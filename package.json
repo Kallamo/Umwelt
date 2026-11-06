@@ -1,0 +1,39 @@
+{
+  "name": "umwelt",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Workspace for Umwelt, an epistemic state engine.",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run build --workspace @kallamo/umwelt && npm run typecheck --workspaces --if-present && tsc -p tsconfig.json --noEmit",
+    "test": "cargo build -p umwelt-cli && vitest run",
+    "generate:types": "npm run generate:types --workspace @kallamo/umwelt",
+    "check:types": "npm run check:types --workspace @kallamo/umwelt",
+    "schema:generate": "cargo run -p umwelt-core --bin generate-schema && cargo run -p umwelt-protocol --bin generate-protocol-schema",
+    "schema:check": "cargo run -p umwelt-core --bin generate-schema -- --check && cargo run -p umwelt-protocol --bin generate-protocol-schema -- --check",
+    "rust:check": "cargo check --workspace",
+    "rust:test": "cargo test --workspace",
+    "rust:lint": "cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings",
+    "bench:check": "cargo check --benches",
+    "cli": "cargo run -q -p umwelt-cli --",
+    "generate:csharp": "node scripts/generate-csharp.mjs",
+    "check:csharp": "node scripts/generate-csharp.mjs --check",
+    "pack:csharp": "node scripts/pack-csharp.mjs",
+    "test:csharp": "cargo build -p umwelt-ffi && dotnet run -c Release --project bindings/csharp/Umwelt.Conformance",
+    "check:versions": "node scripts/check-versions.mjs",
+    "pack:npm": "node scripts/pack-npm.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

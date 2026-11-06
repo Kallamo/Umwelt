@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+[package]
+name = "umwelt-cli"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "The umwelt command: create, inspect and serve Umwelt files."
+# Distributed as binaries and through the npm and NuGet packages, not on crates.io.
+publish = false
+
+[[bin]]
+name = "umwelt"
+path = "src/main.rs"
+
+[dependencies]
+umwelt-api = { path = "../../crates/umwelt-api" }
+umwelt-protocol = { path = "../../crates/umwelt-protocol" }
+serde_json.workspace = true
+umwelt-core = { path = "../../crates/umwelt-core" }
+
+[dev-dependencies]
+tempfile = "3"
+sha2 = "0.10"

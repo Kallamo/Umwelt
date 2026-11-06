@@ -1,0 +1,52 @@
+{
+  "name": "@kallamo/umwelt",
+  "version": "0.1.0",
+  "description": "TypeScript client for Umwelt, an epistemic state engine: who knows what, how they learned it, and since when.",
+  "license": "AGPL-3.0-only",
+  "author": "Jonathan Ferreira da Conceição <contact@kallamo.com> (https://kallamo.com)",
+  "homepage": "https://kallamo.com/umwelt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kallamo/Umwelt.git",
+    "directory": "packages/umwelt"
+  },
+  "bugs": {
+    "url": "https://github.com/Kallamo/Umwelt/issues"
+  },
+  "keywords": [
+    "umwelt",
+    "kallamo",
+    "knowledge",
+    "belief",
+    "epistemic",
+    "narrative",
+    "npc",
+    "simulation",
+    "ai-characters"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node ../../scripts/build-sdk.mjs",
+    "typecheck": "npm run check:types && tsc -p tsconfig.json --noEmit",
+    "generate:types": "node ../../scripts/generate-types.mjs",
+    "check:types": "node ../../scripts/generate-types.mjs --check"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

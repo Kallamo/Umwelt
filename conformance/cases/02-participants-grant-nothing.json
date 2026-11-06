@@ -1,0 +1,241 @@
+{
+  "name": "02-participants-grant-nothing",
+  "steps": [
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "project.create",
+        "payload": {
+          "id": "p",
+          "name": "Test",
+          "timescale": "day",
+          "vocabularyMode": "open"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "version": 0
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "agent",
+          "name": "agent",
+          "kind": "agent"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "group",
+          "name": "group",
+          "kind": "group"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "other",
+          "name": "other",
+          "kind": "other"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "alice",
+          "typeId": "agent",
+          "name": "alice"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "bob",
+          "typeId": "agent",
+          "name": "bob"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "team",
+          "typeId": "group",
+          "name": "team"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "item",
+          "typeId": "other",
+          "name": "item"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.define",
+        "payload": {
+          "projectId": "p",
+          "predicate": {
+            "id": "related",
+            "label": "Related",
+            "object": "entity",
+            "cardinality": "many"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "commit",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "a1",
+          "event": {
+            "id": "e-a1",
+            "type": "test",
+            "title": "Mira's lantern",
+            "position": {
+              "tick": 1
+            },
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "participants": [
+              "alice"
+            ]
+          },
+          "records": [
+            {
+              "kind": "fact",
+              "id": "f1",
+              "position": {
+                "tick": 1
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              }
+            }
+          ],
+          "transitions": []
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "holds",
+        "payload": {
+          "projectId": "p",
+          "holder": "alice",
+          "claim": {
+            "subject": "alice",
+            "predicate": "related",
+            "object": {
+              "kind": "entity",
+              "id": "item"
+            },
+            "polarity": true
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "holds": false
+        }
+      }
+    }
+  ]
+}

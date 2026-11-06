@@ -1,0 +1,46 @@
+{
+  "name": "handshake-required",
+  "steps": [
+    {
+      "request": {
+        "op": "project.list",
+        "payload": {}
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "HANDSHAKE_REQUIRED"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "project.list",
+        "payload": {}
+      },
+      "expect": {
+        "ok": true,
+        "result": []
+      }
+    }
+  ]
+}

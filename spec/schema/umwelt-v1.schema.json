@@ -1,0 +1,4436 @@
+{
+  "$defs": {
+    "Accessibility": {
+      "enum": [
+        "available",
+        "suppressed",
+        "inaccessible"
+      ],
+      "type": "string"
+    },
+    "Acquisition": {
+      "oneOf": [
+        {
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "witnessed",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "eventId"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "intent": {
+              "$ref": "#/$defs/Intent"
+            },
+            "kind": {
+              "const": "told-by",
+              "type": "string"
+            },
+            "sourceHolderId": {
+              "type": "string"
+            },
+            "sourceRecordId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "sourceHolderId",
+            "intent"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "evidenceId": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "evidence",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "evidenceId"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "fromRecordIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "inferred",
+              "type": "string"
+            },
+            "rule": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "fromRecordIds"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "authored",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "AdjustHoldingsInput": {
+      "additionalProperties": false,
+      "description": "Adjusts many Holdings in one commit, e.g. a night of memory decay. How much\nanything decays is the client's policy.",
+      "properties": {
+        "adjustments": {
+          "items": {
+            "$ref": "#/$defs/HoldingAdjustment"
+          },
+          "type": "array"
+        },
+        "attemptId": {
+          "type": "string"
+        },
+        "expectedVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "description": "Positions of the generated event on additional axes.",
+          "type": "object"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timelineId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "attemptId",
+        "position",
+        "adjustments"
+      ],
+      "title": "AdjustHoldingsInput",
+      "type": "object"
+    },
+    "At": {
+      "description": "A read position. `tick` is on the main axis unless `axis` names an\nadditional axis (`axis.define`); then it is a position on that axis.",
+      "properties": {
+        "asOfVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "axis": {
+          "description": "An additional axis to read on. Absent: the main axis.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tick": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Attitude": {
+      "enum": [
+        "knows",
+        "believes",
+        "suspects",
+        "remembers"
+      ],
+      "type": "string"
+    },
+    "AxisDef": {
+      "additionalProperties": false,
+      "description": "An additional order of time, such as reading order next to story order.\nThe main axis (`Position.tick`) is implicit and has no definition.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "type": "object"
+    },
+    "BeliefAboutItem": {
+      "description": "What a holder thinks another holder knows (`umwelt:holds` Holdings), next\nto what the other holder actually holds at the same position.",
+      "properties": {
+        "actualRecordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actuallyHolds": {
+          "description": "Whether the other holder really holds the claim (active, available).",
+          "type": "boolean"
+        },
+        "attitude": {
+          "$ref": "#/$defs/Attitude"
+        },
+        "claimKey": {
+          "type": "string"
+        },
+        "confidence": {
+          "format": "double",
+          "type": "number"
+        },
+        "polarity": {
+          "description": "True: the holder thinks the other holds the claim. False: thinks not.",
+          "type": "boolean"
+        },
+        "recordId": {
+          "description": "The holder's `umwelt:holds` Holding.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordId",
+        "claimKey",
+        "polarity",
+        "attitude",
+        "confidence",
+        "actuallyHolds"
+      ],
+      "title": "BeliefAboutItem",
+      "type": "object"
+    },
+    "Breach": {
+      "description": "A secret told to someone outside its circle.",
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "owner": {
+          "description": "Who keeps the secret.",
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "recordId": {
+          "description": "The recipient's Holding acquired by being told.",
+          "type": "string"
+        },
+        "secretRecordId": {
+          "description": "The secret Holding.",
+          "type": "string"
+        },
+        "toldBy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "secretRecordId",
+        "owner",
+        "toldBy",
+        "recipient",
+        "recordId",
+        "position",
+        "eventId"
+      ],
+      "title": "Breach",
+      "type": "object"
+    },
+    "CanonFilter": {
+      "properties": {
+        "object": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predicate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "title": "CanonFilter",
+      "type": "object"
+    },
+    "CanonStatus": {
+      "description": "How a claim relates to canon at the read position.",
+      "enum": [
+        "agrees",
+        "contradicts",
+        "no-canon"
+      ],
+      "title": "CanonStatus",
+      "type": "string"
+    },
+    "Cardinality": {
+      "enum": [
+        "one",
+        "many"
+      ],
+      "type": "string"
+    },
+    "ChainLink": {
+      "properties": {
+        "acquisition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Acquisition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "record": {
+          "$ref": "#/$defs/Record"
+        }
+      },
+      "required": [
+        "record"
+      ],
+      "type": "object"
+    },
+    "ChangeItem": {
+      "properties": {
+        "payload": true,
+        "seq": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "timelineId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seq",
+        "timelineId",
+        "version",
+        "type",
+        "payload"
+      ],
+      "type": "object"
+    },
+    "ChangePageResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ChangeItem"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "PageResult",
+      "type": "object"
+    },
+    "CheckUtteranceInput": {
+      "additionalProperties": false,
+      "description": "Claims a holder says or thinks, to check against what the holder can know.\nThe claims come from the client (or a model it runs): the engine never\nreads free text.",
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/At",
+          "default": {}
+        },
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/Claim"
+          },
+          "type": "array"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "timelineId": {
+          "description": "Timeline to read; defaults to \"main\".",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "holder",
+        "claims"
+      ],
+      "title": "CheckUtteranceInput",
+      "type": "object"
+    },
+    "CheckUtteranceResult": {
+      "properties": {
+        "consistent": {
+          "description": "Every claim has the verdict `holds` with the same polarity.",
+          "type": "boolean"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/UtteranceCheck"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "consistent"
+      ],
+      "title": "CheckUtteranceResult",
+      "type": "object"
+    },
+    "Claim": {
+      "properties": {
+        "about": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "object": {
+          "$ref": "#/$defs/ClaimObject"
+        },
+        "polarity": {
+          "type": "boolean"
+        },
+        "predicate": {
+          "type": "string"
+        },
+        "qualifiers": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "subject",
+        "predicate",
+        "object",
+        "polarity"
+      ],
+      "type": "object"
+    },
+    "ClaimObject": {
+      "oneOf": [
+        {
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "entity",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "value",
+              "type": "string"
+            },
+            "value": true
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "none",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ClaimRef": {
+      "anyOf": [
+        {
+          "properties": {
+            "claim": {
+              "$ref": "#/$defs/Claim"
+            }
+          },
+          "required": [
+            "claim"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "claimKey": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "claimKey"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "ClaimRef"
+    },
+    "CommitInput": {
+      "additionalProperties": false,
+      "properties": {
+        "attemptId": {
+          "type": "string"
+        },
+        "event": {
+          "$ref": "#/$defs/EventInput"
+        },
+        "expectedVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "records": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RecordInput"
+          },
+          "type": "array"
+        },
+        "timelineId": {
+          "description": "Timeline to write to; defaults to \"main\".",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transitions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TransitionInput"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "projectId",
+        "attemptId",
+        "event"
+      ],
+      "title": "CommitInput",
+      "type": "object"
+    },
+    "CommitOutcome": {
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "recordIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "transitionIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "version": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Warning"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "eventId",
+        "recordIds",
+        "transitionIds",
+        "version"
+      ],
+      "title": "CommitOutcome",
+      "type": "object"
+    },
+    "CompareCounts": {
+      "properties": {
+        "conflicting": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "onlyA": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "onlyB": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "shared": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shared",
+        "conflicting",
+        "onlyA",
+        "onlyB"
+      ],
+      "type": "object"
+    },
+    "CompareEntry": {
+      "properties": {
+        "a": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Record"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "b": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Record"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "claimKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "claimKey"
+      ],
+      "type": "object"
+    },
+    "CompareResult": {
+      "properties": {
+        "conflicting": {
+          "items": {
+            "$ref": "#/$defs/CompareEntry"
+          },
+          "type": "array"
+        },
+        "counts": {
+          "$ref": "#/$defs/CompareCounts"
+        },
+        "onlyA": {
+          "items": {
+            "$ref": "#/$defs/CompareEntry"
+          },
+          "type": "array"
+        },
+        "onlyB": {
+          "items": {
+            "$ref": "#/$defs/CompareEntry"
+          },
+          "type": "array"
+        },
+        "shared": {
+          "items": {
+            "$ref": "#/$defs/CompareEntry"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "shared",
+        "conflicting",
+        "onlyA",
+        "onlyB",
+        "counts"
+      ],
+      "title": "CompareResult",
+      "type": "object"
+    },
+    "ContextAdmitInput": {
+      "additionalProperties": false,
+      "description": "Decides which candidates may enter a context seen from one perspective.\nWithout `holder` the perspective is the narrator's, who sees everything\nvisible at the position.",
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/At",
+          "default": {}
+        },
+        "authorizedNarrator": {
+          "default": false,
+          "type": "boolean"
+        },
+        "budget": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/ContextCandidate"
+          },
+          "type": "array"
+        },
+        "excludeClassifications": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "holder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "includeWithheld": {
+          "default": false,
+          "description": "Admit suppressed and inaccessible Holdings. Requires\n`authorizedNarrator`.",
+          "type": "boolean"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "timelineId": {
+          "description": "Timeline to read; defaults to \"main\".",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "candidates"
+      ],
+      "title": "ContextAdmitInput",
+      "type": "object"
+    },
+    "ContextAdmitResult": {
+      "properties": {
+        "admitted": {
+          "description": "Admitted candidates, highest priority first (ties keep input order).",
+          "items": {
+            "$ref": "#/$defs/ContextAdmitted"
+          },
+          "type": "array"
+        },
+        "rejected": {
+          "description": "Refused candidates, in input order.",
+          "items": {
+            "$ref": "#/$defs/ContextRejected"
+          },
+          "type": "array"
+        },
+        "usedBudget": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "admitted",
+        "rejected",
+        "usedBudget"
+      ],
+      "title": "ContextAdmitResult",
+      "type": "object"
+    },
+    "ContextAdmitted": {
+      "properties": {
+        "cost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "eventId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "priority": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "recordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "cost",
+        "priority"
+      ],
+      "title": "ContextAdmitted",
+      "type": "object"
+    },
+    "ContextCandidate": {
+      "additionalProperties": false,
+      "description": "Something a client wants to put in a context (a prompt, a scene brief).\nExactly one of `recordId` and `eventId` is given.",
+      "properties": {
+        "classification": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cost": {
+          "default": 1,
+          "description": "Budget units the candidate costs (tokens, lines...). Defaults to 1.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "eventId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "The client's own id for the candidate.",
+          "type": "string"
+        },
+        "priority": {
+          "default": 0,
+          "description": "Higher priorities are admitted first when the budget is short.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "recordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "ContextCandidate",
+      "type": "object"
+    },
+    "ContextRejected": {
+      "properties": {
+        "eventId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/$defs/ContextRejection"
+        },
+        "recordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "reason"
+      ],
+      "title": "ContextRejected",
+      "type": "object"
+    },
+    "ContextRejection": {
+      "description": "Why a candidate was refused. Checks run in this order and a candidate\nreports the first one it fails.",
+      "oneOf": [
+        {
+          "const": "invalid-candidate",
+          "description": "Neither or both of `recordId` and `eventId`.",
+          "type": "string"
+        },
+        {
+          "const": "not-in-project",
+          "description": "No such record or event in this project and timeline.",
+          "type": "string"
+        },
+        {
+          "const": "future",
+          "description": "Recorded after the read position.",
+          "type": "string"
+        },
+        {
+          "const": "not-on-axis",
+          "description": "Read on an additional axis, and the candidate's event has no position\non it: it is visible to nobody there.",
+          "type": "string"
+        },
+        {
+          "const": "inactive",
+          "description": "Retracted, revoked, forgotten, abandoned or superseded.",
+          "type": "string"
+        },
+        {
+          "const": "not-held",
+          "description": "Not part of the holder's perspective.",
+          "type": "string"
+        },
+        {
+          "const": "withheld",
+          "description": "Suppressed or inaccessible for the holder.",
+          "type": "string"
+        },
+        {
+          "const": "excluded-classification",
+          "description": "The candidate's classification is excluded.",
+          "type": "string"
+        },
+        {
+          "const": "duplicate",
+          "description": "The same record or event was already admitted.",
+          "type": "string"
+        },
+        {
+          "const": "over-budget",
+          "description": "Higher-priority candidates used the budget first.",
+          "type": "string"
+        }
+      ],
+      "title": "ContextRejection"
+    },
+    "Contradiction": {
+      "properties": {
+        "holdingId": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ContradictionKind"
+        },
+        "otherRecordId": {
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/$defs/ContradictionReason"
+        }
+      },
+      "required": [
+        "holdingId",
+        "kind",
+        "otherRecordId",
+        "reason"
+      ],
+      "title": "Contradiction",
+      "type": "object"
+    },
+    "ContradictionKind": {
+      "enum": [
+        "vs-canon",
+        "vs-self"
+      ],
+      "type": "string"
+    },
+    "ContradictionReason": {
+      "enum": [
+        "opposite-polarity",
+        "different-value-in-functional-slot"
+      ],
+      "type": "string"
+    },
+    "CreateEntityInput": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/Position",
+          "default": {
+            "tick": 0
+          }
+        },
+        "externalRef": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "typeId",
+        "name"
+      ],
+      "title": "CreateEntityInput",
+      "type": "object"
+    },
+    "CreateEntityTypeInput": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FieldDef"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "name",
+        "kind"
+      ],
+      "title": "CreateEntityTypeInput",
+      "type": "object"
+    },
+    "CreateProjectInput": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "timescale": {
+          "type": "string"
+        },
+        "vocabularyMode": {
+          "$ref": "#/$defs/VocabularyMode",
+          "default": "strict"
+        }
+      },
+      "required": [
+        "name",
+        "timescale"
+      ],
+      "title": "CreateProjectInput",
+      "type": "object"
+    },
+    "DefineAxisInput": {
+      "additionalProperties": false,
+      "properties": {
+        "axis": {
+          "$ref": "#/$defs/AxisDef"
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "axis"
+      ],
+      "title": "DefineAxisInput",
+      "type": "object"
+    },
+    "DefineEmbeddingSpaceInput": {
+      "additionalProperties": false,
+      "properties": {
+        "projectId": {
+          "type": "string"
+        },
+        "space": {
+          "$ref": "#/$defs/EmbeddingSpace"
+        }
+      },
+      "required": [
+        "projectId",
+        "space"
+      ],
+      "title": "DefineEmbeddingSpaceInput",
+      "type": "object"
+    },
+    "DefinePredicateInput": {
+      "additionalProperties": false,
+      "properties": {
+        "predicate": {
+          "$ref": "#/$defs/PredicateDef"
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "predicate"
+      ],
+      "title": "DefinePredicateInput",
+      "type": "object"
+    },
+    "DeleteEmbeddingsInput": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/EmbeddingDocRef"
+          },
+          "type": "array"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "spaceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "spaceId",
+        "items"
+      ],
+      "title": "DeleteEmbeddingsInput",
+      "type": "object"
+    },
+    "DeleteEmbeddingsResult": {
+      "properties": {
+        "removed": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "removed"
+      ],
+      "title": "DeleteEmbeddingsResult",
+      "type": "object"
+    },
+    "DispositionSetting": {
+      "additionalProperties": false,
+      "properties": {
+        "dimension": {
+          "type": "string"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target": {
+          "type": "string"
+        },
+        "value": true
+      },
+      "required": [
+        "holder",
+        "target",
+        "dimension",
+        "value"
+      ],
+      "title": "DispositionSetting",
+      "type": "object"
+    },
+    "DropEmbeddingSpaceResult": {
+      "properties": {
+        "removed": {
+          "description": "Vectors removed with the space.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "removed"
+      ],
+      "title": "DropEmbeddingSpaceResult",
+      "type": "object"
+    },
+    "EmbeddingDocRef": {
+      "additionalProperties": false,
+      "description": "A searchable document: a record (a Fact, or a Holding with text) or an\nevent whose type does not begin with `umwelt:`.",
+      "properties": {
+        "docId": {
+          "type": "string"
+        },
+        "docType": {
+          "description": "`record` or `event`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "docType",
+        "docId"
+      ],
+      "type": "object"
+    },
+    "EmbeddingItem": {
+      "additionalProperties": false,
+      "properties": {
+        "docId": {
+          "type": "string"
+        },
+        "docType": {
+          "description": "`record` or `event`.",
+          "type": "string"
+        },
+        "textHash": {
+          "description": "The `textHash` the vector was made from (see `embedding.pending`).",
+          "type": "string"
+        },
+        "vector": {
+          "items": {
+            "format": "float",
+            "type": "number"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "docType",
+        "docId",
+        "textHash",
+        "vector"
+      ],
+      "type": "object"
+    },
+    "EmbeddingSpace": {
+      "additionalProperties": false,
+      "description": "The vectors of one embedding model. A vector is only compared with\nvectors of the same space. `model` documents the model; the engine never\nreads it and never runs a model.",
+      "properties": {
+        "dimensions": {
+          "format": "uint32",
+          "maximum": 4096,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "dimensions",
+        "model"
+      ],
+      "type": "object"
+    },
+    "EnsureEntitiesInput": {
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/EnsureEntityInput"
+          },
+          "type": "array"
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "entities"
+      ],
+      "title": "EnsureEntitiesInput",
+      "type": "object"
+    },
+    "EnsureEntityInput": {
+      "additionalProperties": false,
+      "description": "One entity owned by another system (a game, a wiki, a host app), keyed by\nits `externalRef`. Ensuring it twice is a no-op; changed fields are updated.",
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "externalRef": {
+          "$ref": "#/$defs/ExternalRef"
+        },
+        "fields": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Id used only when the entity is created; an existing entity keeps its id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "externalRef",
+        "typeId",
+        "name"
+      ],
+      "title": "EnsureEntityInput",
+      "type": "object"
+    },
+    "EnsureEntityResult": {
+      "properties": {
+        "created": {
+          "type": "boolean"
+        },
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        }
+      },
+      "required": [
+        "entity",
+        "created"
+      ],
+      "title": "EnsureEntityResult",
+      "type": "object"
+    },
+    "Entity": {
+      "properties": {
+        "aliases": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/Position"
+        },
+        "externalRef": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "typeId",
+        "name",
+        "createdAt",
+        "archived"
+      ],
+      "type": "object"
+    },
+    "EntityAtResult": {
+      "description": "An entity as canon describes it at one position: its current name, title\nand aliases from `umwelt:name`, `umwelt:title` and `umwelt:alias` Facts,\nfalling back to the entity's own name and aliases.",
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        },
+        "name": {
+          "type": "string"
+        },
+        "recordIds": {
+          "description": "The Facts the name, title and aliases come from.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "entity",
+        "name",
+        "aliases",
+        "recordIds"
+      ],
+      "title": "EntityAtResult",
+      "type": "object"
+    },
+    "EntityKind": {
+      "enum": [
+        "agent",
+        "group",
+        "other"
+      ],
+      "type": "string"
+    },
+    "EntityKnownResult": {
+      "description": "An entity as one holder knows it: only what the holder's own active,\navailable Holdings say. A holder that knows no name gets none.",
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "aware": {
+          "description": "The holder has an Awareness record of the entity.",
+          "type": "boolean"
+        },
+        "entityId": {
+          "type": "string"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recordIds": {
+          "description": "The Holdings the name, title and aliases come from.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "entityId",
+        "holder",
+        "aware",
+        "aliases",
+        "recordIds"
+      ],
+      "title": "EntityKnownResult",
+      "type": "object"
+    },
+    "EntityPageResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Entity"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "PageResult",
+      "type": "object"
+    },
+    "EntityType": {
+      "properties": {
+        "fields": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FieldDef"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "name",
+        "kind"
+      ],
+      "title": "EntityType",
+      "type": "object"
+    },
+    "Event": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "description": "Positions on additional axes. Records and transitions of the event\ninherit them.",
+          "type": "object"
+        },
+        "participants": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "recordedAt": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "timelineId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "timelineId",
+        "type",
+        "title",
+        "position",
+        "provenance",
+        "recordedAt"
+      ],
+      "type": "object"
+    },
+    "EventInput": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "description": "Positions on additional axes (`axis.define`), each `>= 0`.",
+          "type": "object"
+        },
+        "participants": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "position",
+        "provenance"
+      ],
+      "type": "object"
+    },
+    "EventPageResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Event"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "PageResult",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "properties": {
+        "evidenceSourceId": {
+          "type": "string"
+        },
+        "excerpt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "locator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "evidenceSourceId"
+      ],
+      "type": "object"
+    },
+    "EvidenceSource": {
+      "additionalProperties": false,
+      "properties": {
+        "contentHash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "locator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "type",
+        "title",
+        "createdAt"
+      ],
+      "title": "EvidenceSource",
+      "type": "object"
+    },
+    "ExternalRef": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "system": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "system",
+        "id"
+      ],
+      "type": "object"
+    },
+    "FieldConstraints": {
+      "properties": {
+        "allowedEntityTypeIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "maxLength": {
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "maximum": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "minLength": {
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "minimum": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/FieldOption"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "FieldDef": {
+      "properties": {
+        "constraints": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FieldConstraints"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/FieldType"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "label",
+        "type"
+      ],
+      "type": "object"
+    },
+    "FieldOption": {
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "type": "object"
+    },
+    "FieldType": {
+      "enum": [
+        "text",
+        "number",
+        "boolean",
+        "date",
+        "enum",
+        "entity-reference",
+        "entity-reference-list",
+        "json"
+      ],
+      "type": "string"
+    },
+    "GroupCoverageResult": {
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "groupHolding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WhoHoldsItem"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The group's own Holding, if the group itself holds the claim."
+        },
+        "holding": {
+          "description": "Members holding the claim.",
+          "items": {
+            "$ref": "#/$defs/WhoHoldsItem"
+          },
+          "type": "array"
+        },
+        "members": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "missing": {
+          "description": "Members holding nothing about the claim.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "group",
+        "members",
+        "holding",
+        "missing"
+      ],
+      "title": "GroupCoverageResult",
+      "type": "object"
+    },
+    "HoldingAdjustment": {
+      "additionalProperties": false,
+      "description": "A new value for an active Holding. The old Holding is superseded by a copy\ncarrying the changed fields; its history stays readable.",
+      "properties": {
+        "accessibility": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Accessibility"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attitude": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attitude"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "newRecordId": {
+          "description": "Id of the replacing Holding. Generated when absent.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recordId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "recordId"
+      ],
+      "title": "HoldingAdjustment",
+      "type": "object"
+    },
+    "HoldingFilter": {
+      "properties": {
+        "about": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attitude": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Attitude"
+          },
+          "type": "array"
+        },
+        "includeWithheld": {
+          "default": false,
+          "type": "boolean"
+        },
+        "minConfidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "predicate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "title": "HoldingFilter",
+      "type": "object"
+    },
+    "HoldingItem": {
+      "properties": {
+        "acquisition": {
+          "$ref": "#/$defs/Acquisition"
+        },
+        "record": {
+          "$ref": "#/$defs/Record"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TransitionStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "record",
+        "acquisition"
+      ],
+      "type": "object"
+    },
+    "HoldingsResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/HoldingItem"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "withheldCount": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "items",
+        "withheldCount"
+      ],
+      "title": "HoldingsResult",
+      "type": "object"
+    },
+    "HoldsResult": {
+      "properties": {
+        "attitude": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attitude"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "holds": {
+          "type": "boolean"
+        },
+        "polarity": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "recordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "holds"
+      ],
+      "title": "HoldsResult",
+      "type": "object"
+    },
+    "Intent": {
+      "enum": [
+        "honest",
+        "deceptive",
+        "unknown"
+      ],
+      "type": "string"
+    },
+    "ObjectKind": {
+      "enum": [
+        "entity",
+        "value",
+        "none"
+      ],
+      "type": "string"
+    },
+    "OpenDraftInput": {
+      "additionalProperties": false,
+      "properties": {
+        "baseTimelineId": {
+          "description": "Timeline to branch from: \"main\" (the default) or an active draft.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId"
+      ],
+      "title": "OpenDraftInput",
+      "type": "object"
+    },
+    "OperationCheck": {
+      "properties": {
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OperationError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operationIndex": {
+          "description": "Index in the proposal: records first, then transitions.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "operationIndex",
+        "valid"
+      ],
+      "title": "OperationCheck",
+      "type": "object"
+    },
+    "OperationError": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "type": "object"
+    },
+    "Origin": {
+      "oneOf": [
+        {
+          "properties": {
+            "actorId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "human",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "model",
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "promptHash": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "model"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "system",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "import",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Page": {
+      "properties": {
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 100,
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "PendingEmbedding": {
+      "properties": {
+        "docId": {
+          "type": "string"
+        },
+        "docType": {
+          "type": "string"
+        },
+        "stale": {
+          "description": "A vector exists but was made from another text.",
+          "type": "boolean"
+        },
+        "text": {
+          "description": "The text the search indexes for this document: embed exactly this.",
+          "type": "string"
+        },
+        "textHash": {
+          "description": "SHA-256 of `text`, to send back with the vector.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "docType",
+        "docId",
+        "text",
+        "textHash",
+        "stale"
+      ],
+      "type": "object"
+    },
+    "PendingEmbeddingsInput": {
+      "additionalProperties": false,
+      "description": "Documents visible in a timeline whose vector in a space is missing or\nstale, with the text to embed.",
+      "properties": {
+        "docTypes": {
+          "description": "`record` and/or `event`; empty for both.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "page": {
+          "$ref": "#/$defs/Page",
+          "default": {
+            "limit": 100
+          }
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "spaceId": {
+          "type": "string"
+        },
+        "timelineId": {
+          "description": "Timeline to read; defaults to \"main\".",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "spaceId"
+      ],
+      "title": "PendingEmbeddingsInput",
+      "type": "object"
+    },
+    "PendingEmbeddingsResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/PendingEmbedding"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "description": "More pending documents follow; pass it as `page.cursor`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resumeCursor": {
+          "description": "Where a later call can start to see only documents written after this\none. Starting without a cursor checks every document again.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "items",
+        "resumeCursor"
+      ],
+      "title": "PendingEmbeddingsResult",
+      "type": "object"
+    },
+    "PerspectiveResult": {
+      "properties": {
+        "awareness": {
+          "items": {
+            "$ref": "#/$defs/Record"
+          },
+          "type": "array"
+        },
+        "dispositions": {
+          "items": {
+            "$ref": "#/$defs/Record"
+          },
+          "type": "array"
+        },
+        "holder": {
+          "$ref": "#/$defs/Entity"
+        },
+        "holdings": {
+          "items": {
+            "$ref": "#/$defs/HoldingItem"
+          },
+          "type": "array"
+        },
+        "memberships": {
+          "items": {
+            "$ref": "#/$defs/Record"
+          },
+          "type": "array"
+        },
+        "withheldCount": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "holder",
+        "awareness",
+        "holdings",
+        "dispositions",
+        "memberships",
+        "withheldCount"
+      ],
+      "title": "PerspectiveResult",
+      "type": "object"
+    },
+    "Position": {
+      "properties": {
+        "tick": {
+          "format": "int64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tick"
+      ],
+      "type": "object"
+    },
+    "PredicateDef": {
+      "properties": {
+        "cardinality": {
+          "$ref": "#/$defs/Cardinality"
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/$defs/ObjectKind"
+        },
+        "subjectTypes": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "object",
+        "cardinality"
+      ],
+      "type": "object"
+    },
+    "Project": {
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "timescale": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "vocabularyMode": {
+          "$ref": "#/$defs/VocabularyMode"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "timescale",
+        "vocabularyMode",
+        "createdAt",
+        "version"
+      ],
+      "title": "Project",
+      "type": "object"
+    },
+    "Proposal": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "input": {
+          "$ref": "#/$defs/ProposeInput"
+        },
+        "rejectionRationale": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviews": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProposalReview"
+          },
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/ProposalStatus"
+        }
+      },
+      "required": [
+        "id",
+        "status",
+        "input"
+      ],
+      "type": "object"
+    },
+    "ProposalRebaseResult": {
+      "description": "A pending proposal checked again against the current head of its timeline.",
+      "properties": {
+        "headVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/OperationCheck"
+          },
+          "type": "array"
+        },
+        "proposal": {
+          "$ref": "#/$defs/Proposal"
+        }
+      },
+      "required": [
+        "proposal",
+        "headVersion",
+        "operations"
+      ],
+      "title": "ProposalRebaseResult",
+      "type": "object"
+    },
+    "ProposalReview": {
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/ReviewDecision"
+        },
+        "id": {
+          "type": "string"
+        },
+        "operationIndex": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rationale": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "operationIndex",
+        "decision",
+        "rationale",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "ProposalStatus": {
+      "enum": [
+        "pending",
+        "applied",
+        "partially-applied",
+        "rejected"
+      ],
+      "type": "string"
+    },
+    "ProposeInput": {
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "$ref": "#/$defs/EventInput"
+        },
+        "expectedVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "records": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RecordInput"
+          },
+          "type": "array"
+        },
+        "timelineId": {
+          "description": "Timeline to write to; defaults to \"main\".",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transitions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TransitionInput"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "projectId",
+        "event"
+      ],
+      "type": "object"
+    },
+    "Provenance": {
+      "properties": {
+        "metadata": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "origin": {
+          "$ref": "#/$defs/Origin"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "origin"
+      ],
+      "type": "object"
+    },
+    "PurgeCounts": {
+      "properties": {
+        "attempts": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "events": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "records": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "transitions": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "events",
+        "records",
+        "transitions",
+        "attempts"
+      ],
+      "type": "object"
+    },
+    "PurgeResult": {
+      "properties": {
+        "purged": {
+          "type": "boolean"
+        },
+        "removed": {
+          "$ref": "#/$defs/PurgeCounts"
+        }
+      },
+      "required": [
+        "purged",
+        "removed"
+      ],
+      "title": "PurgeResult",
+      "type": "object"
+    },
+    "PutEmbeddingsInput": {
+      "additionalProperties": false,
+      "description": "Stores or replaces vectors in one transaction.",
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/EmbeddingItem"
+          },
+          "type": "array"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "spaceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "spaceId",
+        "items"
+      ],
+      "title": "PutEmbeddingsInput",
+      "type": "object"
+    },
+    "PutEmbeddingsResult": {
+      "properties": {
+        "stale": {
+          "description": "Stored vectors whose `textHash` is not the document's: they stay\npending until replaced.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stored": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "stored",
+        "stale"
+      ],
+      "title": "PutEmbeddingsResult",
+      "type": "object"
+    },
+    "Record": {
+      "oneOf": [
+        {
+          "properties": {
+            "claim": {
+              "$ref": "#/$defs/Claim"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "fact",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "projectId": {
+              "type": "string"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            },
+            "recordedAt": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "timelineId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "projectId",
+            "timelineId",
+            "position",
+            "recordedAt",
+            "eventId",
+            "provenance",
+            "claim"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "accessibility": {
+              "$ref": "#/$defs/Accessibility"
+            },
+            "acquisition": {
+              "$ref": "#/$defs/Acquisition"
+            },
+            "attitude": {
+              "$ref": "#/$defs/Attitude"
+            },
+            "claim": {
+              "$ref": "#/$defs/Claim"
+            },
+            "confidence": {
+              "format": "double",
+              "type": "number"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "holder": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "holding",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "projectId": {
+              "type": "string"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            },
+            "recordedAt": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "secrecy": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Secrecy"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The holder keeps this secret; only `sharedWith` may be told."
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "timelineId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "projectId",
+            "timelineId",
+            "position",
+            "recordedAt",
+            "eventId",
+            "provenance",
+            "holder",
+            "attitude",
+            "claim",
+            "acquisition",
+            "confidence",
+            "accessibility"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "holder": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "awareness",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "projectId": {
+              "type": "string"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            },
+            "recordedAt": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "target": {
+              "type": "string"
+            },
+            "timelineId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "projectId",
+            "timelineId",
+            "position",
+            "recordedAt",
+            "eventId",
+            "provenance",
+            "holder",
+            "target"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "dimension": {
+              "type": "string"
+            },
+            "eventId": {
+              "type": "string"
+            },
+            "holder": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "disposition",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "projectId": {
+              "type": "string"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            },
+            "recordedAt": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "target": {
+              "type": "string"
+            },
+            "timelineId": {
+              "type": "string"
+            },
+            "value": true
+          },
+          "required": [
+            "kind",
+            "id",
+            "projectId",
+            "timelineId",
+            "position",
+            "recordedAt",
+            "eventId",
+            "provenance",
+            "holder",
+            "target",
+            "dimension",
+            "value"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RecordCommon": {
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "recordedAt": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "timelineId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "timelineId",
+        "position",
+        "recordedAt",
+        "eventId",
+        "provenance"
+      ],
+      "title": "RecordCommon",
+      "type": "object"
+    },
+    "RecordInput": {
+      "oneOf": [
+        {
+          "properties": {
+            "claim": {
+              "$ref": "#/$defs/Claim"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "fact",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            }
+          },
+          "required": [
+            "kind",
+            "position",
+            "provenance",
+            "claim"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "accessibility": {
+              "$ref": "#/$defs/Accessibility"
+            },
+            "acquisition": {
+              "$ref": "#/$defs/Acquisition"
+            },
+            "attitude": {
+              "$ref": "#/$defs/Attitude"
+            },
+            "claim": {
+              "$ref": "#/$defs/Claim"
+            },
+            "confidence": {
+              "format": "double",
+              "type": "number"
+            },
+            "holder": {
+              "type": "string"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "holding",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            },
+            "secrecy": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Secrecy"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The holder keeps this secret; only `sharedWith` may be told."
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "position",
+            "provenance",
+            "holder",
+            "attitude",
+            "claim",
+            "acquisition",
+            "confidence",
+            "accessibility"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "holder": {
+              "type": "string"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "awareness",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            },
+            "target": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "position",
+            "provenance",
+            "holder",
+            "target"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "dimension": {
+              "type": "string"
+            },
+            "holder": {
+              "type": "string"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "disposition",
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "provenance": {
+              "$ref": "#/$defs/Provenance"
+            },
+            "target": {
+              "type": "string"
+            },
+            "value": true
+          },
+          "required": [
+            "kind",
+            "position",
+            "provenance",
+            "holder",
+            "target",
+            "dimension",
+            "value"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RecordInputCommon": {
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        }
+      },
+      "required": [
+        "position",
+        "provenance"
+      ],
+      "title": "RecordInputCommon",
+      "type": "object"
+    },
+    "RecordPageResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/Record"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "PageResult",
+      "type": "object"
+    },
+    "RecordState": {
+      "properties": {
+        "record": {
+          "$ref": "#/$defs/Record"
+        },
+        "transition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "record"
+      ],
+      "title": "RecordState",
+      "type": "object"
+    },
+    "ResolvedEntity": {
+      "properties": {
+        "entityId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "externalRef": {
+          "$ref": "#/$defs/ExternalRef"
+        }
+      },
+      "required": [
+        "externalRef"
+      ],
+      "title": "ResolvedEntity",
+      "type": "object"
+    },
+    "ReviewDecision": {
+      "enum": [
+        "accepted",
+        "rejected"
+      ],
+      "type": "string"
+    },
+    "ReviewInput": {
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/ReviewDecision"
+        },
+        "operationIndex": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "rationale": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operationIndex",
+        "decision",
+        "rationale"
+      ],
+      "title": "ReviewInput",
+      "type": "object"
+    },
+    "SearchFilter": {
+      "properties": {
+        "docType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "holder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "title": "SearchFilter",
+      "type": "object"
+    },
+    "SearchItem": {
+      "properties": {
+        "docId": {
+          "type": "string"
+        },
+        "docType": {
+          "type": "string"
+        },
+        "event": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Event"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "match": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SearchMatch"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Which search found the item."
+        },
+        "record": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Record"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "score": {
+          "description": "The value the item was ranked by: the cosine similarity in a semantic\nsearch, the fused rank score in a hybrid one. Absent in a text search.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "docType",
+        "docId"
+      ],
+      "type": "object"
+    },
+    "SearchMatch": {
+      "enum": [
+        "text",
+        "semantic",
+        "both"
+      ],
+      "type": "string"
+    },
+    "SearchPageResult": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/SearchItem"
+          },
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "PageResult",
+      "type": "object"
+    },
+    "SearchSemantic": {
+      "additionalProperties": false,
+      "description": "The semantic part of a search: a query vector made by the client's model\nin one of the project's embedding spaces.",
+      "properties": {
+        "spaceId": {
+          "type": "string"
+        },
+        "vector": {
+          "items": {
+            "format": "float",
+            "type": "number"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "spaceId",
+        "vector"
+      ],
+      "title": "SearchSemantic",
+      "type": "object"
+    },
+    "Secrecy": {
+      "description": "Marks a Holding as a secret. The engine never blocks telling it: telling\nanyone outside `sharedWith` (besides the holder) is recorded and reported\nas a breach.",
+      "properties": {
+        "sharedWith": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "SetDispositionsInput": {
+      "additionalProperties": false,
+      "description": "Records many Disposition values in one commit (trust, affection...). The\nnewest value per holder, target and dimension is the current one.",
+      "properties": {
+        "attemptId": {
+          "type": "string"
+        },
+        "dispositions": {
+          "items": {
+            "$ref": "#/$defs/DispositionSetting"
+          },
+          "type": "array"
+        },
+        "expectedVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "description": "Positions of the generated event on additional axes.",
+          "type": "object"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timelineId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "attemptId",
+        "position",
+        "dispositions"
+      ],
+      "title": "SetDispositionsInput",
+      "type": "object"
+    },
+    "Timeline": {
+      "description": "A line of history. \"main\" is the confirmed history of a project; a draft\nbranches from its parent (main or another draft) at `baseVersion` and is\nlater promoted into that parent or discarded.",
+      "properties": {
+        "baseVersion": {
+          "description": "Head version of the parent when the draft was opened. Absent for main.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "closedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "depth": {
+          "description": "Drafts from main down to this timeline: 0 for main, 1 for a draft of\nmain, at most `MAX_DRAFT_DEPTH`.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "headVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/TimelineKind"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maxTick": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "parentTimelineId": {
+          "description": "Timeline this draft branched from: \"main\" or another draft. Absent for\nmain.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "purgedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/TimelineStatus"
+        }
+      },
+      "required": [
+        "projectId",
+        "id",
+        "kind",
+        "status",
+        "depth",
+        "headVersion",
+        "maxTick",
+        "createdAt"
+      ],
+      "title": "Timeline",
+      "type": "object"
+    },
+    "TimelineKind": {
+      "enum": [
+        "main",
+        "draft"
+      ],
+      "type": "string"
+    },
+    "TimelineStatus": {
+      "enum": [
+        "active",
+        "promoted",
+        "discarded"
+      ],
+      "type": "string"
+    },
+    "TraceResult": {
+      "properties": {
+        "chain": {
+          "items": {
+            "$ref": "#/$defs/ChainLink"
+          },
+          "type": "array"
+        },
+        "event": {
+          "$ref": "#/$defs/Event"
+        },
+        "record": {
+          "$ref": "#/$defs/Record"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TransitionStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transitions": {
+          "items": {
+            "$ref": "#/$defs/Transition"
+          },
+          "type": "array"
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "record",
+        "event",
+        "transitions",
+        "chain",
+        "truncated"
+      ],
+      "title": "TraceResult",
+      "type": "object"
+    },
+    "Transition": {
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "ordinal": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "recordedAt": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/TransitionStatus"
+        },
+        "supersededBy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetRecordId": {
+          "type": "string"
+        },
+        "timelineId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "timelineId",
+        "targetRecordId",
+        "status",
+        "position",
+        "recordedAt",
+        "ordinal",
+        "eventId",
+        "provenance"
+      ],
+      "type": "object"
+    },
+    "TransitionBatchInput": {
+      "additionalProperties": false,
+      "description": "One status change applied to many records in one commit, e.g. everything a\ncharacter forgets overnight. `superseded` needs a replacement and is not\naccepted here; use `holding.adjustBatch`.",
+      "properties": {
+        "attemptId": {
+          "type": "string"
+        },
+        "expectedVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "description": "Positions of the generated event on additional axes.",
+          "type": "object"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recordIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/TransitionStatus"
+        },
+        "timelineId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "attemptId",
+        "position",
+        "status",
+        "recordIds"
+      ],
+      "title": "TransitionBatchInput",
+      "type": "object"
+    },
+    "TransitionInput": {
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "status": {
+          "$ref": "#/$defs/TransitionStatus"
+        },
+        "supersededBy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "targetRecordId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "targetRecordId",
+        "status",
+        "position",
+        "provenance"
+      ],
+      "type": "object"
+    },
+    "TransitionStatus": {
+      "enum": [
+        "retracted",
+        "revoked",
+        "forgotten",
+        "abandoned",
+        "superseded"
+      ],
+      "type": "string"
+    },
+    "TransmitInput": {
+      "additionalProperties": false,
+      "properties": {
+        "attemptId": {
+          "type": "string"
+        },
+        "attitude": {
+          "$ref": "#/$defs/Attitude",
+          "default": "believes"
+        },
+        "confidence": {
+          "format": "double",
+          "type": "number"
+        },
+        "distortedClaim": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Claim"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from": {
+          "type": "string"
+        },
+        "intent": {
+          "$ref": "#/$defs/Intent"
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "description": "Positions of the generated event on additional axes.",
+          "type": "object"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceRecordId": {
+          "type": "string"
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timelineId": {
+          "description": "Timeline to write to; defaults to \"main\".",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "attemptId",
+        "position",
+        "from",
+        "to",
+        "sourceRecordId",
+        "confidence",
+        "intent"
+      ],
+      "title": "TransmitInput",
+      "type": "object"
+    },
+    "UpdateEntityInput": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "entityId": {
+          "type": "string"
+        },
+        "externalRef": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "entityId"
+      ],
+      "title": "UpdateEntityInput",
+      "type": "object"
+    },
+    "UtteranceCheck": {
+      "properties": {
+        "attitude": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attitude"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "canon": {
+          "$ref": "#/$defs/CanonStatus"
+        },
+        "canonRecordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "claimKey": {
+          "type": "string"
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "recordId": {
+          "description": "The Holding that decides the verdict.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verdict": {
+          "$ref": "#/$defs/UtteranceVerdict"
+        }
+      },
+      "required": [
+        "claimKey",
+        "verdict",
+        "canon"
+      ],
+      "title": "UtteranceCheck",
+      "type": "object"
+    },
+    "UtteranceVerdict": {
+      "description": "How a claim relates to what the holder holds at the read position.",
+      "oneOf": [
+        {
+          "const": "holds",
+          "description": "The holder holds the claim (see `attitude`).",
+          "type": "string"
+        },
+        {
+          "const": "holds-opposite",
+          "description": "The holder holds the claim with the opposite polarity.",
+          "type": "string"
+        },
+        {
+          "const": "holds-other-value",
+          "description": "The holder holds another value in the same functional slot.",
+          "type": "string"
+        },
+        {
+          "const": "withheld",
+          "description": "The holder holds it, but suppressed or inaccessible.",
+          "type": "string"
+        },
+        {
+          "const": "future",
+          "description": "The holder only comes to hold it at a later tick (on the read's axis):\nan anachronism.",
+          "type": "string"
+        },
+        {
+          "const": "unknown",
+          "description": "Nothing the holder holds covers the claim.",
+          "type": "string"
+        }
+      ],
+      "title": "UtteranceVerdict"
+    },
+    "VocabularyMode": {
+      "enum": [
+        "strict",
+        "open"
+      ],
+      "type": "string"
+    },
+    "Warning": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "type": "object"
+    },
+    "WhoHoldsFilter": {
+      "properties": {
+        "attitude": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Attitude"
+          },
+          "type": "array"
+        },
+        "memberOf": {
+          "description": "Only holders that are members of this group at the read position\n(an active `umwelt:member-of` Fact).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "polarity": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "title": "WhoHoldsFilter",
+      "type": "object"
+    },
+    "WhoHoldsItem": {
+      "properties": {
+        "attitude": {
+          "$ref": "#/$defs/Attitude"
+        },
+        "confidence": {
+          "format": "double",
+          "type": "number"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "polarity": {
+          "type": "boolean"
+        },
+        "recordId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "holder",
+        "recordId",
+        "attitude",
+        "polarity",
+        "confidence"
+      ],
+      "type": "object"
+    },
+    "Witness": {
+      "additionalProperties": false,
+      "properties": {
+        "accessibility": {
+          "$ref": "#/$defs/Accessibility",
+          "default": "available"
+        },
+        "attitude": {
+          "$ref": "#/$defs/Attitude",
+          "default": "knows"
+        },
+        "confidence": {
+          "default": 1.0,
+          "format": "double",
+          "type": "number"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "recordIds": {
+          "description": "One Holding id per claim, in claim order. Empty: generated.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "holder"
+      ],
+      "title": "Witness",
+      "type": "object"
+    },
+    "WitnessInput": {
+      "additionalProperties": false,
+      "description": "One event seen by several holders: every witness gets a `witnessed`\nHolding for every claim, in one atomic commit. Who saw what, and how\nclearly, is the client's decision.",
+      "properties": {
+        "attemptId": {
+          "type": "string"
+        },
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/WitnessedClaim"
+          },
+          "type": "array"
+        },
+        "event": {
+          "$ref": "#/$defs/EventInput"
+        },
+        "expectedVersion": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "timelineId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "witnesses": {
+          "items": {
+            "$ref": "#/$defs/Witness"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "projectId",
+        "attemptId",
+        "event",
+        "claims",
+        "witnesses"
+      ],
+      "title": "WitnessInput",
+      "type": "object"
+    },
+    "WitnessedClaim": {
+      "additionalProperties": false,
+      "description": "One claim seen at a witnessed event.",
+      "properties": {
+        "canon": {
+          "default": false,
+          "description": "Also record the claim as canon (a Fact) in the same commit.",
+          "type": "boolean"
+        },
+        "claim": {
+          "$ref": "#/$defs/Claim"
+        },
+        "factId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "claim"
+      ],
+      "title": "WitnessedClaim",
+      "type": "object"
+    }
+  },
+  "$id": "https://umwelt.dev/spec/schema/umwelt-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contractVersion": "0.1.0",
+  "title": "Umwelt v1 Contract"
+}

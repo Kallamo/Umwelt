@@ -1,0 +1,20 @@
+node_modules/
+target/
+dist/
+coverage/
+.cache/
+.tmp/
+*.umw
+*.umw-shm
+*.umw-wal
+*.tsbuildinfo
+*.umw.lock
+# Generated at release time from about.toml and about.hbs.
+THIRD-PARTY-NOTICES.txt
+# .NET build output (examples/csharp-minimal)
+examples/csharp-minimal/bin/
+examples/csharp-minimal/obj/
+bindings/csharp/*/bin/
+bindings/csharp/*/obj/
+# Native libraries copied in for packing.
+bindings/csharp/Kallamo.Umwelt/runtimes/

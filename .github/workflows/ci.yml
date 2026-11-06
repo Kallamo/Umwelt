@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  # The release workflow runs the same checks and reuses the native libraries
+  # and the NuGet package built here.
+  workflow_call:
+
+jobs:
+  workspace:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-14, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check:versions
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo check --benches
+      - run: npm run schema:check
+      - run: npm run typecheck
+      - run: cargo build -p umwelt-cli
+      - run: npm test
+      - run: npm run build
+      - run: git diff --exit-code
+
+  licenses:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check licenses
+
+  # The .NET binding on every platform: native library, generated types,
+  # conformance cases through the binding, and the example. GitHub has no
+  # Intel macOS runner, so osx-x64 is cross-compiled on Apple silicon and not
+  # run. Linux builds on the oldest supported Ubuntu so the library runs on
+  # older glibc versions too.
+  dotnet:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            library: umwelt_ffi.dll
+            target: ''
+            output: target/release
+            run: true
+          - os: ubuntu-22.04
+            rid: linux-x64
+            library: libumwelt_ffi.so
+            target: ''
+            output: target/release
+            run: true
+          - os: macos-14
+            rid: osx-arm64
+            library: libumwelt_ffi.dylib
+            target: ''
+            output: target/release
+            run: true
+          - os: macos-14
+            rid: osx-x64
+            library: libumwelt_ffi.dylib
+            target: x86_64-apple-darwin
+            output: target/x86_64-apple-darwin/release
+            run: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+      - run: node scripts/generate-csharp.mjs --check
+      - if: matrix.run
+        run: cargo test -p umwelt-ffi --features test-panic
+      - run: cargo build -p umwelt-ffi --release ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+      - if: matrix.run
+        run: dotnet run -c Release --project bindings/csharp/Umwelt.Conformance
+        env:
+          UmweltNativeDir: ${{ github.workspace }}/${{ matrix.output }}/
+      - if: matrix.run
+        run: dotnet run -c Release --project examples/csharp-minimal/UmweltMinimal.csproj
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.rid }}
+          path: ${{ matrix.output }}/${{ matrix.library }}
+
+  nuget:
+    needs: dotnet
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+      - uses: actions/download-artifact@v4
+        with:
+          path: natives
+      - run: >
+          node scripts/pack-csharp.mjs
+          --native win-x64=natives/native-win-x64/umwelt_ffi.dll
+          --native linux-x64=natives/native-linux-x64/libumwelt_ffi.so
+          --native osx-arm64=natives/native-osx-arm64/libumwelt_ffi.dylib
+          --native osx-x64=natives/native-osx-x64/libumwelt_ffi.dylib
+          --output nuget
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget
+          path: nuget/*.nupkg

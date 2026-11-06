@@ -1,0 +1,45 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <!-- net6.0 is deliberate: the binding supports hosts that still run on .NET 6. -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <RootNamespace>Kallamo.Umwelt</RootNamespace>
+    <AssemblyName>Kallamo.Umwelt</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Public types of the generated contract are documented in the schema. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <PackageId>Kallamo.Umwelt</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Jonathan Ferreira da Conceição</Authors>
+    <Description>Official .NET binding of Umwelt, an epistemic state engine: who knows what, how, and since when. Runs the engine in-process through its native library.</Description>
+    <PackageTags>umwelt;narrative;knowledge;rpg;game;modding</PackageTags>
+    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <Copyright>Copyright (C) 2026 Jonathan Ferreira da Conceição</Copyright>
+    <PackageProjectUrl>https://kallamo.com/umwelt</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Kallamo/Umwelt</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umwelt.Conformance" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../../LICENSE" Pack="true" PackagePath="" />
+    <None Include="../../../NOTICE" Pack="true" PackagePath="" />
+    <None Include="../../../LICENSE-EXCEPTION.md" Pack="true" PackagePath="" />
+    <!-- Generated at release time; lists the licenses of the native library's dependencies. -->
+    <None Include="../../../THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="" Condition="Exists('../../../THIRD-PARTY-NOTICES.txt')" />
+    <None Include="../../../assets/icon.png" Pack="true" PackagePath="" />
+    <None Include="README.md" Pack="true" PackagePath="" />
+    <!-- Native libraries per runtime, placed by scripts/pack-csharp.mjs or CI. -->
+    <None Include="runtimes/**/*" Pack="true" PackagePath="runtimes" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,204 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Publishes a release from a version tag (v1.2.3): every package with the same
+# version, from the same commit.
+#
+# Before tagging: set the version everywhere (npm run check:versions) and date
+# its section in CHANGELOG.md. Publishing uses trusted publishing (OIDC), not
+# stored tokens: the npm packages and the NuGet organization must trust this
+# workflow, and the NUGET_USER secret names the nuget.org account.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-versions.mjs --tag "${{ github.ref_name }}"
+      - run: node scripts/release-notes.mjs "${{ github.ref_name }}" > release-notes.md
+      - id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+
+  # Formatting, lints, tests and conformance on every platform, plus the
+  # native libraries (native-<rid>) and the NuGet package.
+  checks:
+    needs: prepare
+    uses: ./.github/workflows/ci.yml
+
+  notices:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
+      - run: cargo about generate about.hbs --workspace -o THIRD-PARTY-NOTICES.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notices
+          path: THIRD-PARTY-NOTICES.txt
+
+  # The umwelt executable per platform. Linux builds on the oldest supported
+  # Ubuntu for glibc compatibility; macOS x64 is cross-compiled.
+  cli:
+    needs: prepare
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32-x64
+            target: x86_64-pc-windows-msvc
+            file: umwelt.exe
+          - os: ubuntu-22.04
+            platform: linux-x64
+            target: x86_64-unknown-linux-gnu
+            file: umwelt
+          - os: macos-14
+            platform: darwin-arm64
+            target: aarch64-apple-darwin
+            file: umwelt
+          - os: macos-14
+            platform: darwin-x64
+            target: x86_64-apple-darwin
+            file: umwelt
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build -p umwelt-cli --release --target ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.platform }}
+          path: target/${{ matrix.target }}/release/${{ matrix.file }}
+
+  package:
+    needs: [checks, notices, cli]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - run: cp artifacts/notices/THIRD-PARTY-NOTICES.txt .
+      - name: NuGet package, with the notices
+        run: >
+          node scripts/pack-csharp.mjs
+          --native win-x64=artifacts/native-win-x64/umwelt_ffi.dll
+          --native linux-x64=artifacts/native-linux-x64/libumwelt_ffi.so
+          --native osx-arm64=artifacts/native-osx-arm64/libumwelt_ffi.dylib
+          --native osx-x64=artifacts/native-osx-x64/libumwelt_ffi.dylib
+          --output dist/nuget
+      - name: npm packages
+        run: >
+          node scripts/pack-npm.mjs
+          --binary win32-x64=artifacts/cli-win32-x64/umwelt.exe
+          --binary linux-x64=artifacts/cli-linux-x64/umwelt
+          --binary darwin-arm64=artifacts/cli-darwin-arm64/umwelt
+          --binary darwin-x64=artifacts/cli-darwin-x64/umwelt
+          --output dist/npm
+      - name: Archives for the GitHub release
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          mkdir -p dist/github
+          for platform in win32-x64 linux-x64 darwin-arm64 darwin-x64; do
+            directory="umwelt-$version-$platform"
+            mkdir -p "$directory"
+            cp artifacts/cli-$platform/* "$directory/"
+            chmod +x "$directory"/umwelt 2>/dev/null || true
+            cp LICENSE LICENSE-EXCEPTION.md NOTICE THIRD-PARTY-NOTICES.txt README.md "$directory/"
+            if [ "$platform" = win32-x64 ]; then
+              (cd "$directory" && zip -q -r "../dist/github/$directory.zip" .)
+            else
+              tar -czf "dist/github/$directory.tar.gz" "$directory"
+            fi
+          done
+          cp crates/umwelt-ffi/include/umwelt.h dist/github/
+          for rid in win-x64 linux-x64 osx-arm64 osx-x64; do
+            directory="umwelt-native-$version-$rid"
+            mkdir -p "$directory"
+            cp artifacts/native-$rid/* crates/umwelt-ffi/include/umwelt.h LICENSE LICENSE-EXCEPTION.md NOTICE THIRD-PARTY-NOTICES.txt "$directory/"
+            tar -czf "dist/github/$directory.tar.gz" "$directory"
+          done
+          (cd dist/github && sha256sum * > SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: dist
+
+  publish:
+    needs: [prepare, package]
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+      # Trusted publishing to npm needs npm 11.5 or newer.
+      - run: npm install -g npm@11
+      - name: Publish to npm, platform packages first
+        run: |
+          set -euo pipefail
+          for package in dist/npm/kallamo-umwelt-*-*.tgz; do
+            npm publish "$package" --access public
+          done
+          npm publish "dist/npm/kallamo-umwelt-${{ needs.prepare.outputs.version }}.tgz" --access public
+      - id: nuget
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Publish to NuGet
+        run: >
+          dotnet nuget push "dist/nuget/*.nupkg"
+          --api-key "${{ steps.nuget.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${{ github.ref_name }}"
+          --title "Umwelt ${{ needs.prepare.outputs.version }}"
+          --notes-file release-notes.md
+          dist/github/*

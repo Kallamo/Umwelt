@@ -1,0 +1,23 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <UmweltNativeDir Condition="'$(UmweltNativeDir)' == ''">$(MSBuildThisFileDirectory)../../target/release/</UmweltNativeDir>
+  </PropertyGroup>
+
+  <!-- A published app would reference the Kallamo.Umwelt NuGet package instead, which
+       carries the native library for each platform. -->
+  <ItemGroup>
+    <ProjectReference Include="../../bindings/csharp/Kallamo.Umwelt/Kallamo.Umwelt.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(UmweltNativeDir)umwelt_ffi.dll" Condition="Exists('$(UmweltNativeDir)umwelt_ffi.dll')" Link="umwelt_ffi.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(UmweltNativeDir)libumwelt_ffi.so" Condition="Exists('$(UmweltNativeDir)libumwelt_ffi.so')" Link="libumwelt_ffi.so" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(UmweltNativeDir)libumwelt_ffi.dylib" Condition="Exists('$(UmweltNativeDir)libumwelt_ffi.dylib')" Link="libumwelt_ffi.dylib" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Umwelt is dual-licensed (AGPL + commercial). Every dependency must allow
+# redistribution under both, so only permissive licenses are accepted.
+
+[graph]
+all-features = true
+
+[licenses]
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "CC0-1.0",
+]
+confidence-threshold = 0.9
+
+[[licenses.exceptions]]
+# Workspace crates themselves.
+allow = ["AGPL-3.0-only"]
+crate = "umwelt-core"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "umwelt-sqlite"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "umwelt-api"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "umwelt-protocol"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "umwelt-cli"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "umwelt-ffi"

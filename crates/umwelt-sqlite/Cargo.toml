@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+[package]
+name = "umwelt-sqlite"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "SQLite storage for Umwelt: atomic writes, indexed bitemporal reads and search."
+# Distributed as binaries and through the npm and NuGet packages, not on crates.io.
+publish = false
+
+[dependencies]
+umwelt-core = { path = "../umwelt-core" }
+sha2 = "0.10"
+rusqlite = { version = "0.37", features = ["backup", "bundled", "functions"] }
+fs4 = "0.13"
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+

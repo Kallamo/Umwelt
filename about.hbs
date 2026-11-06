@@ -1,0 +1,26 @@
+{{!-- SPDX-License-Identifier: AGPL-3.0-only --}}
+Third-party notices for Umwelt
+
+The umwelt executable and the Umwelt native library include the open-source
+components listed below, each under its own license. Umwelt itself is licensed
+under the GNU Affero General Public License, version 3 only (see LICENSE).
+
+The engine also includes SQLite (https://sqlite.org), which is in the public
+domain.
+
+{{#each overview}}
+- {{name}}: {{count}} component(s)
+{{/each}}
+
+{{#each licenses}}
+================================================================================
+{{name}}
+
+Used by:
+{{#each used_by}}
+- {{crate.name}} {{crate.version}}{{#if crate.repository}} ({{crate.repository}}){{/if}}
+{{/each}}
+
+{{{text}}}
+
+{{/each}}

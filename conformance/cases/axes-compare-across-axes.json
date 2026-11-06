@@ -1,0 +1,422 @@
+{
+  "name": "axes-compare-across-axes",
+  "steps": [
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "project.create",
+        "payload": {
+          "id": "p",
+          "name": "Test",
+          "timescale": "day",
+          "vocabularyMode": "open"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "version": 0
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "agent",
+          "name": "agent",
+          "kind": "agent"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "group",
+          "name": "group",
+          "kind": "group"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "other",
+          "name": "other",
+          "kind": "other"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "alice",
+          "typeId": "agent",
+          "name": "alice"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "bob",
+          "typeId": "agent",
+          "name": "bob"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "team",
+          "typeId": "group",
+          "name": "team"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "item",
+          "typeId": "other",
+          "name": "item"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.define",
+        "payload": {
+          "projectId": "p",
+          "predicate": {
+            "id": "related",
+            "label": "Related",
+            "object": "entity",
+            "cardinality": "many"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "axis.define",
+        "payload": {
+          "projectId": "p",
+          "axis": {
+            "id": "reading",
+            "label": "Reading order"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "id": "reading",
+          "label": "Reading order"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "commit",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "ch1",
+          "event": {
+            "id": "e-ch1",
+            "type": "test",
+            "title": "Mira's lantern",
+            "position": {
+              "tick": 10
+            },
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "on": {
+              "reading": 1
+            }
+          },
+          "records": [
+            {
+              "kind": "holding",
+              "id": "alice-1",
+              "position": {
+                "tick": 10
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "alice",
+              "attitude": "believes",
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available"
+            },
+            {
+              "kind": "holding",
+              "id": "reader-1",
+              "position": {
+                "tick": 10
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "bob",
+              "attitude": "believes",
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available"
+            }
+          ],
+          "transitions": []
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "commit",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "ch12",
+          "event": {
+            "id": "e-ch12",
+            "type": "test",
+            "title": "Mira's lantern",
+            "position": {
+              "tick": 3
+            },
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "on": {
+              "reading": 12
+            }
+          },
+          "records": [
+            {
+              "kind": "holding",
+              "id": "team-12",
+              "position": {
+                "tick": 3
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "team",
+              "attitude": "believes",
+              "claim": {
+                "subject": "team",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available"
+            },
+            {
+              "kind": "holding",
+              "id": "reader-12",
+              "position": {
+                "tick": 3
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "bob",
+              "attitude": "believes",
+              "claim": {
+                "subject": "team",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available"
+            }
+          ],
+          "transitions": []
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "compare",
+        "payload": {
+          "projectId": "p",
+          "a": "bob",
+          "b": "alice",
+          "at": {
+            "axis": "reading",
+            "tick": 12
+          },
+          "atB": {
+            "tick": 10
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "counts": {
+            "shared": 1,
+            "onlyA": 1,
+            "onlyB": 0,
+            "conflicting": 0
+          },
+          "onlyA": [
+            {
+              "a": {
+                "id": "reader-12"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "compare",
+        "payload": {
+          "projectId": "p",
+          "a": "bob",
+          "b": "alice",
+          "at": {
+            "axis": "reading",
+            "tick": 5
+          },
+          "atB": {
+            "tick": 10
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "counts": {
+            "shared": 1,
+            "onlyA": 0,
+            "onlyB": 0,
+            "conflicting": 0
+          }
+        }
+      }
+    }
+  ]
+}

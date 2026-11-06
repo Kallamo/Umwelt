@@ -1,0 +1,21 @@
+Umwelt
+Copyright (C) 2026 Jonathan Ferreira da Conceição
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License only.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero
+General Public License for more details.
+
+The full text of the license is in the LICENSE file.
+
+As an additional permission under section 7 of the GNU Affero General Public
+License, free games, mods, interactive fiction and tabletop play tools that
+make no money may use Umwelt without releasing their own code, on the
+conditions of the Umwelt Free Play Exception in the LICENSE-EXCEPTION.md
+file.
+
+SPDX-License-Identifier: AGPL-3.0-only WITH AdditionRef-Umwelt-Free-Play-Exception

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+[package]
+name = "umwelt-ffi"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+description = "The Umwelt C ABI: the JSON protocol in-process."
+# Distributed as binaries and through the npm and NuGet packages, not on crates.io.
+publish = false
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[features]
+test-panic = []
+
+[dependencies]
+serde_json.workspace = true
+umwelt-api = { path = "../umwelt-api" }
+umwelt-protocol = { path = "../umwelt-protocol" }
+
+[dev-dependencies]
+cbindgen = "0.29"
+tempfile = "3"

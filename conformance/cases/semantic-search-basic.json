@@ -1,0 +1,516 @@
+{
+  "name": "semantic-search-basic",
+  "steps": [
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "project.create",
+        "payload": {
+          "id": "p",
+          "name": "Test",
+          "timescale": "day",
+          "vocabularyMode": "open"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "version": 0
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "agent",
+          "name": "agent",
+          "kind": "agent"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "group",
+          "name": "group",
+          "kind": "group"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "other",
+          "name": "other",
+          "kind": "other"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "alice",
+          "typeId": "agent",
+          "name": "alice"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "bob",
+          "typeId": "agent",
+          "name": "bob"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "team",
+          "typeId": "group",
+          "name": "team"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "item",
+          "typeId": "other",
+          "name": "item"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.define",
+        "payload": {
+          "projectId": "p",
+          "predicate": {
+            "id": "related",
+            "label": "Related",
+            "object": "entity",
+            "cardinality": "many"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "embedding.defineSpace",
+        "payload": {
+          "projectId": "p",
+          "space": {
+            "id": "s",
+            "dimensions": 3,
+            "model": "hand-made"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "id": "s",
+          "dimensions": 3
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "commit",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "a1",
+          "event": {
+            "id": "e-a1",
+            "type": "test",
+            "title": "Mira's lantern",
+            "position": {
+              "tick": 1
+            },
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            }
+          },
+          "records": [
+            {
+              "kind": "holding",
+              "id": "jewel",
+              "position": {
+                "tick": 1
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "alice",
+              "attitude": "believes",
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available",
+              "text": "someone took the jewel"
+            },
+            {
+              "kind": "holding",
+              "id": "rain",
+              "position": {
+                "tick": 1
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "alice",
+              "attitude": "believes",
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available",
+              "text": "it rained all night"
+            },
+            {
+              "kind": "holding",
+              "id": "bob-jewel",
+              "position": {
+                "tick": 1
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "bob",
+              "attitude": "believes",
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available",
+              "text": "the jewel was stolen"
+            }
+          ],
+          "transitions": []
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "embedding.put",
+        "payload": {
+          "projectId": "p",
+          "spaceId": "s",
+          "items": [
+            {
+              "docType": "record",
+              "docId": "jewel",
+              "textHash": "c94bb0eb1650b8d362903510dddc01bbd0df8a556d17bbd63b2db4d307a2e82b",
+              "vector": [
+                1,
+                0.1,
+                0
+              ]
+            },
+            {
+              "docType": "record",
+              "docId": "rain",
+              "textHash": "6a4a27fba456a653a212758eafd2254269acc43015bca64aeb704fe0293215f2",
+              "vector": [
+                0,
+                1,
+                0
+              ]
+            },
+            {
+              "docType": "record",
+              "docId": "bob-jewel",
+              "textHash": "5b3acff943a35eb4041bb663a9e4064a14c564e1938376fc09b367ed4e6df48a",
+              "vector": [
+                1,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "stored": 3,
+          "stale": 0
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "embedding.listSpaces",
+        "payload": {
+          "projectId": "p"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": [
+          {
+            "id": "s",
+            "dimensions": 3,
+            "model": "hand-made"
+          }
+        ]
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "semantic": {
+            "spaceId": "s",
+            "vector": [
+              0,
+              1,
+              0
+            ]
+          },
+          "filter": {
+            "holder": "alice"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docId": "rain",
+              "match": "semantic",
+              "record": {
+                "id": "rain"
+              }
+            },
+            {
+              "docId": "jewel",
+              "match": "semantic"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "semantic": {
+            "spaceId": "s",
+            "vector": [
+              1,
+              0
+            ]
+          }
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "VALIDATION_FAILED"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "semantic": {
+            "spaceId": "missing",
+            "vector": [
+              1,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "NOT_FOUND"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "VALIDATION_FAILED"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "embedding.defineSpace",
+        "payload": {
+          "projectId": "p",
+          "space": {
+            "id": "s",
+            "dimensions": 4,
+            "model": "hand-made"
+          }
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "embedding.dropSpace",
+        "payload": {
+          "projectId": "p",
+          "spaceId": "s"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "removed": 3
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "semantic": {
+            "spaceId": "s",
+            "vector": [
+              1,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "NOT_FOUND"
+        }
+      }
+    }
+  ]
+}

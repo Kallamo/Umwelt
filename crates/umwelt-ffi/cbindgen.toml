@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+language = "C"
+include_guard = "UMWELT_H"
+pragma_once = false
+usize_is_size_t = true
+documentation = true
+style = "both"
+cpp_compat = true
+header = "/* SPDX-License-Identifier: AGPL-3.0-only */\n/* One thread at a time per handle. */\n/* Status: 0 OK, 1 INVALID_ARGUMENT, 2 OPEN_FAILED, 3 POISONED, 4 PANIC. */\n/* Domain errors are JSON envelopes and do not change the umwelt_call status. */\n/* A failed umwelt_open returns a non-null failed handle in *out when possible; call umwelt_last_error, then umwelt_close. */"
+
+[export]
+include = ["umwelt_engine", "umwelt_buf", "umwelt_abi_version", "umwelt_open", "umwelt_open_with_options", "UMWELT_DURABILITY_NORMAL", "UMWELT_DURABILITY_FULL", "umwelt_call", "umwelt_buf_free", "umwelt_last_error", "umwelt_close"]

@@ -1,0 +1,26 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- net6.0 is deliberate: the binding supports hosts that still run on .NET 6. -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+    <!-- Native library build to test: debug by default. -->
+    <UmweltNativeDir Condition="'$(UmweltNativeDir)' == ''">$(MSBuildThisFileDirectory)../../../target/debug/</UmweltNativeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Kallamo.Umwelt/Kallamo.Umwelt.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(UmweltNativeDir)umwelt_ffi.dll" Condition="Exists('$(UmweltNativeDir)umwelt_ffi.dll')" Link="umwelt_ffi.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(UmweltNativeDir)libumwelt_ffi.so" Condition="Exists('$(UmweltNativeDir)libumwelt_ffi.so')" Link="libumwelt_ffi.so" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(UmweltNativeDir)libumwelt_ffi.dylib" Condition="Exists('$(UmweltNativeDir)libumwelt_ffi.dylib')" Link="libumwelt_ffi.dylib" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

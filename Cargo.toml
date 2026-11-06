@@ -1,0 +1,32 @@
+[workspace]
+members = [
+  "crates/umwelt-core",
+  "crates/umwelt-sqlite",
+  "crates/umwelt-api",
+  "crates/umwelt-protocol",
+  "crates/umwelt-ffi",
+  "apps/cli",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Jonathan Ferreira da Conceição <contact@kallamo.com>"]
+edition = "2024"
+license = "AGPL-3.0-only"
+repository = "https://github.com/Kallamo/Umwelt"
+homepage = "https://kallamo.com/umwelt"
+rust-version = "1.85"
+
+[workspace.dependencies]
+schemars = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
+tracing = "0.1"
+uuid = { version = "1", features = ["serde", "v7"] }
+
+[profile.release]
+lto = "thin"
+strip = true

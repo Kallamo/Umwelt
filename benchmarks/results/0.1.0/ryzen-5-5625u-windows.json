@@ -1,0 +1,849 @@
+{
+  "version": "0.1.0",
+  "timestamp": "2026-11-05T22:22:12.930Z",
+  "machine": "ryzen-5-5625u-windows",
+  "cpu": "AMD Ryzen 5 5625U with Radeon Graphics         ",
+  "logicalCpus": 12,
+  "ramBytes": 16540803072,
+  "os": "win32 10.0.22631",
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "dataset": {
+    "profile": "town",
+    "seed": 42,
+    "agents": 40,
+    "days": 3360,
+    "holdings": 504040
+  },
+  "durability": "normal",
+  "methodology": "Criterion release, 10 samples, 500 ms warm-up. sampleMeanP99Ns is a percentile of batch-average durations, not individual-request p99. Individual latencies use a fresh fixture with no separate warm-up: 200 reads, 10 nights, 100 opens.",
+  "timings": {
+    "holds": {
+      "meanNs": 64559.18890445067,
+      "sampleMeanP99Ns": 98004.11764705883,
+      "samples": 10
+    },
+    "holdings_about_50": {
+      "meanNs": 1352842.5058106575,
+      "sampleMeanP99Ns": 1505295,
+      "samples": 10
+    },
+    "who_holds": {
+      "meanNs": 2644191.7046485255,
+      "sampleMeanP99Ns": 2824190.714285714,
+      "samples": 10
+    },
+    "holds_draft_depth_1": {
+      "meanNs": 38840.24605629193,
+      "sampleMeanP99Ns": 41737.42268041237,
+      "samples": 10
+    },
+    "holdings_about_50_draft_depth_1": {
+      "meanNs": 1804697.7167658731,
+      "sampleMeanP99Ns": 2391243.4523809524,
+      "samples": 10
+    },
+    "holds_draft_depth_3": {
+      "meanNs": 101280.6745368528,
+      "sampleMeanP99Ns": 126280.72423398329,
+      "samples": 10
+    },
+    "holdings_about_50_draft_depth_3": {
+      "meanNs": 1530679.7191987908,
+      "sampleMeanP99Ns": 1672776.6666666667,
+      "samples": 10
+    },
+    "commit": {
+      "meanNs": 1449256.4650793653,
+      "sampleMeanP99Ns": 3275100,
+      "samples": 10
+    },
+    "commit_batch_100": {
+      "meanNs": 19301956.36904762,
+      "sampleMeanP99Ns": 24098875,
+      "samples": 10
+    },
+    "transmit_batch_2000": {
+      "meanNs": 464431900,
+      "sampleMeanP99Ns": 493392400,
+      "samples": 10
+    },
+    "witness_scene_40": {
+      "meanNs": 85304213.33333334,
+      "sampleMeanP99Ns": 122520366.66666667,
+      "samples": 10
+    },
+    "adjust_batch_2000": {
+      "meanNs": 470745880,
+      "sampleMeanP99Ns": 507255400,
+      "samples": 10
+    },
+    "open": {
+      "meanNs": 4023907.318253968,
+      "sampleMeanP99Ns": 4936873.333333333,
+      "samples": 10
+    }
+  },
+  "individualLatencies": {
+    "holdings_about_50": {
+      "meanNs": 1359267,
+      "p99Ns": 2158800,
+      "samples": 200
+    },
+    "holds": {
+      "meanNs": 58785.5,
+      "p99Ns": 116300,
+      "samples": 200
+    },
+    "open": {
+      "meanNs": 4078704,
+      "p99Ns": 5137200,
+      "samples": 100
+    },
+    "transmit_batch_2000": {
+      "meanNs": 529298450,
+      "p99Ns": 1314053000,
+      "samples": 10
+    }
+  },
+  "storage": {
+    "fileBytes": 417234944,
+    "objects": [
+      {
+        "bytes": 114876416,
+        "name": "records"
+      },
+      {
+        "bytes": 34525184,
+        "name": "attempts"
+      },
+      {
+        "bytes": 30019584,
+        "name": "claims_holder_key_order"
+      },
+      {
+        "bytes": 29564928,
+        "name": "claims_slot_kind"
+      },
+      {
+        "bytes": 28585984,
+        "name": "claims_holder_predicate_object"
+      },
+      {
+        "bytes": 26025984,
+        "name": "claims_holder_subject_order"
+      },
+      {
+        "bytes": 26025984,
+        "name": "claims_holder_object_order"
+      },
+      {
+        "bytes": 25485312,
+        "name": "claims_key_order"
+      },
+      {
+        "bytes": 25456640,
+        "name": "claims_holder_kind_order"
+      },
+      {
+        "bytes": 23216128,
+        "name": "search_fts_content"
+      },
+      {
+        "bytes": 18849792,
+        "name": "events"
+      },
+      {
+        "bytes": 10321920,
+        "name": "search_fts_data"
+      },
+      {
+        "bytes": 7213056,
+        "name": "change_feed"
+      },
+      {
+        "bytes": 7122944,
+        "name": "acquisitions_source_record"
+      },
+      {
+        "bytes": 5328896,
+        "name": "events_timeline_order"
+      },
+      {
+        "bytes": 4431872,
+        "name": "search_fts_docsize"
+      },
+      {
+        "bytes": 16384,
+        "name": "sqlite_schema"
+      },
+      {
+        "bytes": 12288,
+        "name": "entities"
+      },
+      {
+        "bytes": 4096,
+        "name": "transitions_target_window"
+      },
+      {
+        "bytes": 4096,
+        "name": "transitions_draft"
+      },
+      {
+        "bytes": 4096,
+        "name": "transitions"
+      },
+      {
+        "bytes": 4096,
+        "name": "timelines_parent"
+      },
+      {
+        "bytes": 4096,
+        "name": "timelines"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_sequence"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_timelines_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_proposals_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_proposal_reviews_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_projects_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_predicates_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_evidence_sources_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_entity_types_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_entities_2"
+      },
+      {
+        "bytes": 4096,
+        "name": "sqlite_autoindex_entities_1"
+      },
+      {
+        "bytes": 4096,
+        "name": "search_fts_idx"
+      },
+      {
+        "bytes": 4096,
+        "name": "search_fts_config"
+      },
+      {
+        "bytes": 4096,
+        "name": "records_draft"
+      },
+      {
+        "bytes": 4096,
+        "name": "provenances"
+      },
+      {
+        "bytes": 4096,
+        "name": "proposals"
+      },
+      {
+        "bytes": 4096,
+        "name": "proposal_reviews"
+      },
+      {
+        "bytes": 4096,
+        "name": "projects"
+      },
+      {
+        "bytes": 4096,
+        "name": "predicates"
+      },
+      {
+        "bytes": 4096,
+        "name": "evidence_sources"
+      },
+      {
+        "bytes": 4096,
+        "name": "event_positions_order"
+      },
+      {
+        "bytes": 4096,
+        "name": "event_positions"
+      },
+      {
+        "bytes": 4096,
+        "name": "entity_types"
+      },
+      {
+        "bytes": 4096,
+        "name": "embeddings"
+      },
+      {
+        "bytes": 4096,
+        "name": "embedding_spaces"
+      },
+      {
+        "bytes": 4096,
+        "name": "current_status"
+      },
+      {
+        "bytes": 4096,
+        "name": "claims_withheld"
+      },
+      {
+        "bytes": 4096,
+        "name": "claims_secret"
+      },
+      {
+        "bytes": 4096,
+        "name": "claims_fact_subject_predicate"
+      },
+      {
+        "bytes": 4096,
+        "name": "claims_fact_order"
+      },
+      {
+        "bytes": 4096,
+        "name": "claims_fact_object"
+      },
+      {
+        "bytes": 4096,
+        "name": "change_feed_draft"
+      },
+      {
+        "bytes": 4096,
+        "name": "axes"
+      },
+      {
+        "bytes": 4096,
+        "name": "acquisitions_witnessed"
+      }
+    ]
+  },
+  "axes": {
+    "fixture": "town --reading-axis",
+    "timings": {
+      "holds_main_axis": {
+        "meanNs": 55271.32516625406,
+        "sampleMeanP99Ns": 58110.39755351682,
+        "samples": 10
+      },
+      "holdings_about_50_main_axis": {
+        "meanNs": 1294219.5734861847,
+        "sampleMeanP99Ns": 1355793.827160494,
+        "samples": 10
+      },
+      "holds_reading_axis": {
+        "meanNs": 102440.47039235712,
+        "sampleMeanP99Ns": 110958.81367292225,
+        "samples": 10
+      },
+      "holdings_about_50_reading_axis": {
+        "meanNs": 1674738.1726190478,
+        "sampleMeanP99Ns": 1751716.6666666667,
+        "samples": 10
+      }
+    },
+    "storage": {
+      "fileBytes": 428937216,
+      "objects": [
+        {
+          "bytes": 114876416,
+          "name": "records"
+        },
+        {
+          "bytes": 34525184,
+          "name": "attempts"
+        },
+        {
+          "bytes": 30019584,
+          "name": "claims_holder_key_order"
+        },
+        {
+          "bytes": 29564928,
+          "name": "claims_slot_kind"
+        },
+        {
+          "bytes": 28585984,
+          "name": "claims_holder_predicate_object"
+        },
+        {
+          "bytes": 26025984,
+          "name": "claims_holder_subject_order"
+        },
+        {
+          "bytes": 26025984,
+          "name": "claims_holder_object_order"
+        },
+        {
+          "bytes": 25485312,
+          "name": "claims_key_order"
+        },
+        {
+          "bytes": 25456640,
+          "name": "claims_holder_kind_order"
+        },
+        {
+          "bytes": 23216128,
+          "name": "search_fts_content"
+        },
+        {
+          "bytes": 18849792,
+          "name": "events"
+        },
+        {
+          "bytes": 10321920,
+          "name": "search_fts_data"
+        },
+        {
+          "bytes": 7213056,
+          "name": "change_feed"
+        },
+        {
+          "bytes": 7122944,
+          "name": "acquisitions_source_record"
+        },
+        {
+          "bytes": 5865472,
+          "name": "event_positions_order"
+        },
+        {
+          "bytes": 5844992,
+          "name": "event_positions"
+        },
+        {
+          "bytes": 5328896,
+          "name": "events_timeline_order"
+        },
+        {
+          "bytes": 4431872,
+          "name": "search_fts_docsize"
+        },
+        {
+          "bytes": 16384,
+          "name": "sqlite_schema"
+        },
+        {
+          "bytes": 12288,
+          "name": "entities"
+        },
+        {
+          "bytes": 4096,
+          "name": "transitions_target_window"
+        },
+        {
+          "bytes": 4096,
+          "name": "transitions_draft"
+        },
+        {
+          "bytes": 4096,
+          "name": "transitions"
+        },
+        {
+          "bytes": 4096,
+          "name": "timelines_parent"
+        },
+        {
+          "bytes": 4096,
+          "name": "timelines"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_sequence"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_timelines_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_proposals_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_proposal_reviews_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_projects_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_predicates_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_evidence_sources_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_entity_types_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_entities_2"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_entities_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "search_fts_idx"
+        },
+        {
+          "bytes": 4096,
+          "name": "search_fts_config"
+        },
+        {
+          "bytes": 4096,
+          "name": "records_draft"
+        },
+        {
+          "bytes": 4096,
+          "name": "provenances"
+        },
+        {
+          "bytes": 4096,
+          "name": "proposals"
+        },
+        {
+          "bytes": 4096,
+          "name": "proposal_reviews"
+        },
+        {
+          "bytes": 4096,
+          "name": "projects"
+        },
+        {
+          "bytes": 4096,
+          "name": "predicates"
+        },
+        {
+          "bytes": 4096,
+          "name": "evidence_sources"
+        },
+        {
+          "bytes": 4096,
+          "name": "entity_types"
+        },
+        {
+          "bytes": 4096,
+          "name": "embeddings"
+        },
+        {
+          "bytes": 4096,
+          "name": "embedding_spaces"
+        },
+        {
+          "bytes": 4096,
+          "name": "current_status"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_withheld"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_secret"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_fact_subject_predicate"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_fact_order"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_fact_object"
+        },
+        {
+          "bytes": 4096,
+          "name": "change_feed_draft"
+        },
+        {
+          "bytes": 4096,
+          "name": "axes"
+        },
+        {
+          "bytes": 4096,
+          "name": "acquisitions_witnessed"
+        }
+      ]
+    }
+  },
+  "embeddings": {
+    "fixture": "town --embeddings 384",
+    "timings": {
+      "semantic_holder": {
+        "meanNs": 88481290,
+        "sampleMeanP99Ns": 106236700,
+        "samples": 10
+      },
+      "semantic_narrator": {
+        "meanNs": 864523180,
+        "sampleMeanP99Ns": 893322000,
+        "samples": 10
+      },
+      "hybrid_holder": {
+        "meanNs": 1112032950,
+        "sampleMeanP99Ns": 1227219800,
+        "samples": 10
+      },
+      "put_1000": {
+        "meanNs": 26610291.11904762,
+        "sampleMeanP99Ns": 29682625,
+        "samples": 10
+      }
+    },
+    "storage": {
+      "fileBytes": 1129181184,
+      "objects": [
+        {
+          "bytes": 696877056,
+          "name": "embeddings"
+        },
+        {
+          "bytes": 114876416,
+          "name": "records"
+        },
+        {
+          "bytes": 34525184,
+          "name": "attempts"
+        },
+        {
+          "bytes": 30019584,
+          "name": "claims_holder_key_order"
+        },
+        {
+          "bytes": 29564928,
+          "name": "claims_slot_kind"
+        },
+        {
+          "bytes": 28585984,
+          "name": "claims_holder_predicate_object"
+        },
+        {
+          "bytes": 26025984,
+          "name": "claims_holder_subject_order"
+        },
+        {
+          "bytes": 26025984,
+          "name": "claims_holder_object_order"
+        },
+        {
+          "bytes": 25485312,
+          "name": "claims_key_order"
+        },
+        {
+          "bytes": 25456640,
+          "name": "claims_holder_kind_order"
+        },
+        {
+          "bytes": 23216128,
+          "name": "search_fts_content"
+        },
+        {
+          "bytes": 18849792,
+          "name": "events"
+        },
+        {
+          "bytes": 15069184,
+          "name": "embeddings_doc"
+        },
+        {
+          "bytes": 10321920,
+          "name": "search_fts_data"
+        },
+        {
+          "bytes": 7213056,
+          "name": "change_feed"
+        },
+        {
+          "bytes": 7122944,
+          "name": "acquisitions_source_record"
+        },
+        {
+          "bytes": 5328896,
+          "name": "events_timeline_order"
+        },
+        {
+          "bytes": 4431872,
+          "name": "search_fts_docsize"
+        },
+        {
+          "bytes": 16384,
+          "name": "sqlite_schema"
+        },
+        {
+          "bytes": 12288,
+          "name": "entities"
+        },
+        {
+          "bytes": 4096,
+          "name": "transitions_target_window"
+        },
+        {
+          "bytes": 4096,
+          "name": "transitions_draft"
+        },
+        {
+          "bytes": 4096,
+          "name": "transitions"
+        },
+        {
+          "bytes": 4096,
+          "name": "timelines_parent"
+        },
+        {
+          "bytes": 4096,
+          "name": "timelines"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_sequence"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_timelines_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_proposals_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_proposal_reviews_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_projects_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_predicates_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_evidence_sources_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_entity_types_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_entities_2"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_entities_1"
+        },
+        {
+          "bytes": 4096,
+          "name": "search_fts_idx"
+        },
+        {
+          "bytes": 4096,
+          "name": "search_fts_config"
+        },
+        {
+          "bytes": 4096,
+          "name": "records_draft"
+        },
+        {
+          "bytes": 4096,
+          "name": "provenances"
+        },
+        {
+          "bytes": 4096,
+          "name": "proposals"
+        },
+        {
+          "bytes": 4096,
+          "name": "proposal_reviews"
+        },
+        {
+          "bytes": 4096,
+          "name": "projects"
+        },
+        {
+          "bytes": 4096,
+          "name": "predicates"
+        },
+        {
+          "bytes": 4096,
+          "name": "evidence_sources"
+        },
+        {
+          "bytes": 4096,
+          "name": "event_positions_order"
+        },
+        {
+          "bytes": 4096,
+          "name": "event_positions"
+        },
+        {
+          "bytes": 4096,
+          "name": "entity_types"
+        },
+        {
+          "bytes": 4096,
+          "name": "embedding_spaces"
+        },
+        {
+          "bytes": 4096,
+          "name": "current_status"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_withheld"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_secret"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_fact_subject_predicate"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_fact_order"
+        },
+        {
+          "bytes": 4096,
+          "name": "claims_fact_object"
+        },
+        {
+          "bytes": 4096,
+          "name": "change_feed_draft"
+        },
+        {
+          "bytes": 4096,
+          "name": "axes"
+        },
+        {
+          "bytes": 4096,
+          "name": "acquisitions_witnessed"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "handshake-unsupported",
+  "steps": [
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 2,
+            "max": 3
+          },
+          "client": "future"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "UNSUPPORTED_PROTOCOL"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    }
+  ]
+}
