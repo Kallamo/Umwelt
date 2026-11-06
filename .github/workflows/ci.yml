@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-14, ubuntu-24.04]
+        os: [windows-latest, macos-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -66,13 +66,13 @@ jobs:
             target: ''
             output: target/release
             run: true
-          - os: macos-14
+          - os: macos-latest
             rid: osx-arm64
             library: libumwelt_ffi.dylib
             target: ''
             output: target/release
             run: true
-          - os: macos-14
+          - os: macos-latest
             rid: osx-x64
             library: libumwelt_ffi.dylib
             target: x86_64-apple-darwin
