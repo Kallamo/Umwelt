@@ -93,7 +93,7 @@ jobs:
           path: target/${{ matrix.target }}/release/${{ matrix.file }}
 
   package:
-    needs: [checks, notices, cli]
+    needs: [prepare, checks, notices, cli]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
