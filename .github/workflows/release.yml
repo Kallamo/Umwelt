@@ -6,7 +6,7 @@
 # its section in CHANGELOG.md. Publishing uses trusted publishing (OIDC), not
 # stored tokens: the npm packages and the NuGet organization must trust this
 # workflow, and the NUGET_USER secret names the nuget.org account. A package
-# not yet on npm is published once with the NPM_TOKEN secret instead.
+# not yet on npm is published once by hand (or with the NPM_TOKEN secret).
 name: Release
 
 on:
@@ -179,18 +179,27 @@ jobs:
           dotnet-version: 6.0.x
       # Trusted publishing to npm needs npm 11.5 or newer.
       - run: npm install -g npm@11
-      # npm trusts this workflow only for packages that already exist, so the
-      # first release of a new package needs the NPM_TOKEN secret of the
-      # release environment. npm prefers trusted publishing when it is set up.
+      # npm trusts this workflow only for packages that already exist: a new
+      # package is published once by hand, or with the NPM_TOKEN secret of the
+      # release environment. A version already on npm is skipped, so a release
+      # can be run again after a partial failure.
       - name: Publish to npm, platform packages first
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
+          publish() {
+            spec=$(tar -xzOf "$1" package/package.json | node -p "const p = JSON.parse(require('fs').readFileSync(0, 'utf8')); p.name + '@' + p.version")
+            if npm view "$spec" version > /dev/null 2>&1; then
+              echo "$spec is already on npm."
+            else
+              npm publish "$1" --access public --provenance
+            fi
+          }
           for package in dist/npm/kallamo-umwelt-*-*.tgz; do
-            npm publish "$package" --access public --provenance
+            publish "$package"
           done
-          npm publish "dist/npm/kallamo-umwelt-${{ needs.prepare.outputs.version }}.tgz" --access public --provenance
+          publish "dist/npm/kallamo-umwelt-${{ needs.prepare.outputs.version }}.tgz"
       - id: nuget
         uses: NuGet/login@v1
         with:
