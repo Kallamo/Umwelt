@@ -5,7 +5,8 @@
 # Before tagging: set the version everywhere (npm run check:versions) and date
 # its section in CHANGELOG.md. Publishing uses trusted publishing (OIDC), not
 # stored tokens: the npm packages and the NuGet organization must trust this
-# workflow, and the NUGET_USER secret names the nuget.org account.
+# workflow, and the NUGET_USER secret names the nuget.org account. A package
+# not yet on npm is published once with the NPM_TOKEN secret instead.
 name: Release
 
 on:
@@ -178,13 +179,18 @@ jobs:
           dotnet-version: 6.0.x
       # Trusted publishing to npm needs npm 11.5 or newer.
       - run: npm install -g npm@11
+      # npm trusts this workflow only for packages that already exist, so the
+      # first release of a new package needs the NPM_TOKEN secret of the
+      # release environment. npm prefers trusted publishing when it is set up.
       - name: Publish to npm, platform packages first
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
           for package in dist/npm/kallamo-umwelt-*-*.tgz; do
-            npm publish "$package" --access public
+            npm publish "$package" --access public --provenance
           done
-          npm publish "dist/npm/kallamo-umwelt-${{ needs.prepare.outputs.version }}.tgz" --access public
+          npm publish "dist/npm/kallamo-umwelt-${{ needs.prepare.outputs.version }}.tgz" --access public --provenance
       - id: nuget
         uses: NuGet/login@v1
         with:

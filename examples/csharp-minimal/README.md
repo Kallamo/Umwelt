@@ -22,7 +22,7 @@ The project references the binding's source and copies the native library from
 `target/release` next to the program. A published app references the `Kallamo.Umwelt`
 NuGet package instead, which carries the native library for Windows, Linux and
 macOS. The program prints `Ana knows: True`, `Bob knows: True`,
-`The duchess knows: False` and `The duchess Suspects Ana: 0.6`, and targets
+`The duchess knows: False` and `The duchess suspects Ana: 0.6`, and targets
 .NET 6.
 
 ## Durability
