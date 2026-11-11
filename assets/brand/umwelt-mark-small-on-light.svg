@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="26.46" viewBox="8 17 104 86" role="img" aria-label="Umwelt">
+  <!-- SPDX-License-Identifier: AGPL-3.0-only -->
+  <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="14" x2="106" y1="0" y2="0"><stop offset="0" stop-color="#9c27b0"/><stop offset="0.16" stop-color="#3b82f6"/><stop offset="0.32" stop-color="#19ac9b"/><stop offset="0.48" stop-color="#10b981"/><stop offset="0.66" stop-color="#fbca2d"/><stop offset="0.83" stop-color="#ff8c42"/><stop offset="1" stop-color="#ff5f56"/></linearGradient></defs><g fill="none" stroke-width="15"><path stroke="#1a202c" d="M20 55V25.5M20 49A20 20 0 0 1 60 49V55M60 49A20 20 0 0 1 100 49V55"/><path stroke="url(#g)" d="M100 65V94.5M100 71A20 20 0 0 1 60 71V65M60 71A20 20 0 0 1 20 71V65"/></g>
+</svg>

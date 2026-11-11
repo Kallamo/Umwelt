@@ -13,7 +13,7 @@ use crate::domain::{
     EmbeddingSpace, Entity, EntityType, Event, EvidenceSource, ExternalRef, MAIN_TIMELINE_ID,
     PendingEmbedding, PredicateDef, Project, Proposal, ProposalReview, ProposalStatus, PurgeCounts,
     PutEmbeddingsResult, Record, RecordState, ReviewInput, SearchItem, Timeline, TimelineStatus,
-    Transition, Version, Warning,
+    Transition, Version, Warning, WorldWrite,
 };
 
 /// Which rows a read may see. In main: main rows only. In a draft: the draft's
@@ -116,6 +116,8 @@ pub trait Store: Send {
         reference: &ExternalRef,
     ) -> Result<Option<Entity>>;
     fn put_predicate(&mut self, project_id: &str, predicate: &PredicateDef) -> Result<()>;
+    /// Creates everything a world manifest found missing, in one transaction.
+    fn write_world(&mut self, write: &WorldWrite) -> Result<()>;
     /// Defines an additional axis. Defining the same id with the same label
     /// again returns the stored definition; another label is a `CONFLICT`.
     fn define_axis(&mut self, project_id: &str, axis: &AxisDef) -> Result<AxisDef>;
@@ -283,6 +285,20 @@ pub trait Store: Send {
         tick: i64,
         as_of_version: Version,
     ) -> Result<PerspectiveRecords>;
+    /// The current Disposition of `holder_id` per target and dimension,
+    /// optionally narrowed to one target and/or one dimension, ordered by
+    /// target and dimension.
+    #[allow(clippy::too_many_arguments)]
+    fn dispositions(
+        &self,
+        project_id: &str,
+        scope: &TimelineScope,
+        holder_id: &str,
+        target_id: Option<&str>,
+        dimension: Option<&str>,
+        tick: i64,
+        as_of_version: Version,
+    ) -> Result<Vec<Record>>;
     fn project_window(&self, project_id: &str) -> Result<(Version, i64)>;
     fn entity(&self, project_id: &str, entity_id: &str) -> Result<Entity>;
     fn entities(&self, project_id: &str, limit: u32, cursor: Option<&str>) -> Result<EntityPage>;

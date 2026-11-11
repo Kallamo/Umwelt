@@ -405,8 +405,8 @@ fn write_contract_types_round_trip() {
     let record = RecordInput::Holding {
         common: RecordInputCommon {
             id: Some("record-1".to_owned()),
-            position: position(),
-            provenance: provenance(),
+            position: Some(position()),
+            provenance: Some(provenance()),
         },
         holder: "mara".to_owned(),
         attitude: Attitude::Believes,
@@ -422,8 +422,8 @@ fn write_contract_types_round_trip() {
         target_record_id: "record-1".to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: position(),
-        provenance: provenance(),
+        position: Some(position()),
+        provenance: Some(provenance()),
     };
     let commit = CommitInput {
         timeline_id: None,
@@ -548,6 +548,7 @@ fn read_contract_types_round_trip() {
     });
     round_trip(&HoldsResult {
         holds: true,
+        holds_as: Some(HoldsAs::Same),
         attitude: Some(Attitude::Believes),
         polarity: Some(true),
         confidence: Some(0.8),

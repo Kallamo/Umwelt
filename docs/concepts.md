@@ -127,6 +127,14 @@ of it or nothing. Every commit carries an **attempt id**; sending the same
 commit again with the same attempt id returns the original outcome instead of
 writing twice, so a client can retry safely. An optional **expected version**
 makes the commit fail if the timeline moved since the client last read it.
+A record or a transition that gives no position or provenance takes those of
+its event, and a Holding is `available` with confidence 1 unless it says
+otherwise; who holds it, with which attitude and how it was acquired is always
+stated.
+
+A world's projects, entity types, entities, predicates and axes can be
+declared in one **manifest** (`world.ensure`): it creates what is missing,
+leaves the rest untouched, and can run every time the file is opened.
 
 Higher-level writes build commits for common cases: `transmit` (one holder
 tells another), `witness` (everyone at a scene sees the same claims),

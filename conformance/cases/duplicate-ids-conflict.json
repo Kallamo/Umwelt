@@ -1,0 +1,303 @@
+{
+  "name": "duplicate-ids-conflict",
+  "steps": [
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "project.create",
+        "payload": {
+          "id": "p",
+          "name": "Test",
+          "timescale": "day",
+          "vocabularyMode": "open"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "version": 0
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "agent",
+          "name": "agent",
+          "kind": "agent"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "group",
+          "name": "group",
+          "kind": "group"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "other",
+          "name": "other",
+          "kind": "other"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "alice",
+          "typeId": "agent",
+          "name": "alice"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "bob",
+          "typeId": "agent",
+          "name": "bob"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "team",
+          "typeId": "group",
+          "name": "team"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "item",
+          "typeId": "other",
+          "name": "item"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.define",
+        "payload": {
+          "projectId": "p",
+          "predicate": {
+            "id": "related",
+            "label": "Related",
+            "object": "entity",
+            "cardinality": "many"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "project.create",
+        "payload": {
+          "id": "p",
+          "name": "Again",
+          "timescale": "day"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "agent",
+          "name": "agent",
+          "kind": "agent"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "alice",
+          "typeId": "agent",
+          "name": "alice"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.define",
+        "payload": {
+          "projectId": "p",
+          "predicate": {
+            "id": "related",
+            "label": "Related",
+            "object": "entity",
+            "cardinality": "many"
+          }
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "carol",
+          "typeId": "agent",
+          "name": "carol",
+          "externalRef": {
+            "system": "game",
+            "id": "7"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "dave",
+          "typeId": "agent",
+          "name": "dave",
+          "externalRef": {
+            "system": "game",
+            "id": "7"
+          }
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entity.get",
+        "payload": {
+          "projectId": "p",
+          "entityId": "dave"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "NOT_FOUND"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "project.get",
+        "payload": {
+          "projectId": "p"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "name": "Test"
+        }
+      }
+    }
+  ]
+}

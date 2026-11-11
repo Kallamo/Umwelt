@@ -232,10 +232,103 @@ fn embedding_benchmarks(criterion: &mut Criterion, root: &std::path::Path) {
     group.finish();
 }
 
+/// Reading one Disposition directly against reading the holder's whole
+/// perspective to find it. Only run with `UMWELT_BENCH_DISPOSITIONS=1`. Every
+/// agent gets a trust and a fear toward every other agent, set on three days,
+/// on a copy of the main fixture. There is no target; the numbers document
+/// what `dispositions` saves.
+fn disposition_benchmarks(criterion: &mut Criterion, root: &std::path::Path) {
+    if std::env::var_os("UMWELT_BENCH_DISPOSITIONS").is_none() {
+        return;
+    }
+    let dataset = root.join("target/town.umw");
+    if !dataset.exists() {
+        generator::generate_with(&dataset, "town", 42, generator::Extras::default())
+            .required("generate town");
+    }
+    let working_directory =
+        tempfile::tempdir_in(root.join("target")).required("benchmark directory");
+    let working = working_directory.path().join("dispositions.umw");
+    std::fs::copy(&dataset, &working).required("copy checkpointed fixture");
+    let mut engine = Engine::new(
+        SqliteStore::open(&working).required("open fixture"),
+        Arc::new(FixedClock("2026-01-01T00:00:00Z".into())),
+        Arc::new(UuidV7Gen),
+    );
+    let agent = |index: usize| format!("agent-{index:02}");
+    for (round, tick) in [10_i64, 1_000, 3_000].into_iter().enumerate() {
+        let dispositions = (0..40)
+            .flat_map(|holder| (0..40).map(move |target| (holder, target)))
+            .filter(|(holder, target)| holder != target)
+            .flat_map(|(holder, target)| {
+                ["trust", "fear"].map(|dimension| DispositionSetting {
+                    id: None,
+                    holder: agent(holder),
+                    target: agent(target),
+                    dimension: dimension.to_owned(),
+                    value: serde_json::json!(((holder + target + round) % 10) as f64 / 10.0),
+                })
+            })
+            .collect();
+        engine
+            .set_dispositions(SetDispositionsInput {
+                project_id: "town".into(),
+                attempt_id: format!("bench-dispositions-{round}"),
+                timeline_id: None,
+                expected_version: None,
+                position: Position { tick },
+                on: Default::default(),
+                dispositions,
+                provenance: None,
+            })
+            .required("set dispositions");
+    }
+    let mut group = criterion.benchmark_group("town-dispositions");
+    group
+        .sample_size(10)
+        .warm_up_time(Duration::from_millis(500))
+        .measurement_time(Duration::from_secs(2));
+    group.bench_function("dispositions_one", |b| {
+        b.iter(|| {
+            black_box(
+                engine
+                    .dispositions(
+                        "town",
+                        "agent-00",
+                        Some("agent-07"),
+                        Some("trust"),
+                        At::default(),
+                    )
+                    .required("dispositions"),
+            )
+        })
+    });
+    group.bench_function("dispositions_all", |b| {
+        b.iter(|| {
+            black_box(
+                engine
+                    .dispositions("town", "agent-00", None, None, At::default())
+                    .required("dispositions"),
+            )
+        })
+    });
+    group.bench_function("perspective", |b| {
+        b.iter(|| {
+            black_box(
+                engine
+                    .perspective("town", "agent-00", At::default(), Page::default())
+                    .required("perspective"),
+            )
+        })
+    });
+    group.finish();
+}
+
 fn benchmarks(criterion: &mut Criterion) {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     axis_benchmarks(criterion, &root);
     embedding_benchmarks(criterion, &root);
+    disposition_benchmarks(criterion, &root);
     let dataset = root.join("target/town.umw");
     if !dataset.exists() {
         generator::generate_with(&dataset, "town", 42, generator::Extras::default())

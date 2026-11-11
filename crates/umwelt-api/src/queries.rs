@@ -54,6 +54,20 @@ impl<S: Store> Engine<S> {
             .holdings(project_id, holder, filter, at, page)
     }
 
+    /// The current Dispositions of `holder`, optionally toward one target
+    /// and/or along one dimension.
+    pub fn dispositions(
+        &self,
+        project_id: &str,
+        holder: &str,
+        target: Option<&str>,
+        dimension: Option<&str>,
+        at: At,
+    ) -> Result<Vec<Record>> {
+        self.main_reader()
+            .dispositions(project_id, holder, target, dimension, at)
+    }
+
     pub fn who_holds(
         &self,
         project_id: &str,
@@ -273,6 +287,11 @@ impl<S: Store> TimelineReader<'_, S> {
         at: At,
     ) -> Result<HoldsResult> {
         let (scope, tick, version) = self.resolve_at(project_id, at)?;
+        // A question asked by `claimKey` has no polarity to compare with.
+        let asked_polarity = match &claim_ref {
+            ClaimRef::Claim { claim } => Some(claim.polarity),
+            ClaimRef::ClaimKey { .. } => None,
+        };
         let key = resolve_claim_key(claim_ref);
         match self
             .engine
@@ -281,6 +300,13 @@ impl<S: Store> TimelineReader<'_, S> {
         {
             Some(summary) => Ok(HoldsResult {
                 holds: true,
+                holds_as: asked_polarity.map(|asked| {
+                    if asked == summary.polarity {
+                        HoldsAs::Same
+                    } else {
+                        HoldsAs::Opposite
+                    }
+                }),
                 attitude: Some(summary.attitude),
                 polarity: Some(summary.polarity),
                 confidence: Some(summary.confidence),
@@ -288,6 +314,7 @@ impl<S: Store> TimelineReader<'_, S> {
             }),
             None => Ok(HoldsResult {
                 holds: false,
+                holds_as: None,
                 attitude: None,
                 polarity: None,
                 confidence: None,
@@ -326,6 +353,7 @@ impl<S: Store> TimelineReader<'_, S> {
             .records
             .into_iter()
             .filter(|record| matches_holding_attitudes(record, &filter.attitude))
+            .map(as_its_holder_reads)
             .filter_map(holding_item)
             .collect::<Vec<_>>();
         Ok(HoldingsResult {
@@ -1006,6 +1034,24 @@ impl<S: Store> TimelineReader<'_, S> {
         })
     }
 
+    /// The current Dispositions of `holder`: the newest active value per
+    /// target and dimension, optionally toward one target and/or along one
+    /// dimension, ordered by target and dimension.
+    pub fn dispositions(
+        &self,
+        project_id: &str,
+        holder: &str,
+        target: Option<&str>,
+        dimension: Option<&str>,
+        at: At,
+    ) -> Result<Vec<Record>> {
+        let (scope, tick, version) = self.resolve_at(project_id, at)?;
+        self.engine.store.entity(project_id, holder)?;
+        self.engine
+            .store
+            .dispositions(project_id, &scope, holder, target, dimension, tick, version)
+    }
+
     pub fn compare(&self, project_id: &str, a: &str, b: &str, at: At) -> Result<CompareResult> {
         self.compare_across(project_id, a, b, at.clone(), at)
     }
@@ -1023,8 +1069,16 @@ impl<S: Store> TimelineReader<'_, S> {
     ) -> Result<CompareResult> {
         let (scope, tick, version) = self.resolve_at(project_id, at)?;
         let (scope_b, tick_b, version_b) = self.resolve_at(project_id, at_b)?;
-        let a_records = self.active_holdings(project_id, &scope, a, tick, version)?;
-        let b_records = self.active_holdings(project_id, &scope_b, b, tick_b, version_b)?;
+        let a_records = self
+            .active_holdings(project_id, &scope, a, tick, version)?
+            .into_iter()
+            .map(as_its_holder_reads)
+            .collect();
+        let b_records = self
+            .active_holdings(project_id, &scope_b, b, tick_b, version_b)?
+            .into_iter()
+            .map(as_its_holder_reads)
+            .collect();
         let a_map = latest_by_claim_key(a_records);
         let b_map = latest_by_claim_key(b_records);
         let keys = a_map
@@ -1314,6 +1368,8 @@ impl<S: Store> TimelineReader<'_, S> {
             ));
         }
         let text = text.unwrap_or_default();
+        // A search for one holder is a read on their behalf.
+        let for_holder = filter.holder.is_some();
         let (scope, tick, version) = self.resolve_at(project_id, at)?;
         let limit = page_limit(&page)?;
         let offset = page
@@ -1339,8 +1395,16 @@ impl<S: Store> TimelineReader<'_, S> {
             limit,
             offset,
         })?;
+        let mut items = result.items;
+        if for_holder {
+            for item in &mut items {
+                if let Some(record) = &mut item.record {
+                    record.hide_intent();
+                }
+            }
+        }
         Ok(PageResult {
-            items: result.items,
+            items,
             next_cursor: result
                 .next_offset
                 .map(|offset| encode_text_cursor(&offset.to_string())),
@@ -1620,6 +1684,13 @@ fn resolve_claim_key(reference: ClaimRef) -> String {
     }
 }
 
+/// A record returned to a read made on behalf of its holder. The intent of
+/// whoever told them is the narrator's knowledge: the holder reads `unknown`.
+fn as_its_holder_reads(mut record: Record) -> Record {
+    record.hide_intent();
+    record
+}
+
 fn holding_item(record: Record) -> Option<HoldingItem> {
     let acquisition = match &record {
         Record::Holding { acquisition, .. } => acquisition.clone(),
@@ -1854,7 +1925,7 @@ fn rejection(candidate: &ContextCandidate, reason: ContextRejection) -> ContextR
 }
 
 /// `NOT_FOUND` as `None`; every other error is still an error.
-fn found<T>(result: Result<T>) -> Result<Option<T>> {
+pub(crate) fn found<T>(result: Result<T>) -> Result<Option<T>> {
     match result {
         Ok(value) => Ok(Some(value)),
         Err(error) if error.code == UmweltErrorCode::NotFound => Ok(None),

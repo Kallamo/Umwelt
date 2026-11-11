@@ -4,8 +4,9 @@
 
 The scene of [the getting-started guide](../../docs/getting-started.md) with the
 official .NET binding (`bindings/csharp/Kallamo.Umwelt`): it creates a `.umw`
-file, records that Ana saw Bob steal a necklace, asks who knows it, and shows a
-typed error.
+file, records that Ana saw Bob steal a necklace, asks who knows it (Ana and
+Bob do; the duchess, though present, does not), records the duchess's
+suspicion of Ana the morning after, and shows a typed error.
 
 Build the native library from the repository root, then run the example:
 
@@ -20,7 +21,8 @@ dotnet run --project examples/csharp-minimal/UmweltMinimal.csproj
 The project references the binding's source and copies the native library from
 `target/release` next to the program. A published app references the `Kallamo.Umwelt`
 NuGet package instead, which carries the native library for Windows, Linux and
-macOS. The program prints `Ana knows: True` and `Bob knows: False`, and targets
+macOS. The program prints `Ana knows: True`, `Bob knows: True`,
+`The duchess knows: False` and `The duchess Suspects Ana: 0.6`, and targets
 .NET 6.
 
 ## Durability

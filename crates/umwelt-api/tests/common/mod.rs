@@ -113,8 +113,8 @@ pub fn negated(mut value: Claim) -> Claim {
 pub fn common(id: &str, tick: i64) -> RecordInputCommon {
     RecordInputCommon {
         id: Some(id.to_owned()),
-        position: Position { tick },
-        provenance: provenance(),
+        position: Some(Position { tick }),
+        provenance: Some(provenance()),
     }
 }
 

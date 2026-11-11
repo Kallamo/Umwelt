@@ -36,6 +36,44 @@ Search by words, by meaning (vectors from the client's embedding model) or both 
 
 Without a holder filter, search exposes only active Facts and visible Events. With a holder filter, it exposes only active, available Holdings belonging to that holder. Suppressed and inaccessible Holdings are never returned by search.
 
+## `holds` and polarity
+
+A claim and its negation share one `claimKey`, so `holds` answers
+`holds: true` for a holder who believes the **opposite** of what was asked.
+The result says which case it is:
+
+| `holds` | `holdsAs` | Meaning |
+| --- | --- | --- |
+| `true` | `same` | The holder holds the claim as asked. |
+| `true` | `opposite` | The holder holds its negation. |
+| `false` | absent | The holder holds nothing about it. |
+
+`polarity` is the polarity of the Holding behind the answer. A gate such as
+"does this character know it?" must test `holdsAs == "same"`, not `holds`
+alone, or it treats those who deny a claim as those who know it. A question
+asked by `claimKey` has no polarity, so `holdsAs` is absent and `polarity`
+decides.
+
+## Reads on behalf of a holder
+
+`perspective`, `holdings`, `compare` and `search` with `filter.holder` read
+what a holder holds. In their results the `intent` of a `told-by` acquisition
+is always `unknown`: whether the teller was honest is the narrator's
+knowledge, not the hearer's (invariant 10), and a prompt built from a
+perspective must not tell a model that its character was lied to. The teller
+(`sourceHolderId`, `sourceRecordId`) stays visible. `record`, `trace` and
+`breaches` are narrator reads and return the recorded intent. A holder comes
+to know they were deceived only through a record of their own that says so.
+
+## Dispositions
+
+`dispositions { projectId, holder, target?, dimension?, at?, timelineId? }`
+returns the holder's current Dispositions as records: the newest active value
+per target and dimension, ordered by target and dimension, optionally toward
+one `target` and/or along one `dimension`. It is the Disposition part of
+`perspective`, without the rest. An unknown holder is `NOT_FOUND`; a holder
+with no Disposition answers an empty list.
+
 ## Group membership
 
 `whoHolds` accepts `filter.memberOf`. Membership is read from active

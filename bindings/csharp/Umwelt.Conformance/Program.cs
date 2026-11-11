@@ -42,12 +42,22 @@ catch (Exception error)
     failures++;
     Console.WriteLine($"FAIL sdk-embedding-helpers: {error.Message}");
 }
-Console.WriteLine($"{files.Count + 1 - failures} passed, {failures} failed");
+try
+{
+    Builders.Run(Path.Combine(casesDirectory, "..", "builders.json"));
+    Console.WriteLine("ok   sdk-builders");
+}
+catch (Exception error)
+{
+    failures++;
+    Console.WriteLine($"FAIL sdk-builders: {error.Message}");
+}
+Console.WriteLine($"{files.Count + 2 - failures} passed, {failures} failed");
 return failures == 0 ? 0 : 1;
 
 internal static class Conformance
 {
-    private static readonly JsonSerializerOptions Options = (JsonSerializerOptions)typeof(UmweltEngine).Assembly
+    internal static readonly JsonSerializerOptions Options = (JsonSerializerOptions)typeof(UmweltEngine).Assembly
         .GetType("Kallamo.Umwelt.UmweltJson")!
         .GetField("Options", BindingFlags.NonPublic | BindingFlags.Static)!
         .GetValue(null)!;
@@ -211,8 +221,86 @@ internal static class Conformance
     // JsonNode.DeepClone is .NET 8; this runner targets .NET 6.
     private static JsonNode? Clone(JsonNode? node) => node is null ? null : JsonNode.Parse(node.ToJsonString());
 
-    private static bool NodesEqual(JsonNode? left, JsonNode? right) =>
+    internal static bool NodesEqual(JsonNode? left, JsonNode? right) =>
         Equivalent(JsonSerializer.SerializeToElement(left), JsonSerializer.SerializeToElement(right));
+}
+
+/// <summary>
+/// The hand-written write factories against conformance/builders.json, which
+/// the npm package checks too: both languages must build the same JSON.
+/// </summary>
+internal static class Builders
+{
+    private static readonly Dictionary<string, Func<JsonObject, object>> Factories = new()
+    {
+        ["claim.entity"] = a => Claim.Entity(Text(a, "subject"), Text(a, "predicate"), Text(a, "objectId"), Polarity(a), Qualifiers(a), Optional(a, "about")),
+        ["claim.value"] = a => Claim.Value(Text(a, "subject"), Text(a, "predicate"), JsonSerializer.SerializeToElement(a["value"]), Polarity(a), Qualifiers(a), Optional(a, "about")),
+        ["claim.unary"] = a => Claim.Unary(Text(a, "subject"), Text(a, "predicate"), Polarity(a), Qualifiers(a), Optional(a, "about")),
+        ["claim.holds"] = a => Claim.Holds(Text(a, "holder"), Text(a, "claimKey"), Polarity(a), Qualifiers(a), Optional(a, "about")),
+        ["negate"] = a => Typed<Claim>(a, "claim")!.Negated(),
+        ["at"] = a => Position.At(a["tick"]!.GetValue<long>()),
+        ["by.human"] = a => Provenance.Human(Optional(a, "actorId")),
+        ["by.model"] = a => Provenance.Model(Text(a, "model"), Optional(a, "promptHash")),
+        ["by.system"] = a => Provenance.System(Text(a, "name")),
+        ["by.imported"] = _ => Provenance.Imported(),
+        ["witnessed"] = a => Acquired.Witnessed(Text(a, "eventId")),
+        ["toldBy"] = a => Acquired.ToldBy(Text(a, "sourceHolderId"), Typed<Intent>(a, "intent"), Optional(a, "sourceRecordId")),
+        ["evidence"] = a => Acquired.Evidence(Text(a, "evidenceId")),
+        ["inferred"] = a => Acquired.Inferred(Typed<List<string>>(a, "fromRecordIds")!, Optional(a, "rule")),
+        ["authored"] = _ => Acquired.Authored(),
+        ["fact"] = a => Records.Fact(Typed<Claim>(a, "claim")!, Optional(a, "id"), Typed<Position>(a, "position"), Typed<Provenance>(a, "provenance")),
+        ["knows"] = a => Holding(Records.Knows, a),
+        ["believes"] = a => Holding(Records.Believes, a),
+        ["suspects"] = a => Holding(Records.Suspects, a),
+        ["remembers"] = a => Holding(Records.Remembers, a),
+    };
+
+    private delegate RecordInput.Holding HoldingFactory(string holder, Claim claim, Acquisition acquisition, string? id, Position? position, Provenance? provenance, double? confidence, Accessibility? accessibility, string? text, Secrecy? secrecy);
+
+    public static void Run(string path)
+    {
+        var lines = JsonNode.Parse(File.ReadAllText(path))!.AsArray();
+        var called = new HashSet<string>();
+        var index = 0;
+        foreach (var line in lines)
+        {
+            index++;
+            var call = line!["call"]!.GetValue<string>();
+            called.Add(call);
+            if (!Factories.TryGetValue(call, out var factory))
+            {
+                throw new InvalidOperationException($"line {index}: no .NET factory for '{call}'.");
+            }
+            var built = factory(line["args"]!.AsObject());
+            var actual = JsonSerializer.SerializeToNode(built, built.GetType().BaseType is { IsAbstract: true } parent ? parent : built.GetType(), Conformance.Options);
+            if (!Conformance.NodesEqual(line["expect"], actual))
+            {
+                throw new InvalidOperationException($"line {index} {call}: expected {line["expect"]!.ToJsonString()} got {actual?.ToJsonString()}");
+            }
+        }
+        var unused = Factories.Keys.Where(name => !called.Contains(name)).ToList();
+        if (unused.Count > 0)
+        {
+            throw new InvalidOperationException($"no line in builders.json for {string.Join(", ", unused)}.");
+        }
+    }
+
+    private static RecordInput.Holding Holding(HoldingFactory factory, JsonObject a) => factory(
+        Text(a, "holder"), Typed<Claim>(a, "claim")!, Typed<Acquisition>(a, "acquisition")!, Optional(a, "id"),
+        Typed<Position>(a, "position"), Typed<Provenance>(a, "provenance"), a["confidence"]?.GetValue<double>(),
+        a.ContainsKey("accessibility") ? Typed<Accessibility>(a, "accessibility") : null, Optional(a, "text"), Typed<Secrecy>(a, "secrecy"));
+
+    private static string Text(JsonObject args, string name) => args[name]!.GetValue<string>();
+
+    private static string? Optional(JsonObject args, string name) => args[name]?.GetValue<string>();
+
+    private static bool Polarity(JsonObject args) => args["polarity"]?.GetValue<bool>() ?? true;
+
+    private static T? Typed<T>(JsonObject args, string name) =>
+        args[name] is { } node ? node.Deserialize<T>(Conformance.Options) : default;
+
+    private static Dictionary<string, object?>? Qualifiers(JsonObject args) =>
+        args["qualifiers"]?.AsObject().ToDictionary(pair => pair.Key, pair => (object?)JsonSerializer.SerializeToElement(pair.Value));
 }
 
 /// <summary>

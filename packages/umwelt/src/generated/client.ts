@@ -11,12 +11,14 @@ export class UmweltClient {
   canon(payload: T.CanonPayload): Promise<T.RecordPageResult> { return this.transport.request("canon", payload); }
   changes(payload: T.ChangesPayload): Promise<T.ChangePageResult> { return this.transport.request("changes", payload); }
   checkUtterance(payload: T.CheckUtteranceInput): Promise<T.CheckUtteranceResult> { return this.transport.request("check.utterance", payload); }
+  claimKey(payload: T.ClaimKeyPayload): Promise<T.ClaimKeyResult> { return this.transport.request("claim.key", payload); }
   commit(payload: T.CommitInput): Promise<T.CommitOutcome> { return this.transport.request("commit", payload); }
   commitBatch(payload: T.CommitBatchPayload): Promise<T.CommitBatchResult> { return this.transport.request("commitBatch", payload); }
   compare(payload: T.ComparePayload): Promise<T.CompareResult> { return this.transport.request("compare", payload); }
   contextAdmit(payload: T.ContextAdmitInput): Promise<T.ContextAdmitResult> { return this.transport.request("context.admit", payload); }
   contradictions(payload: T.HolderAt): Promise<T.ContradictionsResult> { return this.transport.request("contradictions", payload); }
   dispositionSetBatch(payload: T.SetDispositionsInput): Promise<T.CommitOutcome> { return this.transport.request("disposition.setBatch", payload); }
+  dispositions(payload: T.DispositionsPayload): Promise<T.DispositionsResult> { return this.transport.request("dispositions", payload); }
   embeddingDefineSpace(payload: T.DefineEmbeddingSpaceInput): Promise<T.EmbeddingSpace> { return this.transport.request("embedding.defineSpace", payload); }
   embeddingDelete(payload: T.DeleteEmbeddingsInput): Promise<T.DeleteEmbeddingsResult> { return this.transport.request("embedding.delete", payload); }
   embeddingDropSpace(payload: T.EmbeddingSpaceRef): Promise<T.DropEmbeddingSpaceResult> { return this.transport.request("embedding.dropSpace", payload); }
@@ -71,5 +73,6 @@ export class UmweltClient {
   transmitBatch(payload: T.TransmitBatchPayload): Promise<T.TransmitBatchResult> { return this.transport.request("transmitBatch", payload); }
   whoHolds(payload: T.WhoHoldsPayload): Promise<T.WhoHoldsResult> { return this.transport.request("whoHolds", payload); }
   witness(payload: T.WitnessInput): Promise<T.CommitOutcome> { return this.transport.request("witness", payload); }
+  worldEnsure(payload: T.EnsureWorldInput): Promise<T.EnsureWorldResult> { return this.transport.request("world.ensure", payload); }
   close(): Promise<void> { return this.transport.close(); }
 }

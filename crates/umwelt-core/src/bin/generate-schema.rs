@@ -146,6 +146,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         SetDispositionsInput,
         DispositionSetting,
         TransitionBatchInput,
+        BatchTransitionStatus,
         AdjustHoldingsInput,
         HoldingAdjustment,
         GroupCoverageResult,
@@ -162,6 +163,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         OpenDraftInput,
         PurgeCounts,
         PurgeResult,
+        HoldsAs,
+        ClaimKeyResult,
+        TransmitShared,
+        TransmitBatchItem,
+        WorldProject,
+        WorldEntityType,
+        WorldEntity,
+        EnsureWorldInput,
+        WorldCreated,
+        EnsureWorldResult,
+        WorldDivergence,
     );
     insert_schema::<PageResult<Record>>(&mut definitions, "RecordPageResult")?;
     insert_schema::<PageResult<Event>>(&mut definitions, "EventPageResult")?;

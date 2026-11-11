@@ -1,0 +1,671 @@
+[
+  {
+    "call": "claim.entity",
+    "args": {
+      "subject": "bob",
+      "predicate": "stole",
+      "objectId": "necklace"
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "stole",
+      "object": {
+        "kind": "entity",
+        "id": "necklace"
+      },
+      "polarity": true
+    }
+  },
+  {
+    "call": "claim.entity",
+    "args": {
+      "subject": "bob",
+      "predicate": "stole",
+      "objectId": "necklace",
+      "polarity": false,
+      "qualifiers": {
+        "where": "ballroom",
+        "times": 2
+      },
+      "about": "r1"
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "stole",
+      "object": {
+        "kind": "entity",
+        "id": "necklace"
+      },
+      "polarity": false,
+      "qualifiers": {
+        "where": "ballroom",
+        "times": 2
+      },
+      "about": "r1"
+    }
+  },
+  {
+    "call": "claim.value",
+    "args": {
+      "subject": "bob",
+      "predicate": "age",
+      "value": 42
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "age",
+      "object": {
+        "kind": "value",
+        "value": 42
+      },
+      "polarity": true
+    }
+  },
+  {
+    "call": "claim.value",
+    "args": {
+      "subject": "bob",
+      "predicate": "umwelt:name",
+      "value": "The Stranger",
+      "polarity": false
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "umwelt:name",
+      "object": {
+        "kind": "value",
+        "value": "The Stranger"
+      },
+      "polarity": false
+    }
+  },
+  {
+    "call": "claim.value",
+    "args": {
+      "subject": "bob",
+      "predicate": "umwelt:holds",
+      "value": {
+        "claimKey": "abc"
+      }
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "umwelt:holds",
+      "object": {
+        "kind": "value",
+        "value": {
+          "claimKey": "abc"
+        }
+      },
+      "polarity": true
+    }
+  },
+  {
+    "call": "claim.unary",
+    "args": {
+      "subject": "bob",
+      "predicate": "asleep"
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "asleep",
+      "object": {
+        "kind": "none"
+      },
+      "polarity": true
+    }
+  },
+  {
+    "call": "claim.unary",
+    "args": {
+      "subject": "bob",
+      "predicate": "asleep",
+      "about": "r1"
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "asleep",
+      "object": {
+        "kind": "none"
+      },
+      "polarity": true,
+      "about": "r1"
+    }
+  },
+  {
+    "call": "claim.holds",
+    "args": {
+      "holder": "crown",
+      "claimKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "expect": {
+      "subject": "crown",
+      "predicate": "umwelt:holds",
+      "object": {
+        "kind": "value",
+        "value": {
+          "claimKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "polarity": true
+    }
+  },
+  {
+    "call": "claim.holds",
+    "args": {
+      "holder": "crown",
+      "claimKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "polarity": false
+    },
+    "expect": {
+      "subject": "crown",
+      "predicate": "umwelt:holds",
+      "object": {
+        "kind": "value",
+        "value": {
+          "claimKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "polarity": false
+    }
+  },
+  {
+    "call": "negate",
+    "args": {
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      }
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "stole",
+      "object": {
+        "kind": "entity",
+        "id": "necklace"
+      },
+      "polarity": false
+    }
+  },
+  {
+    "call": "negate",
+    "args": {
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": false,
+        "about": "r1"
+      }
+    },
+    "expect": {
+      "subject": "bob",
+      "predicate": "stole",
+      "object": {
+        "kind": "entity",
+        "id": "necklace"
+      },
+      "polarity": true,
+      "about": "r1"
+    }
+  },
+  {
+    "call": "at",
+    "args": {
+      "tick": 7
+    },
+    "expect": {
+      "tick": 7
+    }
+  },
+  {
+    "call": "by.human",
+    "args": {},
+    "expect": {
+      "origin": {
+        "kind": "human"
+      }
+    }
+  },
+  {
+    "call": "by.human",
+    "args": {
+      "actorId": "author"
+    },
+    "expect": {
+      "origin": {
+        "kind": "human",
+        "actorId": "author"
+      }
+    }
+  },
+  {
+    "call": "by.model",
+    "args": {
+      "model": "some-model"
+    },
+    "expect": {
+      "origin": {
+        "kind": "model",
+        "model": "some-model"
+      }
+    }
+  },
+  {
+    "call": "by.model",
+    "args": {
+      "model": "some-model",
+      "promptHash": "h1"
+    },
+    "expect": {
+      "origin": {
+        "kind": "model",
+        "model": "some-model",
+        "promptHash": "h1"
+      }
+    }
+  },
+  {
+    "call": "by.system",
+    "args": {
+      "name": "night-job"
+    },
+    "expect": {
+      "origin": {
+        "kind": "system",
+        "name": "night-job"
+      }
+    }
+  },
+  {
+    "call": "by.imported",
+    "args": {},
+    "expect": {
+      "origin": {
+        "kind": "import"
+      }
+    }
+  },
+  {
+    "call": "witnessed",
+    "args": {
+      "eventId": "scene-1"
+    },
+    "expect": {
+      "kind": "witnessed",
+      "eventId": "scene-1"
+    }
+  },
+  {
+    "call": "toldBy",
+    "args": {
+      "sourceHolderId": "ana",
+      "intent": "honest"
+    },
+    "expect": {
+      "kind": "told-by",
+      "sourceHolderId": "ana",
+      "intent": "honest"
+    }
+  },
+  {
+    "call": "toldBy",
+    "args": {
+      "sourceHolderId": "ana",
+      "intent": "deceptive",
+      "sourceRecordId": "ana-saw"
+    },
+    "expect": {
+      "kind": "told-by",
+      "sourceHolderId": "ana",
+      "intent": "deceptive",
+      "sourceRecordId": "ana-saw"
+    }
+  },
+  {
+    "call": "evidence",
+    "args": {
+      "evidenceId": "letter"
+    },
+    "expect": {
+      "kind": "evidence",
+      "evidenceId": "letter"
+    }
+  },
+  {
+    "call": "inferred",
+    "args": {
+      "fromRecordIds": [
+        "r1",
+        "r2"
+      ]
+    },
+    "expect": {
+      "kind": "inferred",
+      "fromRecordIds": [
+        "r1",
+        "r2"
+      ]
+    }
+  },
+  {
+    "call": "inferred",
+    "args": {
+      "fromRecordIds": [
+        "r1"
+      ],
+      "rule": "motive"
+    },
+    "expect": {
+      "kind": "inferred",
+      "fromRecordIds": [
+        "r1"
+      ],
+      "rule": "motive"
+    }
+  },
+  {
+    "call": "authored",
+    "args": {},
+    "expect": {
+      "kind": "authored"
+    }
+  },
+  {
+    "call": "fact",
+    "args": {
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      }
+    },
+    "expect": {
+      "kind": "fact",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      }
+    }
+  },
+  {
+    "call": "fact",
+    "args": {
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "id": "theft",
+      "position": {
+        "tick": 3
+      },
+      "provenance": {
+        "origin": {
+          "kind": "human"
+        }
+      }
+    },
+    "expect": {
+      "kind": "fact",
+      "id": "theft",
+      "position": {
+        "tick": 3
+      },
+      "provenance": {
+        "origin": {
+          "kind": "human"
+        }
+      },
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      }
+    }
+  },
+  {
+    "call": "knows",
+    "args": {
+      "holder": "ana",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "witnessed",
+        "eventId": "scene-1"
+      }
+    },
+    "expect": {
+      "kind": "holding",
+      "holder": "ana",
+      "attitude": "knows",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "witnessed",
+        "eventId": "scene-1"
+      }
+    }
+  },
+  {
+    "call": "knows",
+    "args": {
+      "holder": "ana",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "witnessed",
+        "eventId": "scene-1"
+      },
+      "id": "ana-saw",
+      "position": {
+        "tick": 3
+      },
+      "provenance": {
+        "origin": {
+          "kind": "human"
+        }
+      },
+      "confidence": 0.5,
+      "accessibility": "suppressed",
+      "text": "She saw him take it.",
+      "secrecy": {
+        "sharedWith": [
+          "bob"
+        ]
+      }
+    },
+    "expect": {
+      "kind": "holding",
+      "id": "ana-saw",
+      "position": {
+        "tick": 3
+      },
+      "provenance": {
+        "origin": {
+          "kind": "human"
+        }
+      },
+      "holder": "ana",
+      "attitude": "knows",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "witnessed",
+        "eventId": "scene-1"
+      },
+      "confidence": 0.5,
+      "accessibility": "suppressed",
+      "text": "She saw him take it.",
+      "secrecy": {
+        "sharedWith": [
+          "bob"
+        ]
+      }
+    }
+  },
+  {
+    "call": "believes",
+    "args": {
+      "holder": "ana",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "authored"
+      }
+    },
+    "expect": {
+      "kind": "holding",
+      "holder": "ana",
+      "attitude": "believes",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "authored"
+      }
+    }
+  },
+  {
+    "call": "suspects",
+    "args": {
+      "holder": "ana",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "authored"
+      },
+      "confidence": 0.3
+    },
+    "expect": {
+      "kind": "holding",
+      "holder": "ana",
+      "attitude": "suspects",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "authored"
+      },
+      "confidence": 0.3
+    }
+  },
+  {
+    "call": "remembers",
+    "args": {
+      "holder": "ana",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "witnessed",
+        "eventId": "scene-1"
+      },
+      "id": "memory"
+    },
+    "expect": {
+      "kind": "holding",
+      "id": "memory",
+      "holder": "ana",
+      "attitude": "remembers",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "acquisition": {
+        "kind": "witnessed",
+        "eventId": "scene-1"
+      }
+    }
+  }
+]

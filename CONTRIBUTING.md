@@ -31,10 +31,12 @@ This document explains how to get involved and what to expect.
 
 ## Code of conduct
 
-Be respectful, be constructive, and assume good faith. Harassment, personal
-attacks or dismissive behavior toward other contributors are not tolerated. If
-something feels off, reach out on [Discord](https://discord.com/invite/CE4C9JRS9H)
-or at contact@kallamo.com.
+Everyone who takes part in Umwelt follows the
+[Kallamo Code of Conduct](CODE_OF_CONDUCT.md). In short: be respectful, be
+constructive, and assume good faith. Harassment, personal attacks or
+dismissive behavior toward other contributors are not tolerated. To report
+something, write to conduct@kallamo.com or message a moderator on
+[Discord](https://discord.com/invite/CE4C9JRS9H).
 
 ## Ways to contribute
 

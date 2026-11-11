@@ -58,7 +58,7 @@ record ids were generated.
 | Operation | Effect |
 | --- | --- |
 | `holding.adjustBatch` | Each adjustment supersedes an active Holding with a copy carrying a new `confidence`, `accessibility` and/or `attitude` (optionally with `newRecordId`). |
-| `transition.batch` | One status (`retracted`, `revoked`, `forgotten`, `abandoned`) for many records. `superseded` is refused: use `holding.adjustBatch`. |
+| `transition.batch` | One status for many records. Its `status` is a `BatchTransitionStatus`: `retracted`, `revoked`, `forgotten` or `abandoned`. `superseded`, which needs a replacement record, is not one of them and is refused with `VALIDATION_FAILED`: use `holding.adjustBatch`. |
 | `disposition.setBatch` | Many Disposition values (`holder`, `target`, `dimension`, `value`). The newest per holder, target and dimension is the current one. |
 
 Each is one commit with one engine event of type `umwelt:adjust`,
@@ -91,6 +91,11 @@ negated claim means "Alice believes Bob does not".
 `beliefsAbout { holder, about, at }` lists the holder's `umwelt:holds`
 Holdings about `about`, each with `actuallyHolds` and `actualRecordId`: what
 `about` really holds at the same position.
+
+`claim.key { claim }` returns `{ claimKey, slotKey }`, the keys of
+[claim-key.md](claim-key.md), without reading the file. Clients take the key
+from this operation rather than hashing the claim themselves: the canonical
+form distinguishes `1` from `1.0`, which not every language can.
 
 ## Secrets
 

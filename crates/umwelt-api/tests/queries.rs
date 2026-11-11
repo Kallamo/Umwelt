@@ -105,8 +105,8 @@ fn claim(subject: &str, predicate: &str, object: &str, polarity: bool) -> Claim 
 fn common(id: &str, tick: i64) -> RecordInputCommon {
     RecordInputCommon {
         id: Some(id.to_owned()),
-        position: Position { tick },
-        provenance: provenance(),
+        position: Some(Position { tick }),
+        provenance: Some(provenance()),
     }
 }
 

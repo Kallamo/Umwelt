@@ -119,7 +119,7 @@ internal sealed class AcquisitionConverter : JsonConverter<Acquisition>
 /// Adjusts many Holdings in one commit, e.g. a night of memory decay. How much
 /// anything decays is the client's policy.
 /// </summary>
-public sealed class AdjustHoldingsInput
+public sealed partial class AdjustHoldingsInput
 {
     [JsonPropertyName("adjustments")]
     public List<HoldingAdjustment> Adjustments { get; set; } = new();
@@ -153,7 +153,7 @@ public sealed class AdjustHoldingsInput
     public string? TimelineId { get; set; }
 }
 
-public sealed class ApplyPayload
+public sealed partial class ApplyPayload
 {
     [JsonPropertyName("attemptId")]
     public string AttemptId { get; set; } = default!;
@@ -166,7 +166,7 @@ public sealed class ApplyPayload
 /// A read position. `tick` is on the main axis unless `axis` names an
 /// additional axis (`axis.define`); then it is a position on that axis.
 /// </summary>
-public sealed class At
+public sealed partial class At
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("asOfVersion")]
@@ -217,7 +217,7 @@ internal sealed class AttitudeConverter : JsonConverter<Attitude>
 /// An additional order of time, such as reading order next to story order.
 /// The main axis (`Position.tick`) is implicit and has no definition.
 /// </summary>
-public sealed class AxisDef
+public sealed partial class AxisDef
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = default!;
@@ -227,10 +227,43 @@ public sealed class AxisDef
 }
 
 /// <summary>
+/// The statuses `transition.batch` applies. `superseded` is not one of them:
+/// it needs a replacement record, which `holding.adjustBatch` writes.
+/// </summary>
+public enum BatchTransitionStatus
+{
+    Retracted,
+    Revoked,
+    Forgotten,
+    Abandoned,
+}
+
+internal sealed class BatchTransitionStatusConverter : JsonConverter<BatchTransitionStatus>
+{
+    public override BatchTransitionStatus Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => reader.GetString() switch
+    {
+        "retracted" => BatchTransitionStatus.Retracted,
+        "revoked" => BatchTransitionStatus.Revoked,
+        "forgotten" => BatchTransitionStatus.Forgotten,
+        "abandoned" => BatchTransitionStatus.Abandoned,
+        var other => throw new JsonException($"Unknown BatchTransitionStatus '{other}'."),
+    };
+
+    public override void Write(Utf8JsonWriter writer, BatchTransitionStatus value, JsonSerializerOptions options) => writer.WriteStringValue(value switch
+    {
+        BatchTransitionStatus.Retracted => "retracted",
+        BatchTransitionStatus.Revoked => "revoked",
+        BatchTransitionStatus.Forgotten => "forgotten",
+        BatchTransitionStatus.Abandoned => "abandoned",
+        _ => throw new JsonException($"Unknown BatchTransitionStatus {value}."),
+    });
+}
+
+/// <summary>
 /// What a holder thinks another holder knows (`umwelt:holds` Holdings), next
 /// to what the other holder actually holds at the same position.
 /// </summary>
-public sealed class BeliefAboutItem
+public sealed partial class BeliefAboutItem
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("actualRecordId")]
@@ -264,7 +297,7 @@ public sealed class BeliefAboutItem
     public string RecordId { get; set; } = default!;
 }
 
-public sealed class BeliefsAboutPayload
+public sealed partial class BeliefsAboutPayload
 {
     /// <summary>
     /// The other holder whose knowledge `holder` has beliefs about.
@@ -293,7 +326,7 @@ public sealed class BeliefsAboutPayload
 /// <summary>
 /// A secret told to someone outside its circle.
 /// </summary>
-public sealed class Breach
+public sealed partial class Breach
 {
     [JsonPropertyName("eventId")]
     public string EventId { get; set; } = default!;
@@ -326,7 +359,7 @@ public sealed class Breach
     public string ToldBy { get; set; } = default!;
 }
 
-public sealed class BreachesPayload
+public sealed partial class BreachesPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -350,7 +383,7 @@ public sealed class BreachesPayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class CanonFilter
+public sealed partial class CanonFilter
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("object")]
@@ -365,7 +398,7 @@ public sealed class CanonFilter
     public string? Subject { get; set; }
 }
 
-public sealed class CanonPayload
+public sealed partial class CanonPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -442,7 +475,7 @@ internal sealed class CardinalityConverter : JsonConverter<Cardinality>
     });
 }
 
-public sealed class ChainLink
+public sealed partial class ChainLink
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("acquisition")]
@@ -452,7 +485,7 @@ public sealed class ChainLink
     public Record Record { get; set; } = default!;
 }
 
-public sealed class ChangeItem
+public sealed partial class ChangeItem
 {
     [JsonPropertyName("payload")]
     public JsonElement Payload { get; set; }
@@ -470,7 +503,7 @@ public sealed class ChangeItem
     public ulong Version { get; set; }
 }
 
-public sealed class ChangePageResult
+public sealed partial class ChangePageResult
 {
     [JsonPropertyName("items")]
     public List<ChangeItem> Items { get; set; } = new();
@@ -480,7 +513,7 @@ public sealed class ChangePageResult
     public string? NextCursor { get; set; }
 }
 
-public sealed class ChangesPayload
+public sealed partial class ChangesPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("limit")]
@@ -506,7 +539,7 @@ public sealed class ChangesPayload
 /// The claims come from the client (or a model it runs): the engine never
 /// reads free text.
 /// </summary>
-public sealed class CheckUtteranceInput
+public sealed partial class CheckUtteranceInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -529,7 +562,7 @@ public sealed class CheckUtteranceInput
     public string? TimelineId { get; set; }
 }
 
-public sealed class CheckUtteranceResult
+public sealed partial class CheckUtteranceResult
 {
     /// <summary>
     /// Every claim has the verdict `holds` with the same polarity.
@@ -541,7 +574,7 @@ public sealed class CheckUtteranceResult
     public List<UtteranceCheck> Items { get; set; } = new();
 }
 
-public sealed class Claim
+public sealed partial class Claim
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("about")]
@@ -562,6 +595,30 @@ public sealed class Claim
 
     [JsonPropertyName("subject")]
     public string Subject { get; set; } = default!;
+}
+
+public sealed partial class ClaimKeyPayload
+{
+    [JsonPropertyName("claim")]
+    public Claim Claim { get; set; } = default!;
+}
+
+/// <summary>
+/// The keys the engine derives from a claim (`spec/claim-key.md`).
+/// </summary>
+public sealed partial class ClaimKeyResult
+{
+    /// <summary>
+    /// Identifies the claim whatever its polarity.
+    /// </summary>
+    [JsonPropertyName("claimKey")]
+    public string ClaimKey { get; set; } = default!;
+
+    /// <summary>
+    /// Identifies the subject and predicate.
+    /// </summary>
+    [JsonPropertyName("slotKey")]
+    public string SlotKey { get; set; } = default!;
 }
 
 public abstract class ClaimObject
@@ -628,13 +685,13 @@ public sealed class ClaimRef
     public string? ClaimKey { get; set; }
 }
 
-public sealed class CommitBatchPayload
+public sealed partial class CommitBatchPayload
 {
     [JsonPropertyName("commits")]
     public List<CommitInput> Commits { get; set; } = new();
 }
 
-public sealed class CommitInput
+public sealed partial class CommitInput
 {
     [JsonPropertyName("attemptId")]
     public string AttemptId { get; set; } = default!;
@@ -665,7 +722,7 @@ public sealed class CommitInput
     public List<TransitionInput>? Transitions { get; set; }
 }
 
-public sealed class CommitOutcome
+public sealed partial class CommitOutcome
 {
     [JsonPropertyName("eventId")]
     public string EventId { get; set; } = default!;
@@ -684,7 +741,7 @@ public sealed class CommitOutcome
     public List<Warning>? Warnings { get; set; }
 }
 
-public sealed class CompareCounts
+public sealed partial class CompareCounts
 {
     [JsonPropertyName("conflicting")]
     public ulong Conflicting { get; set; }
@@ -699,7 +756,7 @@ public sealed class CompareCounts
     public ulong Shared { get; set; }
 }
 
-public sealed class CompareEntry
+public sealed partial class CompareEntry
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("a")]
@@ -713,7 +770,7 @@ public sealed class CompareEntry
     public string ClaimKey { get; set; } = default!;
 }
 
-public sealed class ComparePayload
+public sealed partial class ComparePayload
 {
     [JsonPropertyName("a")]
     public string A { get; set; } = default!;
@@ -743,7 +800,7 @@ public sealed class ComparePayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class CompareResult
+public sealed partial class CompareResult
 {
     [JsonPropertyName("conflicting")]
     public List<CompareEntry> Conflicting { get; set; } = new();
@@ -766,7 +823,7 @@ public sealed class CompareResult
 /// Without `holder` the perspective is the narrator's, who sees everything
 /// visible at the position.
 /// </summary>
-public sealed class ContextAdmitInput
+public sealed partial class ContextAdmitInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -810,7 +867,7 @@ public sealed class ContextAdmitInput
     public string? TimelineId { get; set; }
 }
 
-public sealed class ContextAdmitResult
+public sealed partial class ContextAdmitResult
 {
     /// <summary>
     /// Admitted candidates, highest priority first (ties keep input order).
@@ -828,7 +885,7 @@ public sealed class ContextAdmitResult
     public ulong UsedBudget { get; set; }
 }
 
-public sealed class ContextAdmitted
+public sealed partial class ContextAdmitted
 {
     [JsonPropertyName("cost")]
     public uint Cost { get; set; }
@@ -852,7 +909,7 @@ public sealed class ContextAdmitted
 /// Something a client wants to put in a context (a prompt, a scene brief).
 /// Exactly one of `recordId` and `eventId` is given.
 /// </summary>
-public sealed class ContextCandidate
+public sealed partial class ContextCandidate
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("classification")]
@@ -887,7 +944,7 @@ public sealed class ContextCandidate
     public string? RecordId { get; set; }
 }
 
-public sealed class ContextRejected
+public sealed partial class ContextRejected
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("eventId")]
@@ -986,7 +1043,7 @@ internal sealed class ContextRejectionConverter : JsonConverter<ContextRejection
     });
 }
 
-public sealed class Contradiction
+public sealed partial class Contradiction
 {
     [JsonPropertyName("holdingId")]
     public string HoldingId { get; set; } = default!;
@@ -1047,7 +1104,7 @@ internal sealed class ContradictionReasonConverter : JsonConverter<Contradiction
     });
 }
 
-public sealed class CreateEntityInput
+public sealed partial class CreateEntityInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("aliases")]
@@ -1079,7 +1136,7 @@ public sealed class CreateEntityInput
     public string TypeId { get; set; } = default!;
 }
 
-public sealed class CreateEntityTypeInput
+public sealed partial class CreateEntityTypeInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("fields")]
@@ -1099,7 +1156,7 @@ public sealed class CreateEntityTypeInput
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class CreateProjectInput
+public sealed partial class CreateProjectInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("description")]
@@ -1120,7 +1177,7 @@ public sealed class CreateProjectInput
     public VocabularyMode? VocabularyMode { get; set; }
 }
 
-public sealed class DefineAxisInput
+public sealed partial class DefineAxisInput
 {
     [JsonPropertyName("axis")]
     public AxisDef Axis { get; set; } = default!;
@@ -1129,7 +1186,7 @@ public sealed class DefineAxisInput
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class DefineEmbeddingSpaceInput
+public sealed partial class DefineEmbeddingSpaceInput
 {
     [JsonPropertyName("projectId")]
     public string ProjectId { get; set; } = default!;
@@ -1138,7 +1195,7 @@ public sealed class DefineEmbeddingSpaceInput
     public EmbeddingSpace Space { get; set; } = default!;
 }
 
-public sealed class DefinePredicateInput
+public sealed partial class DefinePredicateInput
 {
     [JsonPropertyName("predicate")]
     public PredicateDef Predicate { get; set; } = default!;
@@ -1147,7 +1204,7 @@ public sealed class DefinePredicateInput
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class DeleteEmbeddingsInput
+public sealed partial class DeleteEmbeddingsInput
 {
     [JsonPropertyName("items")]
     public List<EmbeddingDocRef> Items { get; set; } = new();
@@ -1159,13 +1216,13 @@ public sealed class DeleteEmbeddingsInput
     public string SpaceId { get; set; } = default!;
 }
 
-public sealed class DeleteEmbeddingsResult
+public sealed partial class DeleteEmbeddingsResult
 {
     [JsonPropertyName("removed")]
     public ulong Removed { get; set; }
 }
 
-public sealed class DiscardPayload
+public sealed partial class DiscardPayload
 {
     [JsonPropertyName("projectId")]
     public string ProjectId { get; set; } = default!;
@@ -1181,7 +1238,7 @@ public sealed class DiscardPayload
     public string TimelineId { get; set; } = default!;
 }
 
-public sealed class DispositionSetting
+public sealed partial class DispositionSetting
 {
     [JsonPropertyName("dimension")]
     public string Dimension { get; set; } = default!;
@@ -1200,7 +1257,41 @@ public sealed class DispositionSetting
     public JsonElement Value { get; set; }
 }
 
-public sealed class DropEmbeddingSpaceResult
+public sealed partial class DispositionsPayload
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("at")]
+    public At? At { get; set; }
+
+    /// <summary>
+    /// Only this dimension.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("dimension")]
+    public string? Dimension { get; set; }
+
+    [JsonPropertyName("holder")]
+    public string Holder { get; set; } = default!;
+
+    [JsonPropertyName("projectId")]
+    public string ProjectId { get; set; } = default!;
+
+    /// <summary>
+    /// Only the Dispositions toward this entity.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("target")]
+    public string? Target { get; set; }
+
+    /// <summary>
+    /// Timeline to read; defaults to "main".
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("timelineId")]
+    public string? TimelineId { get; set; }
+}
+
+public sealed partial class DropEmbeddingSpaceResult
 {
     /// <summary>
     /// Vectors removed with the space.
@@ -1213,7 +1304,7 @@ public sealed class DropEmbeddingSpaceResult
 /// A searchable document: a record (a Fact, or a Holding with text) or an
 /// event whose type does not begin with `umwelt:`.
 /// </summary>
-public sealed class EmbeddingDocRef
+public sealed partial class EmbeddingDocRef
 {
     [JsonPropertyName("docId")]
     public string DocId { get; set; } = default!;
@@ -1225,7 +1316,7 @@ public sealed class EmbeddingDocRef
     public string DocType { get; set; } = default!;
 }
 
-public sealed class EmbeddingItem
+public sealed partial class EmbeddingItem
 {
     [JsonPropertyName("docId")]
     public string DocId { get; set; } = default!;
@@ -1251,7 +1342,7 @@ public sealed class EmbeddingItem
 /// vectors of the same space. `model` documents the model; the engine never
 /// reads it and never runs a model.
 /// </summary>
-public sealed class EmbeddingSpace
+public sealed partial class EmbeddingSpace
 {
     [JsonPropertyName("dimensions")]
     public uint Dimensions { get; set; }
@@ -1263,7 +1354,7 @@ public sealed class EmbeddingSpace
     public string Model { get; set; } = default!;
 }
 
-public sealed class EmbeddingSpaceRef
+public sealed partial class EmbeddingSpaceRef
 {
     [JsonPropertyName("projectId")]
     public string ProjectId { get; set; } = default!;
@@ -1272,11 +1363,11 @@ public sealed class EmbeddingSpaceRef
     public string SpaceId { get; set; } = default!;
 }
 
-public sealed class EmptyPayload
+public sealed partial class EmptyPayload
 {
 }
 
-public sealed class EnsureEntitiesInput
+public sealed partial class EnsureEntitiesInput
 {
     [JsonPropertyName("entities")]
     public List<EnsureEntityInput> Entities { get; set; } = new();
@@ -1289,7 +1380,7 @@ public sealed class EnsureEntitiesInput
 /// One entity owned by another system (a game, a wiki, a host app), keyed by
 /// its `externalRef`. Ensuring it twice is a no-op; changed fields are updated.
 /// </summary>
-public sealed class EnsureEntityInput
+public sealed partial class EnsureEntityInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("aliases")]
@@ -1320,7 +1411,7 @@ public sealed class EnsureEntityInput
     public string TypeId { get; set; } = default!;
 }
 
-public sealed class EnsureEntityResult
+public sealed partial class EnsureEntityResult
 {
     [JsonPropertyName("created")]
     public bool Created { get; set; }
@@ -1329,7 +1420,44 @@ public sealed class EnsureEntityResult
     public Entity Entity { get; set; } = default!;
 }
 
-public sealed class Entity
+/// <summary>
+/// A manifest of what must exist: the project and its entity types, entities,
+/// predicates and axes. Ensuring it creates what is missing, in one
+/// transaction, and leaves what is already there untouched; anything that
+/// exists with another definition refuses the whole manifest.
+/// </summary>
+public sealed partial class EnsureWorldInput
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("axes")]
+    public List<AxisDef>? Axes { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("entities")]
+    public List<WorldEntity>? Entities { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("entityTypes")]
+    public List<WorldEntityType>? EntityTypes { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("predicates")]
+    public List<PredicateDef>? Predicates { get; set; }
+
+    [JsonPropertyName("project")]
+    public WorldProject Project { get; set; } = default!;
+}
+
+public sealed partial class EnsureWorldResult
+{
+    [JsonPropertyName("created")]
+    public WorldCreated Created { get; set; } = default!;
+
+    [JsonPropertyName("project")]
+    public Project Project { get; set; } = default!;
+}
+
+public sealed partial class Entity
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("aliases")]
@@ -1362,7 +1490,7 @@ public sealed class Entity
     public string TypeId { get; set; } = default!;
 }
 
-public sealed class EntityAtPayload
+public sealed partial class EntityAtPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -1387,7 +1515,7 @@ public sealed class EntityAtPayload
 /// and aliases from `umwelt:name`, `umwelt:title` and `umwelt:alias` Facts,
 /// falling back to the entity's own name and aliases.
 /// </summary>
-public sealed class EntityAtResult
+public sealed partial class EntityAtResult
 {
     [JsonPropertyName("aliases")]
     public List<string> Aliases { get; set; } = new();
@@ -1409,7 +1537,7 @@ public sealed class EntityAtResult
     public string? Title { get; set; }
 }
 
-public sealed class EntityId
+public sealed partial class EntityId
 {
     [JsonPropertyName("entityId")]
     public string EntityIdValue { get; set; } = default!;
@@ -1444,7 +1572,7 @@ internal sealed class EntityKindConverter : JsonConverter<EntityKind>
     });
 }
 
-public sealed class EntityKnownPayload
+public sealed partial class EntityKnownPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -1471,7 +1599,7 @@ public sealed class EntityKnownPayload
 /// An entity as one holder knows it: only what the holder's own active,
 /// available Holdings say. A holder that knows no name gets none.
 /// </summary>
-public sealed class EntityKnownResult
+public sealed partial class EntityKnownResult
 {
     [JsonPropertyName("aliases")]
     public List<string> Aliases { get; set; } = new();
@@ -1503,7 +1631,7 @@ public sealed class EntityKnownResult
     public string? Title { get; set; }
 }
 
-public sealed class EntityPageResult
+public sealed partial class EntityPageResult
 {
     [JsonPropertyName("items")]
     public List<Entity> Items { get; set; } = new();
@@ -1513,7 +1641,7 @@ public sealed class EntityPageResult
     public string? NextCursor { get; set; }
 }
 
-public sealed class EntityType
+public sealed partial class EntityType
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("fields")]
@@ -1532,7 +1660,7 @@ public sealed class EntityType
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class Event
+public sealed partial class Event
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("description")]
@@ -1583,7 +1711,7 @@ public sealed class Event
     public string Type { get; set; } = default!;
 }
 
-public sealed class EventInput
+public sealed partial class EventInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("description")]
@@ -1625,7 +1753,7 @@ public sealed class EventInput
     public string Type { get; set; } = default!;
 }
 
-public sealed class EventPageResult
+public sealed partial class EventPageResult
 {
     [JsonPropertyName("items")]
     public List<Event> Items { get; set; } = new();
@@ -1635,7 +1763,7 @@ public sealed class EventPageResult
     public string? NextCursor { get; set; }
 }
 
-public sealed class EvidenceId
+public sealed partial class EvidenceId
 {
     [JsonPropertyName("evidenceId")]
     public string EvidenceIdValue { get; set; } = default!;
@@ -1644,7 +1772,7 @@ public sealed class EvidenceId
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class EvidenceRef
+public sealed partial class EvidenceRef
 {
     [JsonPropertyName("evidenceSourceId")]
     public string EvidenceSourceId { get; set; } = default!;
@@ -1662,7 +1790,7 @@ public sealed class EvidenceRef
     public Dictionary<string, JsonElement>? Metadata { get; set; }
 }
 
-public sealed class EvidenceSource
+public sealed partial class EvidenceSource
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("contentHash")]
@@ -1696,7 +1824,7 @@ public sealed class EvidenceSource
     public string Type { get; set; } = default!;
 }
 
-public sealed class ExternalRef
+public sealed partial class ExternalRef
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = default!;
@@ -1705,7 +1833,7 @@ public sealed class ExternalRef
     public string System { get; set; } = default!;
 }
 
-public sealed class FieldConstraints
+public sealed partial class FieldConstraints
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("allowedEntityTypeIds")]
@@ -1736,7 +1864,7 @@ public sealed class FieldConstraints
     public bool? Required { get; set; }
 }
 
-public sealed class FieldDef
+public sealed partial class FieldDef
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("constraints")]
@@ -1759,7 +1887,7 @@ public sealed class FieldDef
     public FieldType Type { get; set; }
 }
 
-public sealed class FieldOption
+public sealed partial class FieldOption
 {
     [JsonPropertyName("label")]
     public string Label { get; set; } = default!;
@@ -1809,7 +1937,7 @@ internal sealed class FieldTypeConverter : JsonConverter<FieldType>
     });
 }
 
-public sealed class GroupCoveragePayload
+public sealed partial class GroupCoveragePayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -1837,7 +1965,7 @@ public sealed class GroupCoveragePayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class GroupCoverageResult
+public sealed partial class GroupCoverageResult
 {
     [JsonPropertyName("group")]
     public string Group { get; set; } = default!;
@@ -1865,7 +1993,7 @@ public sealed class GroupCoverageResult
     public List<string> Missing { get; set; } = new();
 }
 
-public sealed class HolderAt
+public sealed partial class HolderAt
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -1889,7 +2017,7 @@ public sealed class HolderAt
 /// A new value for an active Holding. The old Holding is superseded by a copy
 /// carrying the changed fields; its history stays readable.
 /// </summary>
-public sealed class HoldingAdjustment
+public sealed partial class HoldingAdjustment
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("accessibility")]
@@ -1914,7 +2042,7 @@ public sealed class HoldingAdjustment
     public string RecordId { get; set; } = default!;
 }
 
-public sealed class HoldingFilter
+public sealed partial class HoldingFilter
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("about")]
@@ -1937,7 +2065,7 @@ public sealed class HoldingFilter
     public string? Predicate { get; set; }
 }
 
-public sealed class HoldingItem
+public sealed partial class HoldingItem
 {
     [JsonPropertyName("acquisition")]
     public Acquisition Acquisition { get; set; } = default!;
@@ -1950,7 +2078,7 @@ public sealed class HoldingItem
     public TransitionStatus? Status { get; set; }
 }
 
-public sealed class HoldingsPayload
+public sealed partial class HoldingsPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -1978,7 +2106,7 @@ public sealed class HoldingsPayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class HoldingsResult
+public sealed partial class HoldingsResult
 {
     [JsonPropertyName("items")]
     public List<HoldingItem> Items { get; set; } = new();
@@ -1991,7 +2119,40 @@ public sealed class HoldingsResult
     public ulong WithheldCount { get; set; }
 }
 
-public sealed class HoldsPayload
+/// <summary>
+/// Whether the Holding behind a `holds` answer has the polarity that was
+/// asked about. A holder who believes the opposite still holds the claim.
+/// </summary>
+public enum HoldsAs
+{
+    /// <summary>
+    /// The Holding has the polarity of the claim asked about.
+    /// </summary>
+    Same,
+    /// <summary>
+    /// The Holding has the opposite polarity: the holder holds the negation.
+    /// </summary>
+    Opposite,
+}
+
+internal sealed class HoldsAsConverter : JsonConverter<HoldsAs>
+{
+    public override HoldsAs Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => reader.GetString() switch
+    {
+        "same" => HoldsAs.Same,
+        "opposite" => HoldsAs.Opposite,
+        var other => throw new JsonException($"Unknown HoldsAs '{other}'."),
+    };
+
+    public override void Write(Utf8JsonWriter writer, HoldsAs value, JsonSerializerOptions options) => writer.WriteStringValue(value switch
+    {
+        HoldsAs.Same => "same",
+        HoldsAs.Opposite => "opposite",
+        _ => throw new JsonException($"Unknown HoldsAs {value}."),
+    });
+}
+
+public sealed partial class HoldsPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -2019,7 +2180,7 @@ public sealed class HoldsPayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class HoldsResult
+public sealed partial class HoldsResult
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("attitude")]
@@ -2029,8 +2190,20 @@ public sealed class HoldsResult
     [JsonPropertyName("confidence")]
     public double? Confidence { get; set; }
 
+    /// <summary>
+    /// The holder has a Holding about the claim, with either polarity.
+    /// </summary>
     [JsonPropertyName("holds")]
     public bool Holds { get; set; }
+
+    /// <summary>
+    /// Whether that Holding affirms what was asked (`same`) or its negation
+    /// (`opposite`). Absent when `holds` is false or the question gave only
+    /// a `claimKey`, which has no polarity.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("holdsAs")]
+    public HoldsAs? HoldsAs { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("polarity")]
@@ -2093,7 +2266,7 @@ internal sealed class ObjectKindConverter : JsonConverter<ObjectKind>
     });
 }
 
-public sealed class OpenDraftInput
+public sealed partial class OpenDraftInput
 {
     /// <summary>
     /// Timeline to branch from: "main" (the default) or an active draft.
@@ -2114,7 +2287,7 @@ public sealed class OpenDraftInput
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class OperationCheck
+public sealed partial class OperationCheck
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("error")]
@@ -2130,7 +2303,7 @@ public sealed class OperationCheck
     public bool Valid { get; set; }
 }
 
-public sealed class OperationError
+public sealed partial class OperationError
 {
     [JsonPropertyName("code")]
     public string Code { get; set; } = default!;
@@ -2204,7 +2377,7 @@ internal sealed class OriginConverter : JsonConverter<Origin>
     public override void Write(Utf8JsonWriter writer, Origin value, JsonSerializerOptions options) => JsonSerializer.Serialize(writer, value, value.GetType(), options);
 }
 
-public sealed class Page
+public sealed partial class Page
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("cursor")]
@@ -2215,7 +2388,7 @@ public sealed class Page
     public uint? Limit { get; set; }
 }
 
-public sealed class PagedProject
+public sealed partial class PagedProject
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("page")]
@@ -2225,7 +2398,7 @@ public sealed class PagedProject
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class PendingEmbedding
+public sealed partial class PendingEmbedding
 {
     [JsonPropertyName("docId")]
     public string DocId { get; set; } = default!;
@@ -2256,7 +2429,7 @@ public sealed class PendingEmbedding
 /// Documents visible in a timeline whose vector in a space is missing or
 /// stale, with the text to embed.
 /// </summary>
-public sealed class PendingEmbeddingsInput
+public sealed partial class PendingEmbeddingsInput
 {
     /// <summary>
     /// `record` and/or `event`; empty for both.
@@ -2283,7 +2456,7 @@ public sealed class PendingEmbeddingsInput
     public string? TimelineId { get; set; }
 }
 
-public sealed class PendingEmbeddingsResult
+public sealed partial class PendingEmbeddingsResult
 {
     [JsonPropertyName("items")]
     public List<PendingEmbedding> Items { get; set; } = new();
@@ -2303,7 +2476,7 @@ public sealed class PendingEmbeddingsResult
     public string ResumeCursor { get; set; } = default!;
 }
 
-public sealed class PerspectivePayload
+public sealed partial class PerspectivePayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -2327,7 +2500,7 @@ public sealed class PerspectivePayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class PerspectiveResult
+public sealed partial class PerspectiveResult
 {
     [JsonPropertyName("awareness")]
     public List<Record> Awareness { get; set; } = new();
@@ -2348,13 +2521,13 @@ public sealed class PerspectiveResult
     public ulong WithheldCount { get; set; }
 }
 
-public sealed class Position
+public sealed partial class Position
 {
     [JsonPropertyName("tick")]
     public long Tick { get; set; }
 }
 
-public sealed class PredicateDef
+public sealed partial class PredicateDef
 {
     [JsonPropertyName("cardinality")]
     public Cardinality Cardinality { get; set; }
@@ -2373,7 +2546,7 @@ public sealed class PredicateDef
     public List<string>? SubjectTypes { get; set; }
 }
 
-public sealed class Project
+public sealed partial class Project
 {
     [JsonPropertyName("createdAt")]
     public string CreatedAt { get; set; } = default!;
@@ -2398,13 +2571,13 @@ public sealed class Project
     public VocabularyMode VocabularyMode { get; set; }
 }
 
-public sealed class ProjectId
+public sealed partial class ProjectId
 {
     [JsonPropertyName("projectId")]
     public string ProjectIdValue { get; set; } = default!;
 }
 
-public sealed class Proposal
+public sealed partial class Proposal
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = default!;
@@ -2424,7 +2597,7 @@ public sealed class Proposal
     public ProposalStatus Status { get; set; }
 }
 
-public sealed class ProposalId
+public sealed partial class ProposalId
 {
     [JsonPropertyName("proposalId")]
     public string ProposalIdValue { get; set; } = default!;
@@ -2433,7 +2606,7 @@ public sealed class ProposalId
 /// <summary>
 /// A pending proposal checked again against the current head of its timeline.
 /// </summary>
-public sealed class ProposalRebaseResult
+public sealed partial class ProposalRebaseResult
 {
     [JsonPropertyName("headVersion")]
     public ulong HeadVersion { get; set; }
@@ -2445,7 +2618,7 @@ public sealed class ProposalRebaseResult
     public Proposal Proposal { get; set; } = default!;
 }
 
-public sealed class ProposalReview
+public sealed partial class ProposalReview
 {
     [JsonPropertyName("createdAt")]
     public string CreatedAt { get; set; } = default!;
@@ -2492,7 +2665,7 @@ internal sealed class ProposalStatusConverter : JsonConverter<ProposalStatus>
     });
 }
 
-public sealed class ProposeInput
+public sealed partial class ProposeInput
 {
     [JsonPropertyName("event")]
     public EventInput Event { get; set; } = default!;
@@ -2520,7 +2693,7 @@ public sealed class ProposeInput
     public List<TransitionInput>? Transitions { get; set; }
 }
 
-public sealed class Provenance
+public sealed partial class Provenance
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("metadata")]
@@ -2534,7 +2707,7 @@ public sealed class Provenance
     public string? Reason { get; set; }
 }
 
-public sealed class PurgeCounts
+public sealed partial class PurgeCounts
 {
     [JsonPropertyName("attempts")]
     public ulong Attempts { get; set; }
@@ -2549,7 +2722,7 @@ public sealed class PurgeCounts
     public ulong Transitions { get; set; }
 }
 
-public sealed class PurgeResult
+public sealed partial class PurgeResult
 {
     [JsonPropertyName("purged")]
     public bool Purged { get; set; }
@@ -2561,7 +2734,7 @@ public sealed class PurgeResult
 /// <summary>
 /// Stores or replaces vectors in one transaction.
 /// </summary>
-public sealed class PutEmbeddingsInput
+public sealed partial class PutEmbeddingsInput
 {
     [JsonPropertyName("items")]
     public List<EmbeddingItem> Items { get; set; } = new();
@@ -2573,7 +2746,7 @@ public sealed class PutEmbeddingsInput
     public string SpaceId { get; set; } = default!;
 }
 
-public sealed class PutEmbeddingsResult
+public sealed partial class PutEmbeddingsResult
 {
     /// <summary>
     /// Stored vectors whose `textHash` is not the document's: they stay
@@ -2770,7 +2943,7 @@ internal sealed class RecordConverter : JsonConverter<Record>
     public override void Write(Utf8JsonWriter writer, Record value, JsonSerializerOptions options) => JsonSerializer.Serialize(writer, value, value.GetType(), options);
 }
 
-public sealed class RecordCommon
+public sealed partial class RecordCommon
 {
     [JsonPropertyName("eventId")]
     public string EventId { get; set; } = default!;
@@ -2794,7 +2967,7 @@ public sealed class RecordCommon
     public string TimelineId { get; set; } = default!;
 }
 
-public sealed class RecordId
+public sealed partial class RecordId
 {
     [JsonPropertyName("projectId")]
     public string ProjectId { get; set; } = default!;
@@ -2828,11 +3001,19 @@ public abstract class RecordInput
         [JsonPropertyName("id")]
         public string? Id { get; set; }
 
+        /// <summary>
+        /// Omitted: the position of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("position")]
-        public Position Position { get; set; } = default!;
+        public Position? Position { get; set; }
 
+        /// <summary>
+        /// Omitted: the provenance of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("provenance")]
-        public Provenance Provenance { get; set; } = default!;
+        public Provenance? Provenance { get; set; }
     }
 
     public sealed class Holding : RecordInput
@@ -2840,8 +3021,12 @@ public abstract class RecordInput
         [JsonPropertyName("kind")]
         public override string Kind => "holding";
 
+        /// <summary>
+        /// Omitted: `available`.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("accessibility")]
-        public Accessibility Accessibility { get; set; }
+        public Accessibility? Accessibility { get; set; }
 
         [JsonPropertyName("acquisition")]
         public Acquisition Acquisition { get; set; } = default!;
@@ -2852,8 +3037,12 @@ public abstract class RecordInput
         [JsonPropertyName("claim")]
         public Claim Claim { get; set; } = default!;
 
+        /// <summary>
+        /// Omitted: 1.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("confidence")]
-        public double Confidence { get; set; }
+        public double? Confidence { get; set; }
 
         [JsonPropertyName("holder")]
         public string Holder { get; set; } = default!;
@@ -2862,11 +3051,19 @@ public abstract class RecordInput
         [JsonPropertyName("id")]
         public string? Id { get; set; }
 
+        /// <summary>
+        /// Omitted: the position of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("position")]
-        public Position Position { get; set; } = default!;
+        public Position? Position { get; set; }
 
+        /// <summary>
+        /// Omitted: the provenance of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("provenance")]
-        public Provenance Provenance { get; set; } = default!;
+        public Provenance? Provenance { get; set; }
 
         /// <summary>
         /// The holder keeps this secret; only `sharedWith` may be told.
@@ -2892,11 +3089,19 @@ public abstract class RecordInput
         [JsonPropertyName("id")]
         public string? Id { get; set; }
 
+        /// <summary>
+        /// Omitted: the position of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("position")]
-        public Position Position { get; set; } = default!;
+        public Position? Position { get; set; }
 
+        /// <summary>
+        /// Omitted: the provenance of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("provenance")]
-        public Provenance Provenance { get; set; } = default!;
+        public Provenance? Provenance { get; set; }
 
         [JsonPropertyName("target")]
         public string Target { get; set; } = default!;
@@ -2917,11 +3122,19 @@ public abstract class RecordInput
         [JsonPropertyName("id")]
         public string? Id { get; set; }
 
+        /// <summary>
+        /// Omitted: the position of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("position")]
-        public Position Position { get; set; } = default!;
+        public Position? Position { get; set; }
 
+        /// <summary>
+        /// Omitted: the provenance of the commit's event.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("provenance")]
-        public Provenance Provenance { get; set; } = default!;
+        public Provenance? Provenance { get; set; }
 
         [JsonPropertyName("target")]
         public string Target { get; set; } = default!;
@@ -2950,20 +3163,28 @@ internal sealed class RecordInputConverter : JsonConverter<RecordInput>
     public override void Write(Utf8JsonWriter writer, RecordInput value, JsonSerializerOptions options) => JsonSerializer.Serialize(writer, value, value.GetType(), options);
 }
 
-public sealed class RecordInputCommon
+public sealed partial class RecordInputCommon
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("id")]
     public string? Id { get; set; }
 
+    /// <summary>
+    /// Omitted: the position of the commit's event.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("position")]
-    public Position Position { get; set; } = default!;
+    public Position? Position { get; set; }
 
+    /// <summary>
+    /// Omitted: the provenance of the commit's event.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("provenance")]
-    public Provenance Provenance { get; set; } = default!;
+    public Provenance? Provenance { get; set; }
 }
 
-public sealed class RecordPageResult
+public sealed partial class RecordPageResult
 {
     [JsonPropertyName("items")]
     public List<Record> Items { get; set; } = new();
@@ -2973,7 +3194,7 @@ public sealed class RecordPageResult
     public string? NextCursor { get; set; }
 }
 
-public sealed class RecordState
+public sealed partial class RecordState
 {
     [JsonPropertyName("record")]
     public Record Record { get; set; } = default!;
@@ -2983,7 +3204,7 @@ public sealed class RecordState
     public Transition? Transition { get; set; }
 }
 
-public sealed class RejectPayload
+public sealed partial class RejectPayload
 {
     [JsonPropertyName("proposalId")]
     public string ProposalId { get; set; } = default!;
@@ -2992,7 +3213,7 @@ public sealed class RejectPayload
     public string Rationale { get; set; } = default!;
 }
 
-public sealed class ResolveEntitiesPayload
+public sealed partial class ResolveEntitiesPayload
 {
     [JsonPropertyName("externalRefs")]
     public List<ExternalRef> ExternalRefs { get; set; } = new();
@@ -3001,7 +3222,7 @@ public sealed class ResolveEntitiesPayload
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class ResolveEntityPayload
+public sealed partial class ResolveEntityPayload
 {
     [JsonPropertyName("externalRef")]
     public ExternalRef ExternalRef { get; set; } = default!;
@@ -3010,7 +3231,7 @@ public sealed class ResolveEntityPayload
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class ResolvedEntity
+public sealed partial class ResolvedEntity
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("entityId")]
@@ -3043,7 +3264,7 @@ internal sealed class ReviewDecisionConverter : JsonConverter<ReviewDecision>
     });
 }
 
-public sealed class ReviewInput
+public sealed partial class ReviewInput
 {
     [JsonPropertyName("decision")]
     public ReviewDecision Decision { get; set; }
@@ -3055,7 +3276,7 @@ public sealed class ReviewInput
     public string Rationale { get; set; } = default!;
 }
 
-public sealed class ReviewPayload
+public sealed partial class ReviewPayload
 {
     [JsonPropertyName("proposalId")]
     public string ProposalId { get; set; } = default!;
@@ -3064,7 +3285,7 @@ public sealed class ReviewPayload
     public List<ReviewInput> Reviews { get; set; } = new();
 }
 
-public sealed class SearchFilter
+public sealed partial class SearchFilter
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("docType")]
@@ -3075,7 +3296,7 @@ public sealed class SearchFilter
     public string? Holder { get; set; }
 }
 
-public sealed class SearchItem
+public sealed partial class SearchItem
 {
     [JsonPropertyName("docId")]
     public string DocId { get; set; } = default!;
@@ -3133,7 +3354,7 @@ internal sealed class SearchMatchConverter : JsonConverter<SearchMatch>
     });
 }
 
-public sealed class SearchPageResult
+public sealed partial class SearchPageResult
 {
     [JsonPropertyName("items")]
     public List<SearchItem> Items { get; set; } = new();
@@ -3143,7 +3364,7 @@ public sealed class SearchPageResult
     public string? NextCursor { get; set; }
 }
 
-public sealed class SearchPayload
+public sealed partial class SearchPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -3187,7 +3408,7 @@ public sealed class SearchPayload
 /// The semantic part of a search: a query vector made by the client's model
 /// in one of the project's embedding spaces.
 /// </summary>
-public sealed class SearchSemantic
+public sealed partial class SearchSemantic
 {
     [JsonPropertyName("spaceId")]
     public string SpaceId { get; set; } = default!;
@@ -3201,7 +3422,7 @@ public sealed class SearchSemantic
 /// anyone outside `sharedWith` (besides the holder) is recorded and reported
 /// as a breach.
 /// </summary>
-public sealed class Secrecy
+public sealed partial class Secrecy
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("sharedWith")]
@@ -3212,7 +3433,7 @@ public sealed class Secrecy
 /// Records many Disposition values in one commit (trust, affection...). The
 /// newest value per holder, target and dimension is the current one.
 /// </summary>
-public sealed class SetDispositionsInput
+public sealed partial class SetDispositionsInput
 {
     [JsonPropertyName("attemptId")]
     public string AttemptId { get; set; } = default!;
@@ -3251,7 +3472,7 @@ public sealed class SetDispositionsInput
 /// branches from its parent (main or another draft) at `baseVersion` and is
 /// later promoted into that parent or discarded.
 /// </summary>
-public sealed class Timeline
+public sealed partial class Timeline
 {
     /// <summary>
     /// Head version of the parent when the draft was opened. Absent for main.
@@ -3332,7 +3553,7 @@ internal sealed class TimelineKindConverter : JsonConverter<TimelineKind>
     });
 }
 
-public sealed class TimelineListPayload
+public sealed partial class TimelineListPayload
 {
     [JsonPropertyName("projectId")]
     public string ProjectId { get; set; } = default!;
@@ -3342,7 +3563,7 @@ public sealed class TimelineListPayload
     public TimelineStatus? Status { get; set; }
 }
 
-public sealed class TimelinePayload
+public sealed partial class TimelinePayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -3363,7 +3584,7 @@ public sealed class TimelinePayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class TimelineRef
+public sealed partial class TimelineRef
 {
     [JsonPropertyName("projectId")]
     public string ProjectId { get; set; } = default!;
@@ -3398,7 +3619,7 @@ internal sealed class TimelineStatusConverter : JsonConverter<TimelineStatus>
     });
 }
 
-public sealed class TraceResult
+public sealed partial class TraceResult
 {
     [JsonPropertyName("chain")]
     public List<ChainLink> Chain { get; set; } = new();
@@ -3420,7 +3641,7 @@ public sealed class TraceResult
     public bool Truncated { get; set; }
 }
 
-public sealed class Transition
+public sealed partial class Transition
 {
     [JsonPropertyName("eventId")]
     public string EventId { get; set; } = default!;
@@ -3462,7 +3683,7 @@ public sealed class Transition
 /// character forgets overnight. `superseded` needs a replacement and is not
 /// accepted here; use `holding.adjustBatch`.
 /// </summary>
-public sealed class TransitionBatchInput
+public sealed partial class TransitionBatchInput
 {
     [JsonPropertyName("attemptId")]
     public string AttemptId { get; set; } = default!;
@@ -3492,24 +3713,32 @@ public sealed class TransitionBatchInput
     public List<string> RecordIds { get; set; } = new();
 
     [JsonPropertyName("status")]
-    public TransitionStatus Status { get; set; }
+    public BatchTransitionStatus Status { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("timelineId")]
     public string? TimelineId { get; set; }
 }
 
-public sealed class TransitionInput
+public sealed partial class TransitionInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("id")]
     public string? Id { get; set; }
 
+    /// <summary>
+    /// Omitted: the position of the commit's event.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("position")]
-    public Position Position { get; set; } = default!;
+    public Position? Position { get; set; }
 
+    /// <summary>
+    /// Omitted: the provenance of the commit's event.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("provenance")]
-    public Provenance Provenance { get; set; } = default!;
+    public Provenance? Provenance { get; set; }
 
     [JsonPropertyName("status")]
     public TransitionStatus Status { get; set; }
@@ -3554,13 +3783,85 @@ internal sealed class TransitionStatusConverter : JsonConverter<TransitionStatus
     });
 }
 
-public sealed class TransmitBatchPayload
+/// <summary>
+/// One transmit of a batch: a `TransmitInput` whose shareable fields may be
+/// left to the batch's `shared`.
+/// </summary>
+public sealed partial class TransmitBatchItem
 {
-    [JsonPropertyName("transmits")]
-    public List<TransmitInput> Transmits { get; set; } = new();
+    [JsonPropertyName("attemptId")]
+    public string AttemptId { get; set; } = default!;
+
+    /// <summary>
+    /// Neither here nor in `shared`: `believes`.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("attitude")]
+    public Attitude? Attitude { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("confidence")]
+    public double? Confidence { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("distortedClaim")]
+    public Claim? DistortedClaim { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("from")]
+    public string? From { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("intent")]
+    public Intent? Intent { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("on")]
+    public Dictionary<string, long>? On { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("position")]
+    public Position? Position { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("projectId")]
+    public string? ProjectId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("recordId")]
+    public string? RecordId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("sourceRecordId")]
+    public string? SourceRecordId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("text")]
+    public string? Text { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("timelineId")]
+    public string? TimelineId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("to")]
+    public string? To { get; set; }
 }
 
-public sealed class TransmitInput
+public sealed partial class TransmitBatchPayload
+{
+    /// <summary>
+    /// What the transmits have in common, written once.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("shared")]
+    public TransmitShared? Shared { get; set; }
+
+    [JsonPropertyName("transmits")]
+    public List<TransmitBatchItem> Transmits { get; set; } = new();
+}
+
+public sealed partial class TransmitInput
 {
     [JsonPropertyName("attemptId")]
     public string AttemptId { get; set; } = default!;
@@ -3617,7 +3918,54 @@ public sealed class TransmitInput
     public string To { get; set; } = default!;
 }
 
-public sealed class UpdateEntityInput
+/// <summary>
+/// What every transmit of a batch has in common, written once. A field given
+/// by an item wins over the shared one.
+/// </summary>
+public sealed partial class TransmitShared
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("attitude")]
+    public Attitude? Attitude { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("confidence")]
+    public double? Confidence { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("from")]
+    public string? From { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("intent")]
+    public Intent? Intent { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("on")]
+    public Dictionary<string, long>? On { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("position")]
+    public Position? Position { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("projectId")]
+    public string? ProjectId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("sourceRecordId")]
+    public string? SourceRecordId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("timelineId")]
+    public string? TimelineId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("to")]
+    public string? To { get; set; }
+}
+
+public sealed partial class UpdateEntityInput
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("aliases")]
@@ -3642,7 +3990,7 @@ public sealed class UpdateEntityInput
     public string ProjectId { get; set; } = default!;
 }
 
-public sealed class UtteranceCheck
+public sealed partial class UtteranceCheck
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("attitude")]
@@ -3753,7 +4101,7 @@ internal sealed class VocabularyModeConverter : JsonConverter<VocabularyMode>
     });
 }
 
-public sealed class Warning
+public sealed partial class Warning
 {
     [JsonPropertyName("code")]
     public string Code { get; set; } = default!;
@@ -3762,7 +4110,7 @@ public sealed class Warning
     public string Message { get; set; } = default!;
 }
 
-public sealed class WhoHoldsFilter
+public sealed partial class WhoHoldsFilter
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("attitude")]
@@ -3781,7 +4129,7 @@ public sealed class WhoHoldsFilter
     public bool? Polarity { get; set; }
 }
 
-public sealed class WhoHoldsItem
+public sealed partial class WhoHoldsItem
 {
     [JsonPropertyName("attitude")]
     public Attitude Attitude { get; set; }
@@ -3799,7 +4147,7 @@ public sealed class WhoHoldsItem
     public string RecordId { get; set; } = default!;
 }
 
-public sealed class WhoHoldsPayload
+public sealed partial class WhoHoldsPayload
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("at")]
@@ -3828,7 +4176,7 @@ public sealed class WhoHoldsPayload
     public string? TimelineId { get; set; }
 }
 
-public sealed class Witness
+public sealed partial class Witness
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("accessibility")]
@@ -3858,7 +4206,7 @@ public sealed class Witness
 /// Holding for every claim, in one atomic commit. Who saw what, and how
 /// clearly, is the client's decision.
 /// </summary>
-public sealed class WitnessInput
+public sealed partial class WitnessInput
 {
     [JsonPropertyName("attemptId")]
     public string AttemptId { get; set; } = default!;
@@ -3887,7 +4235,7 @@ public sealed class WitnessInput
 /// <summary>
 /// One claim seen at a witnessed event.
 /// </summary>
-public sealed class WitnessedClaim
+public sealed partial class WitnessedClaim
 {
     /// <summary>
     /// Also record the claim as canon (a Fact) in the same commit.
@@ -3904,6 +4252,116 @@ public sealed class WitnessedClaim
     public string? FactId { get; set; }
 }
 
+/// <summary>
+/// What a manifest created; everything else was already there.
+/// </summary>
+public sealed partial class WorldCreated
+{
+    [JsonPropertyName("axes")]
+    public List<string> Axes { get; set; } = new();
+
+    [JsonPropertyName("entities")]
+    public List<string> Entities { get; set; } = new();
+
+    [JsonPropertyName("entityTypes")]
+    public List<string> EntityTypes { get; set; } = new();
+
+    [JsonPropertyName("predicates")]
+    public List<string> Predicates { get; set; } = new();
+
+    [JsonPropertyName("project")]
+    public bool Project { get; set; }
+}
+
+/// <summary>
+/// One thing a manifest asks for that already exists with another definition.
+/// </summary>
+public sealed partial class WorldDivergence
+{
+    /// <summary>
+    /// The field whose stored value differs.
+    /// </summary>
+    [JsonPropertyName("field")]
+    public string Field { get; set; } = default!;
+
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = default!;
+
+    /// <summary>
+    /// `project`, `entityType`, `entity`, `predicate` or `axis`.
+    /// </summary>
+    [JsonPropertyName("kind")]
+    public string Kind { get; set; } = default!;
+}
+
+public sealed partial class WorldEntity
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("aliases")]
+    public List<string>? Aliases { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("createdAt")]
+    public Position? CreatedAt { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("externalRef")]
+    public ExternalRef? ExternalRef { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("fields")]
+    public Dictionary<string, JsonElement>? Fields { get; set; }
+
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = default!;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = default!;
+
+    [JsonPropertyName("typeId")]
+    public string TypeId { get; set; } = default!;
+}
+
+public sealed partial class WorldEntityType
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("fields")]
+    public List<FieldDef>? Fields { get; set; }
+
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = default!;
+
+    [JsonPropertyName("kind")]
+    public EntityKind Kind { get; set; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = default!;
+}
+
+/// <summary>
+/// The project of a world manifest. Unlike `project.create`, the id is
+/// required: it is what makes the manifest repeatable.
+/// </summary>
+public sealed partial class WorldProject
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = default!;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = default!;
+
+    [JsonPropertyName("timescale")]
+    public string Timescale { get; set; } = default!;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("vocabularyMode")]
+    public VocabularyMode? VocabularyMode { get; set; }
+}
+
 internal static partial class UmweltJson
 {
     private static IEnumerable<JsonConverter> GeneratedConverters() => new JsonConverter[]
@@ -3911,6 +4369,7 @@ internal static partial class UmweltJson
         new AccessibilityConverter(),
         new AcquisitionConverter(),
         new AttitudeConverter(),
+        new BatchTransitionStatusConverter(),
         new CanonStatusConverter(),
         new CardinalityConverter(),
         new ClaimObjectConverter(),
@@ -3919,6 +4378,7 @@ internal static partial class UmweltJson
         new ContradictionReasonConverter(),
         new EntityKindConverter(),
         new FieldTypeConverter(),
+        new HoldsAsConverter(),
         new IntentConverter(),
         new ObjectKindConverter(),
         new OriginConverter(),

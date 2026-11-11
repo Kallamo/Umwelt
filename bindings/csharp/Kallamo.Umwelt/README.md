@@ -36,6 +36,36 @@ if (result.Holds)
 }
 ```
 
+Records are plain objects, and small factories build the repetitive ones:
+
+```csharp
+var theft = Claim.Entity("bob", "stole", "necklace");
+engine.Commit(new CommitInput
+{
+    ProjectId = "ball",
+    AttemptId = "scene-1",
+    Event = new EventInput { Id = "scene-1", Type = "scene", Title = "The ball", Position = Position.At(1), Provenance = Provenance.Human() },
+    Records = new()
+    {
+        Records.Fact(theft),
+        Records.Knows("ana", theft, Acquired.Witnessed("scene-1")),
+        Records.Suspects("duchess", Claim.Entity("ana", "stole", "necklace"), Acquired.Authored(), confidence: 0.6),
+    },
+});
+```
+
+`Claim.Entity`, `Claim.Value`, `Claim.Unary`, `Claim.Holds` and
+`claim.Negated()` build claims; `Position.At` a position; `Provenance.Human`, `.Model`, `.System` and
+`.Imported` a provenance; `Acquired.Witnessed`, `.ToldBy`, `.Evidence`,
+`.Inferred` and `.Authored` an acquisition; `Records.Fact` and one factory per
+attitude (`Records.Knows`, `.Believes`, `.Suspects`, `.Remembers`) a record.
+Each is pure and returns the contract type, so it mixes with object
+initializers. A record that gives no position or provenance takes those of
+its event, and a Holding defaults to confidence 1 and `Available`; optional
+named arguments (`id`, `position`, `provenance`, `confidence`,
+`accessibility`, `text`, `secrecy`) set them. When everyone at an event saw
+the same thing, `engine.Witness` records it in one call.
+
 Semantic search uses your own embedding model: implement `IEmbedder`
 (`SpaceId` and `EmbedAsync`), then `EmbedPendingAsync` fills the vectors of
 every searchable document and `SemanticSearchAsync` searches by meaning,

@@ -1,0 +1,482 @@
+{
+  "name": "world-ensure-conflict",
+  "steps": [
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "world.ensure",
+        "payload": {
+          "project": {
+            "id": "w",
+            "name": "World",
+            "timescale": "day"
+          },
+          "entityTypes": [
+            {
+              "id": "person",
+              "name": "Person",
+              "kind": "agent"
+            },
+            {
+              "id": "thing",
+              "name": "Thing",
+              "kind": "other"
+            }
+          ],
+          "entities": [
+            {
+              "id": "ana",
+              "typeId": "person",
+              "name": "Ana"
+            },
+            {
+              "id": "necklace",
+              "typeId": "thing",
+              "name": "The necklace"
+            }
+          ],
+          "predicates": [
+            {
+              "id": "stole",
+              "label": "stole",
+              "object": "entity",
+              "cardinality": "many"
+            }
+          ],
+          "axes": [
+            {
+              "id": "reading",
+              "label": "Reading order"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "world.ensure",
+        "payload": {
+          "project": {
+            "id": "w",
+            "name": "World",
+            "timescale": "day"
+          },
+          "entityTypes": [
+            {
+              "id": "person",
+              "name": "Person",
+              "kind": "agent"
+            },
+            {
+              "id": "thing",
+              "name": "Thing",
+              "kind": "other"
+            }
+          ],
+          "entities": [
+            {
+              "id": "ana",
+              "typeId": "thing",
+              "name": "Ana"
+            },
+            {
+              "id": "carl",
+              "typeId": "person",
+              "name": "Carl"
+            }
+          ],
+          "predicates": [
+            {
+              "id": "stole",
+              "label": "stole",
+              "object": "entity",
+              "cardinality": "one"
+            }
+          ],
+          "axes": [
+            {
+              "id": "reading",
+              "label": "Pages"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT",
+          "details": {
+            "divergences": [
+              {
+                "kind": "entity",
+                "id": "ana",
+                "field": "typeId"
+              },
+              {
+                "kind": "predicate",
+                "id": "stole",
+                "field": "cardinality"
+              },
+              {
+                "kind": "axis",
+                "id": "reading",
+                "field": "label"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entity.get",
+        "payload": {
+          "projectId": "w",
+          "entityId": "carl"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "NOT_FOUND"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "world.ensure",
+        "payload": {
+          "project": {
+            "id": "w",
+            "name": "World",
+            "timescale": "year"
+          },
+          "entityTypes": [
+            {
+              "id": "person",
+              "name": "Person",
+              "kind": "agent"
+            },
+            {
+              "id": "thing",
+              "name": "Thing",
+              "kind": "other"
+            }
+          ],
+          "entities": [
+            {
+              "id": "ana",
+              "typeId": "person",
+              "name": "Ana"
+            },
+            {
+              "id": "necklace",
+              "typeId": "thing",
+              "name": "The necklace"
+            }
+          ],
+          "predicates": [
+            {
+              "id": "stole",
+              "label": "stole",
+              "object": "entity",
+              "cardinality": "many"
+            }
+          ],
+          "axes": [
+            {
+              "id": "reading",
+              "label": "Reading order"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "CONFLICT",
+          "details": {
+            "divergences": [
+              {
+                "kind": "project",
+                "id": "w",
+                "field": "timescale"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "world.ensure",
+        "payload": {
+          "project": {
+            "id": "w",
+            "name": "World",
+            "timescale": "day"
+          },
+          "entityTypes": [
+            {
+              "id": "person",
+              "name": "Person",
+              "kind": "agent"
+            },
+            {
+              "id": "thing",
+              "name": "Thing",
+              "kind": "other"
+            }
+          ],
+          "entities": [
+            {
+              "id": "dora",
+              "typeId": "person",
+              "name": "Dora"
+            },
+            {
+              "id": "dora",
+              "typeId": "person",
+              "name": "Dora"
+            }
+          ],
+          "predicates": [
+            {
+              "id": "stole",
+              "label": "stole",
+              "object": "entity",
+              "cardinality": "many"
+            }
+          ],
+          "axes": [
+            {
+              "id": "reading",
+              "label": "Reading order"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "VALIDATION_FAILED"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "world.ensure",
+        "payload": {
+          "project": {
+            "id": "w",
+            "name": "World",
+            "timescale": "day"
+          },
+          "entityTypes": [
+            {
+              "id": "person",
+              "name": "Person",
+              "kind": "agent"
+            },
+            {
+              "id": "thing",
+              "name": "Thing",
+              "kind": "other"
+            }
+          ],
+          "entities": [
+            {
+              "id": "ana",
+              "typeId": "person",
+              "name": "Ana"
+            },
+            {
+              "id": "necklace",
+              "typeId": "thing",
+              "name": "The necklace"
+            }
+          ],
+          "predicates": [
+            {
+              "id": "umwelt:mine",
+              "label": "mine",
+              "object": "none",
+              "cardinality": "one"
+            }
+          ],
+          "axes": [
+            {
+              "id": "reading",
+              "label": "Reading order"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "VALIDATION_FAILED"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "world.ensure",
+        "payload": {
+          "project": {
+            "id": "w",
+            "name": "World",
+            "timescale": "day"
+          },
+          "entityTypes": [
+            {
+              "id": "person",
+              "name": "Person",
+              "kind": "agent"
+            },
+            {
+              "id": "thing",
+              "name": "Thing",
+              "kind": "other"
+            }
+          ],
+          "entities": [
+            {
+              "id": "eve",
+              "typeId": "ghost",
+              "name": "Eve"
+            }
+          ],
+          "predicates": [
+            {
+              "id": "saw",
+              "label": "saw",
+              "object": "entity",
+              "cardinality": "many"
+            }
+          ],
+          "axes": [
+            {
+              "id": "reading",
+              "label": "Reading order"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "NOT_FOUND"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.list",
+        "payload": {
+          "projectId": "w"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": "$capture:predicates"
+      }
+    },
+    {
+      "request": {
+        "op": "world.ensure",
+        "payload": {
+          "project": {
+            "id": "w",
+            "name": "World",
+            "timescale": "day"
+          },
+          "entityTypes": [
+            {
+              "id": "person",
+              "name": "Person",
+              "kind": "agent"
+            },
+            {
+              "id": "thing",
+              "name": "Thing",
+              "kind": "other"
+            }
+          ],
+          "entities": [
+            {
+              "id": "ana",
+              "typeId": "person",
+              "name": "Ana"
+            },
+            {
+              "id": "necklace",
+              "typeId": "thing",
+              "name": "The necklace"
+            }
+          ],
+          "predicates": [
+            {
+              "id": "stole",
+              "label": "stole",
+              "object": "entity",
+              "cardinality": "many"
+            }
+          ],
+          "axes": [
+            {
+              "id": "reading",
+              "label": "Reading order"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "created": {
+            "project": false,
+            "entityTypes": [],
+            "entities": [],
+            "predicates": [],
+            "axes": []
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.list",
+        "payload": {
+          "projectId": "w"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": "$ref:predicates"
+      }
+    }
+  ]
+}

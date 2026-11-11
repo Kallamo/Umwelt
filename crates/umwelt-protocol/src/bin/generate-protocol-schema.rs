@@ -44,6 +44,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         EmptyPayload,
         CommitBatchPayload,
         TransmitBatchPayload,
+        TransmitShared,
+        TransmitBatchItem,
+        ClaimKeyPayload,
+        ClaimKeyResult,
+        DispositionsPayload,
+        EnsureWorldInput,
+        EnsureWorldResult,
         ProjectId,
         PagedProject,
         EntityId,
@@ -142,6 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     insert::<ProposalListResult>(&mut defs, "ProposalListResult")?;
     insert::<CommitBatchResult>(&mut defs, "CommitBatchResult")?;
     insert::<TransmitBatchResult>(&mut defs, "TransmitBatchResult")?;
+    insert::<DispositionsResult>(&mut defs, "DispositionsResult")?;
     insert::<WhoHoldsResult>(&mut defs, "WhoHoldsResult")?;
     insert::<ContradictionsResult>(&mut defs, "ContradictionsResult")?;
     insert::<BreachesResult>(&mut defs, "BreachesResult")?;

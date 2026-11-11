@@ -649,3 +649,35 @@ impl QueryBuilder {
         self.0
     }
 }
+
+/// The `dispositions` read starts from the holder's records, on the main
+/// axis and on an additional one, and never scans the ledger.
+#[test]
+fn dispositions_start_from_the_holder() {
+    let store = SqliteStore::in_memory().expect("create store");
+    for axis in [false, true] {
+        let plan = store
+            .explain_dispositions(axis)
+            .expect("explain")
+            .join("\n");
+        assert!(
+            plan.contains(
+                "USING INDEX claims_holder_kind_order (project_id=? AND holder_id=? AND kind=?"
+            ),
+            "{plan}"
+        );
+        assert!(
+            plan.contains("SEARCH r USING PRIMARY KEY (project_id=? AND id=?)"),
+            "{plan}"
+        );
+        // Only the ranked rows are walked, never the records or transitions.
+        assert!(
+            !plan.lines().any(|line| {
+                ["SCAN r", "SCAN t"]
+                    .iter()
+                    .any(|scan| line == *scan || line.starts_with(&format!("{scan} ")))
+            }),
+            "{plan}"
+        );
+    }
+}

@@ -56,6 +56,10 @@ fn subset(expected: &Value, actual: &Value, captures: &mut BTreeMap<String, Valu
                 subset(expected, actual, captures);
             }
         }
+        // JSON has one number type: a case that expects `1` matches `1.0`.
+        Value::Number(number) if actual.is_number() => {
+            assert_eq!(number.as_f64(), actual.as_f64());
+        }
         _ => assert_eq!(expected, actual),
     }
 }

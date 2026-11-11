@@ -652,6 +652,28 @@ pub enum TransitionStatus {
     Superseded,
 }
 
+/// The statuses `transition.batch` applies. `superseded` is not one of them:
+/// it needs a replacement record, which `holding.adjustBatch` writes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum BatchTransitionStatus {
+    Retracted,
+    Revoked,
+    Forgotten,
+    Abandoned,
+}
+
+impl From<BatchTransitionStatus> for TransitionStatus {
+    fn from(status: BatchTransitionStatus) -> Self {
+        match status {
+            BatchTransitionStatus::Retracted => Self::Retracted,
+            BatchTransitionStatus::Revoked => Self::Revoked,
+            BatchTransitionStatus::Forgotten => Self::Forgotten,
+            BatchTransitionStatus::Abandoned => Self::Abandoned,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Transition {
@@ -754,8 +776,24 @@ pub struct EventInput {
 pub struct RecordInputCommon {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-    pub position: Position,
-    pub provenance: Provenance,
+    /// Omitted: the position of the commit's event.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position: Option<Position>,
+    /// Omitted: the provenance of the commit's event.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<Provenance>,
+}
+
+impl RecordInputCommon {
+    /// The record's position: its own, or the event's.
+    pub fn position_in(&self, event: &EventInput) -> Position {
+        self.position.unwrap_or(event.position)
+    }
+
+    /// The record's provenance: its own, or the event's.
+    pub fn provenance_in<'a>(&'a self, event: &'a EventInput) -> &'a Provenance {
+        self.provenance.as_ref().unwrap_or(&event.provenance)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -777,7 +815,11 @@ pub enum RecordInput {
         attitude: Attitude,
         claim: Claim,
         acquisition: Acquisition,
+        /// Omitted: 1.
+        #[serde(default = "default_confidence")]
         confidence: f64,
+        /// Omitted: `available`.
+        #[serde(default = "default_accessibility")]
         accessibility: Accessibility,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         text: Option<String>,
@@ -810,6 +852,15 @@ impl RecordInput {
             | Self::Disposition { common, .. } => common,
         }
     }
+
+    pub fn common_mut(&mut self) -> &mut RecordInputCommon {
+        match self {
+            Self::Fact { common, .. }
+            | Self::Holding { common, .. }
+            | Self::Awareness { common, .. }
+            | Self::Disposition { common, .. } => common,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -821,8 +872,46 @@ pub struct TransitionInput {
     pub status: TransitionStatus,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub superseded_by: Option<String>,
-    pub position: Position,
-    pub provenance: Provenance,
+    /// Omitted: the position of the commit's event.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position: Option<Position>,
+    /// Omitted: the provenance of the commit's event.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<Provenance>,
+}
+
+impl TransitionInput {
+    /// The transition's position: its own, or the event's.
+    pub fn position_in(&self, event: &EventInput) -> Position {
+        self.position.unwrap_or(event.position)
+    }
+
+    /// The transition's provenance: its own, or the event's.
+    pub fn provenance_in<'a>(&'a self, event: &'a EventInput) -> &'a Provenance {
+        self.provenance.as_ref().unwrap_or(&event.provenance)
+    }
+}
+
+/// Fills every write default that comes from the event, so that a request
+/// that omits a field and one that spells it out are the same request.
+fn fill_write_defaults(
+    event: &EventInput,
+    records: &mut [RecordInput],
+    transitions: &mut [TransitionInput],
+) {
+    for record in records {
+        let common = record.common_mut();
+        common.position.get_or_insert(event.position);
+        if common.provenance.is_none() {
+            common.provenance = Some(event.provenance.clone());
+        }
+    }
+    for transition in transitions {
+        transition.position.get_or_insert(event.position);
+        if transition.provenance.is_none() {
+            transition.provenance = Some(event.provenance.clone());
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -945,7 +1034,13 @@ pub struct Proposal {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct HoldsResult {
+    /// The holder has a Holding about the claim, with either polarity.
     pub holds: bool,
+    /// Whether that Holding affirms what was asked (`same`) or its negation
+    /// (`opposite`). Absent when `holds` is false or the question gave only
+    /// a `claimKey`, which has no polarity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub holds_as: Option<HoldsAs>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub attitude: Option<Attitude>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1334,6 +1429,19 @@ impl CommitInput {
     pub fn timeline(&self) -> &str {
         self.timeline_id.as_deref().unwrap_or(MAIN_TIMELINE_ID)
     }
+
+    /// Fills the position and provenance that records and transitions left
+    /// out with the event's. Runs before the fingerprint and validation.
+    pub fn normalize(&mut self) {
+        fill_write_defaults(&self.event, &mut self.records, &mut self.transitions);
+    }
+}
+
+impl ProposeInput {
+    /// Same as [`CommitInput::normalize`], so a proposal shows what it writes.
+    pub fn normalize(&mut self) {
+        fill_write_defaults(&self.event, &mut self.records, &mut self.transitions);
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -1534,7 +1642,7 @@ pub struct TransitionBatchInput {
     /// Positions of the generated event on additional axes.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub on: AxisPositions,
-    pub status: TransitionStatus,
+    pub status: BatchTransitionStatus,
     pub record_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub provenance: Option<Provenance>,
@@ -1844,4 +1952,495 @@ pub struct ProposalRebaseResult {
     pub proposal: Proposal,
     pub head_version: Version,
     pub operations: Vec<OperationCheck>,
+}
+
+/// Whether the Holding behind a `holds` answer has the polarity that was
+/// asked about. A holder who believes the opposite still holds the claim.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum HoldsAs {
+    /// The Holding has the polarity of the claim asked about.
+    Same,
+    /// The Holding has the opposite polarity: the holder holds the negation.
+    Opposite,
+}
+
+/// The keys the engine derives from a claim (`spec/claim-key.md`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ClaimKeyResult {
+    /// Identifies the claim whatever its polarity.
+    pub claim_key: String,
+    /// Identifies the subject and predicate.
+    pub slot_key: String,
+}
+
+impl ClaimKeyResult {
+    pub fn of(claim: &Claim) -> Self {
+        Self {
+            claim_key: crate::claim_key(claim),
+            slot_key: crate::slot_key(claim),
+        }
+    }
+}
+
+impl Acquisition {
+    /// The acquisition as the holder knows it. The intent of whoever told
+    /// them is the narrator's knowledge, so it reads as `unknown`.
+    pub fn hide_intent(&mut self) {
+        if let Self::ToldBy { intent, .. } = self {
+            *intent = Intent::Unknown;
+        }
+    }
+}
+
+impl Record {
+    /// The record as its holder may read it (see [`Acquisition::hide_intent`]).
+    pub fn hide_intent(&mut self) {
+        if let Self::Holding { acquisition, .. } = self {
+            acquisition.hide_intent();
+        }
+    }
+}
+
+/// What every transmit of a batch has in common, written once. A field given
+/// by an item wins over the shared one.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TransmitShared {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeline_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position: Option<Position>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub on: Option<AxisPositions>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_record_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attitude: Option<Attitude>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intent: Option<Intent>,
+}
+
+/// One transmit of a batch: a `TransmitInput` whose shareable fields may be
+/// left to the batch's `shared`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TransmitBatchItem {
+    pub attempt_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeline_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position: Option<Position>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub on: Option<AxisPositions>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_record_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub record_id: Option<String>,
+    /// Neither here nor in `shared`: `believes`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attitude: Option<Attitude>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intent: Option<Intent>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distorted_claim: Option<Claim>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+}
+
+impl From<TransmitInput> for TransmitBatchItem {
+    fn from(input: TransmitInput) -> Self {
+        Self {
+            attempt_id: input.attempt_id,
+            project_id: Some(input.project_id),
+            timeline_id: input.timeline_id,
+            position: Some(input.position),
+            on: (!input.on.is_empty()).then_some(input.on),
+            from: Some(input.from),
+            to: Some(input.to),
+            source_record_id: Some(input.source_record_id),
+            record_id: input.record_id,
+            attitude: Some(input.attitude),
+            confidence: Some(input.confidence),
+            intent: Some(input.intent),
+            distorted_claim: input.distorted_claim,
+            text: input.text,
+        }
+    }
+}
+
+impl TransmitBatchItem {
+    /// The complete transmit: this item, with what it leaves out taken from
+    /// `shared`. The engine supplies nothing itself except the attitude's
+    /// documented default; a field missing in both places is refused.
+    pub fn complete(self, shared: &TransmitShared) -> Result<TransmitInput> {
+        let attempt_id = self.attempt_id;
+        let missing = |field: &str| {
+            UmweltError::validation(format!(
+                "Transmit '{attempt_id}' has no `{field}`, in the item or in `shared`."
+            ))
+        };
+        Ok(TransmitInput {
+            project_id: self
+                .project_id
+                .or_else(|| shared.project_id.clone())
+                .ok_or_else(|| missing("projectId"))?,
+            timeline_id: self.timeline_id.or_else(|| shared.timeline_id.clone()),
+            position: self
+                .position
+                .or(shared.position)
+                .ok_or_else(|| missing("position"))?,
+            on: self.on.or_else(|| shared.on.clone()).unwrap_or_default(),
+            from: self
+                .from
+                .or_else(|| shared.from.clone())
+                .ok_or_else(|| missing("from"))?,
+            to: self
+                .to
+                .or_else(|| shared.to.clone())
+                .ok_or_else(|| missing("to"))?,
+            source_record_id: self
+                .source_record_id
+                .or_else(|| shared.source_record_id.clone())
+                .ok_or_else(|| missing("sourceRecordId"))?,
+            record_id: self.record_id,
+            attitude: self
+                .attitude
+                .or_else(|| shared.attitude.clone())
+                .unwrap_or_else(default_transmit_attitude),
+            confidence: self
+                .confidence
+                .or(shared.confidence)
+                .ok_or_else(|| missing("confidence"))?,
+            intent: self
+                .intent
+                .or_else(|| shared.intent.clone())
+                .ok_or_else(|| missing("intent"))?,
+            distorted_claim: self.distorted_claim,
+            text: self.text,
+            attempt_id: attempt_id.clone(),
+        })
+    }
+}
+
+/// The project of a world manifest. Unlike `project.create`, the id is
+/// required: it is what makes the manifest repeatable.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorldProject {
+    pub id: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub timescale: String,
+    #[serde(default = "default_vocabulary_mode")]
+    pub vocabulary_mode: VocabularyMode,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorldEntityType {
+    pub id: String,
+    pub name: String,
+    pub kind: EntityKind,
+    #[serde(default)]
+    pub fields: Vec<FieldDef>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorldEntity {
+    pub id: String,
+    pub type_id: String,
+    pub name: String,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+    #[serde(default)]
+    pub fields: Map<String, Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub external_ref: Option<ExternalRef>,
+    #[serde(default)]
+    pub created_at: Position,
+}
+
+/// A manifest of what must exist: the project and its entity types, entities,
+/// predicates and axes. Ensuring it creates what is missing, in one
+/// transaction, and leaves what is already there untouched; anything that
+/// exists with another definition refuses the whole manifest.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EnsureWorldInput {
+    pub project: WorldProject,
+    #[serde(default)]
+    pub entity_types: Vec<WorldEntityType>,
+    #[serde(default)]
+    pub entities: Vec<WorldEntity>,
+    #[serde(default)]
+    pub predicates: Vec<PredicateDef>,
+    #[serde(default)]
+    pub axes: Vec<AxisDef>,
+}
+
+/// What a manifest created; everything else was already there.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldCreated {
+    pub project: bool,
+    pub entity_types: Vec<String>,
+    pub entities: Vec<String>,
+    pub predicates: Vec<String>,
+    pub axes: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct EnsureWorldResult {
+    pub project: Project,
+    pub created: WorldCreated,
+}
+
+/// One thing a manifest asks for that already exists with another definition.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldDivergence {
+    /// `project`, `entityType`, `entity`, `predicate` or `axis`.
+    pub kind: String,
+    pub id: String,
+    /// The field whose stored value differs.
+    pub field: String,
+}
+
+/// What a manifest has to create, decided against the stored world.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct WorldWrite {
+    pub project: Option<Project>,
+    pub entity_types: Vec<EntityType>,
+    pub entities: Vec<Entity>,
+    /// The project the predicates and axes belong to.
+    pub project_id: String,
+    pub predicates: Vec<PredicateDef>,
+    pub axes: Vec<AxisDef>,
+}
+
+/// The world as stored, as far as a manifest needs to compare against it.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct StoredWorld {
+    pub project: Option<Project>,
+    pub entity_types: Vec<EntityType>,
+    /// Stored entities among those the manifest names.
+    pub entities: Vec<Entity>,
+    pub predicates: Vec<PredicateDef>,
+    pub axes: Vec<AxisDef>,
+}
+
+fn unique_ids<'a>(kind: &str, ids: impl Iterator<Item = &'a str>) -> Result<()> {
+    let mut seen = std::collections::BTreeSet::new();
+    for id in ids {
+        if id.trim().is_empty() {
+            return Err(UmweltError::validation(format!(
+                "A manifest {kind} has an empty id."
+            )));
+        }
+        if !seen.insert(id) {
+            return Err(UmweltError::validation(format!(
+                "The manifest lists {kind} '{id}' twice."
+            )));
+        }
+    }
+    Ok(())
+}
+
+/// Compares a manifest with the stored world: what is missing, and what
+/// exists with another definition. An existing entity only has to keep its
+/// type: its name, aliases and fields change during play and are left alone.
+pub fn plan_world(
+    input: &EnsureWorldInput,
+    stored: &StoredWorld,
+    created_at: &str,
+) -> Result<(WorldWrite, Vec<WorldDivergence>)> {
+    let project_id = &input.project.id;
+    unique_ids("project", std::iter::once(project_id.as_str()))?;
+    unique_ids(
+        "entity type",
+        input.entity_types.iter().map(|value| value.id.as_str()),
+    )?;
+    unique_ids(
+        "entity",
+        input.entities.iter().map(|value| value.id.as_str()),
+    )?;
+    unique_ids(
+        "predicate",
+        input.predicates.iter().map(|value| value.id.as_str()),
+    )?;
+    unique_ids("axis", input.axes.iter().map(|value| value.id.as_str()))?;
+
+    let mut write = WorldWrite {
+        project_id: project_id.clone(),
+        ..WorldWrite::default()
+    };
+    let mut divergences = Vec::new();
+    let mut differ = |kind: &str, id: &str, field: &str, differs: bool| {
+        if differs {
+            divergences.push(WorldDivergence {
+                kind: kind.to_owned(),
+                id: id.to_owned(),
+                field: field.to_owned(),
+            });
+        }
+    };
+    match &stored.project {
+        Some(project) => {
+            let wanted = &input.project;
+            differ("project", project_id, "name", project.name != wanted.name);
+            differ(
+                "project",
+                project_id,
+                "description",
+                project.description != wanted.description,
+            );
+            differ(
+                "project",
+                project_id,
+                "timescale",
+                project.timescale != wanted.timescale,
+            );
+            differ(
+                "project",
+                project_id,
+                "vocabularyMode",
+                project.vocabulary_mode != wanted.vocabulary_mode,
+            );
+        }
+        None => {
+            write.project = Some(Project {
+                id: project_id.clone(),
+                name: input.project.name.clone(),
+                description: input.project.description.clone(),
+                timescale: input.project.timescale.clone(),
+                vocabulary_mode: input.project.vocabulary_mode.clone(),
+                created_at: created_at.to_owned(),
+                version: 0,
+            });
+        }
+    }
+    for wanted in &input.entity_types {
+        match stored
+            .entity_types
+            .iter()
+            .find(|value| value.id == wanted.id)
+        {
+            Some(existing) => {
+                differ(
+                    "entityType",
+                    &wanted.id,
+                    "name",
+                    existing.name != wanted.name,
+                );
+                differ(
+                    "entityType",
+                    &wanted.id,
+                    "kind",
+                    existing.kind != wanted.kind,
+                );
+                differ(
+                    "entityType",
+                    &wanted.id,
+                    "fields",
+                    existing.fields != wanted.fields,
+                );
+            }
+            None => write.entity_types.push(EntityType {
+                id: wanted.id.clone(),
+                project_id: project_id.clone(),
+                name: wanted.name.clone(),
+                kind: wanted.kind.clone(),
+                fields: wanted.fields.clone(),
+            }),
+        }
+    }
+    for wanted in &input.entities {
+        match stored.entities.iter().find(|value| value.id == wanted.id) {
+            Some(existing) => differ(
+                "entity",
+                &wanted.id,
+                "typeId",
+                existing.type_id != wanted.type_id,
+            ),
+            None => write.entities.push(Entity {
+                id: wanted.id.clone(),
+                project_id: project_id.clone(),
+                type_id: wanted.type_id.clone(),
+                name: wanted.name.clone(),
+                aliases: wanted.aliases.clone(),
+                fields: wanted.fields.clone(),
+                external_ref: wanted.external_ref.clone(),
+                created_at: wanted.created_at,
+                archived: false,
+            }),
+        }
+    }
+    for wanted in &input.predicates {
+        if wanted.id.starts_with("umwelt:") {
+            return Err(UmweltError::validation(
+                "Predicate ids beginning with 'umwelt:' are reserved.",
+            ));
+        }
+        match stored.predicates.iter().find(|value| value.id == wanted.id) {
+            Some(existing) => {
+                differ(
+                    "predicate",
+                    &wanted.id,
+                    "label",
+                    existing.label != wanted.label,
+                );
+                differ(
+                    "predicate",
+                    &wanted.id,
+                    "object",
+                    existing.object != wanted.object,
+                );
+                differ(
+                    "predicate",
+                    &wanted.id,
+                    "cardinality",
+                    existing.cardinality != wanted.cardinality,
+                );
+                differ(
+                    "predicate",
+                    &wanted.id,
+                    "subjectTypes",
+                    existing.subject_types != wanted.subject_types,
+                );
+            }
+            None => write.predicates.push(wanted.clone()),
+        }
+    }
+    for wanted in &input.axes {
+        validate_axis_id(&wanted.id)?;
+        if wanted.label.trim().is_empty() {
+            return Err(UmweltError::validation("Axis labels cannot be empty."));
+        }
+        match stored.axes.iter().find(|value| value.id == wanted.id) {
+            Some(existing) => differ("axis", &wanted.id, "label", existing.label != wanted.label),
+            None => write.axes.push(wanted.clone()),
+        }
+    }
+    Ok((write, divergences))
 }

@@ -314,7 +314,7 @@ fn a_document_the_read_cannot_see_is_never_returned() {
             expected_version: None,
             position: Position { tick: 6 },
             on: AxisPositions::new(),
-            status: TransitionStatus::Forgotten,
+            status: BatchTransitionStatus::Forgotten,
             record_ids: vec!["later".to_owned()],
             provenance: None,
         })

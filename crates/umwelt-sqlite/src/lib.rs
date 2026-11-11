@@ -319,6 +319,26 @@ const TOLD_FROM: &str = concat!(
     visible!("r"),
     " ORDER BY r.tick, r.recorded_version, r.id"
 );
+/// The current Disposition of a holder per target and dimension: the newest
+/// active one, optionally for one target and/or one dimension.
+const DISPOSITIONS: &str = concat!(
+    "SELECT ",
+    record_columns!(),
+    " FROM (SELECT r.id AS ranked_id, ROW_NUMBER() OVER \
+     (PARTITION BY r.target_id, r.dimension \
+     ORDER BY r.tick DESC, r.recorded_version DESC, r.id DESC) AS position \
+     FROM records r INDEXED BY claims_holder_kind_order \
+     WHERE r.project_id = :project_id AND r.holder_id = :holder AND r.kind = 'disposition' \
+     AND (:target IS NULL OR r.target_id = :target) \
+     AND (:dimension IS NULL OR r.dimension = :dimension) \
+     AND r.tick <= :tick AND r.recorded_version <= :version AND ",
+    visible!("r"),
+    " AND NOT EXISTS (SELECT 1 FROM transitions t WHERE t.project_id = r.project_id \
+     AND t.target_id = r.id AND t.tick <= :tick AND t.recorded_version <= :version AND ",
+    visible!("t"),
+    ")) ranked CROSS JOIN records r ON r.project_id = :project_id AND r.id = ranked.ranked_id \
+     WHERE ranked.position = 1 ORDER BY r.target_id, r.dimension"
+);
 /// Whether a holder has an active, available Holding witnessed at an event.
 const WITNESSED_BY: &str = concat!(
     "SELECT EXISTS (SELECT 1 FROM records r INDEXED BY acquisitions_witnessed \
@@ -717,6 +737,11 @@ impl SqliteStore {
             SEMANTIC_NARRATOR
         };
         self.explain_unbound(sql)
+    }
+
+    /// Plan of the `dispositions` read, on the main axis or an additional one.
+    pub fn explain_dispositions(&self, axis: bool) -> Result<Vec<String>> {
+        self.explain_unbound(&bound_on_axis(DISPOSITIONS, axis))
     }
 
     /// Plan of `embedding.pending`.
@@ -1219,20 +1244,7 @@ impl Store for SqliteStore {
             .connection
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(database_error)?;
-        transaction
-            .execute(
-                "INSERT INTO projects (id, name, description, timescale, vocabulary_mode, created_at, version, last_version) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)",
-                params![project.id, project.name, project.description, project.timescale, enum_name(&project.vocabulary_mode)?, project.created_at, to_i64(project.version)?],
-            )
-            .map_err(database_error)?;
-        for predicate in reserved_predicates() {
-            transaction
-                .execute(
-                    "INSERT INTO predicates (project_id, id, payload) VALUES (?1, ?2, ?3)",
-                    params![project.id, predicate.id, to_json(&predicate)?],
-                )
-                .map_err(database_error)?;
-        }
+        insert_project(&transaction, project)?;
         transaction.commit().map_err(database_error)
     }
 
@@ -1276,19 +1288,7 @@ impl Store for SqliteStore {
     }
 
     fn put_entity_type(&mut self, entity_type: &EntityType) -> Result<()> {
-        self.connection
-            .execute(
-                "INSERT INTO entity_types (project_id, id, name, kind, payload) VALUES (?1, ?2, ?3, ?4, ?5)",
-                params![
-                    entity_type.project_id,
-                    entity_type.id,
-                    entity_type.name,
-                    enum_name(&entity_type.kind)?,
-                    to_json(entity_type)?
-                ],
-            )
-            .map_err(database_error)?;
-        Ok(())
+        insert_entity_type(&self.connection, entity_type)
     }
 
     fn entity_types(&self, project_id: &str) -> Result<Vec<EntityType>> {
@@ -1338,13 +1338,35 @@ impl Store for SqliteStore {
     }
 
     fn put_predicate(&mut self, project_id: &str, predicate: &PredicateDef) -> Result<()> {
-        self.connection
-            .execute(
-                "INSERT INTO predicates (project_id, id, payload) VALUES (?1, ?2, ?3)",
-                params![project_id, predicate.id, to_json(predicate)?],
-            )
+        insert_predicate(&self.connection, project_id, predicate)
+    }
+
+    fn write_world(&mut self, write: &WorldWrite) -> Result<()> {
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(database_error)?;
-        Ok(())
+        if let Some(project) = &write.project {
+            insert_project(&transaction, project)?;
+        }
+        for entity_type in &write.entity_types {
+            insert_entity_type(&transaction, entity_type)?;
+        }
+        for entity in &write.entities {
+            insert_entity(&transaction, entity)?;
+        }
+        for predicate in &write.predicates {
+            insert_predicate(&transaction, &write.project_id, predicate)?;
+        }
+        for axis in &write.axes {
+            transaction
+                .execute(
+                    "INSERT INTO axes (project_id, id, label) VALUES (?1, ?2, ?3)",
+                    params![write.project_id, axis.id, axis.label],
+                )
+                .map_err(database_error)?;
+        }
+        transaction.commit().map_err(database_error)
     }
 
     fn define_axis(&mut self, project_id: &str, axis: &AxisDef) -> Result<AxisDef> {
@@ -2457,6 +2479,7 @@ impl Store for SqliteStore {
         as_of_version: Version,
     ) -> Result<PerspectiveRecords> {
         let version = to_i64(as_of_version)?;
+        let scope_in = scope;
         let scope = ScopeBinding::of(scope)?;
         let parameters = scope.with(&[
             (":project_id", &project_id),
@@ -2486,28 +2509,47 @@ impl Store for SqliteStore {
             ),
             &parameters[..],
         )?;
-        // The newest active value per target and dimension.
-        let dispositions = record_rows(
-            &self.connection,
-            &self.provenances,
-            &bound_on_axis(
-                &format!(
-                    "SELECT {RECORD_COLUMNS} FROM (SELECT r.id AS ranked_id, ROW_NUMBER() OVER \
-                 (PARTITION BY r.target_id, r.dimension \
-                 ORDER BY r.tick DESC, r.recorded_version DESC, r.id DESC) AS position \
-                 FROM records r INDEXED BY claims_holder_kind_order \
-                 WHERE r.project_id = :project_id AND r.holder_id = :holder AND r.kind = 'disposition' {active}) \
-                 ranked CROSS JOIN records r ON r.project_id = :project_id AND r.id = ranked.ranked_id \
-                 WHERE ranked.position = 1 ORDER BY r.target_id, r.dimension"
-                ),
-                axis,
-            ),
-            &parameters[..],
+        let dispositions = self.dispositions(
+            project_id,
+            scope_in,
+            holder_id,
+            None,
+            None,
+            tick,
+            as_of_version,
         )?;
         Ok(PerspectiveRecords {
             awareness,
             dispositions,
         })
+    }
+
+    fn dispositions(
+        &self,
+        project_id: &str,
+        scope: &TimelineScope,
+        holder_id: &str,
+        target_id: Option<&str>,
+        dimension: Option<&str>,
+        tick: i64,
+        as_of_version: Version,
+    ) -> Result<Vec<Record>> {
+        let version = to_i64(as_of_version)?;
+        let scope = ScopeBinding::of(scope)?;
+        let parameters = scope.with(&[
+            (":project_id", &project_id),
+            (":holder", &holder_id),
+            (":target", &target_id),
+            (":dimension", &dimension),
+            (":tick", &tick),
+            (":version", &version),
+        ]);
+        record_rows(
+            &self.connection,
+            &self.provenances,
+            &bound_on_axis(DISPOSITIONS, scope.axis.is_some()),
+            &parameters[..],
+        )
     }
 
     fn project_window(&self, project_id: &str) -> Result<(Version, i64)> {
@@ -3145,6 +3187,67 @@ fn insert_transition(
     )
 }
 
+fn insert_project(connection: &Connection, project: &Project) -> Result<()> {
+    connection
+        .execute(
+            "INSERT INTO projects (id, name, description, timescale, vocabulary_mode, created_at, version, last_version) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7)",
+            params![project.id, project.name, project.description, project.timescale, enum_name(&project.vocabulary_mode)?, project.created_at, to_i64(project.version)?],
+        )
+        .map_err(|source| {
+            duplicate_or_database_error(source, |_| {
+                format!("Project '{}' already exists.", project.id)
+            })
+        })?;
+    for predicate in reserved_predicates() {
+        insert_predicate(connection, &project.id, &predicate)?;
+    }
+    Ok(())
+}
+
+fn insert_entity_type(connection: &Connection, entity_type: &EntityType) -> Result<()> {
+    connection
+        .execute(
+            "INSERT INTO entity_types (project_id, id, name, kind, payload) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![
+                entity_type.project_id,
+                entity_type.id,
+                entity_type.name,
+                enum_name(&entity_type.kind)?,
+                to_json(entity_type)?
+            ],
+        )
+        .map_err(|source| {
+            duplicate_or_database_error(source, |_| {
+                format!(
+                    "Entity type '{}' already exists in project '{}'.",
+                    entity_type.id, entity_type.project_id
+                )
+            })
+        })?;
+    Ok(())
+}
+
+fn insert_predicate(
+    connection: &Connection,
+    project_id: &str,
+    predicate: &PredicateDef,
+) -> Result<()> {
+    connection
+        .execute(
+            "INSERT INTO predicates (project_id, id, payload) VALUES (?1, ?2, ?3)",
+            params![project_id, predicate.id, to_json(predicate)?],
+        )
+        .map_err(|source| {
+            duplicate_or_database_error(source, |_| {
+                format!(
+                    "Predicate '{}' already exists in project '{project_id}'.",
+                    predicate.id
+                )
+            })
+        })?;
+    Ok(())
+}
+
 fn insert_entity(connection: &Connection, entity: &Entity) -> Result<()> {
     project_from_connection(connection, &entity.project_id)?.ok_or_else(|| {
         UmweltError::not_found(format!("Project '{}' does not exist.", entity.project_id))
@@ -3167,7 +3270,18 @@ fn insert_entity(connection: &Connection, entity: &Entity) -> Result<()> {
             "INSERT INTO entities (project_id, id, type_id, name, external_system, external_id, payload) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![entity.project_id, entity.id, entity.type_id, entity.name, entity.external_ref.as_ref().map(|value| value.system.as_str()), entity.external_ref.as_ref().map(|value| value.id.as_str()), to_json(entity)?],
         )
-        .map_err(database_error)?;
+        .map_err(|source| {
+            duplicate_or_database_error(source, |duplicate| match (duplicate, &entity.external_ref) {
+                (Duplicate::Unique, Some(reference)) => format!(
+                    "Another entity in project '{}' already has the external reference '{}:{}'.",
+                    entity.project_id, reference.system, reference.id
+                ),
+                _ => format!(
+                    "Entity '{}' already exists in project '{}'.",
+                    entity.id, entity.project_id
+                ),
+            })
+        })?;
     let aliases = entity.aliases.join(" ");
     insert_search(
         connection,
@@ -4207,8 +4321,8 @@ fn stored_draft_commits(
                 target_record_id: transition.target_record_id,
                 status: transition.status,
                 superseded_by: transition.superseded_by,
-                position: transition.position,
-                provenance: transition.provenance,
+                position: Some(transition.position),
+                provenance: Some(transition.provenance),
             });
         }
         commits.push(PreparedCommit {
@@ -4245,8 +4359,8 @@ fn stored_draft_commits(
 fn record_input(record: Record) -> RecordInput {
     let input_common = |common: RecordCommon| RecordInputCommon {
         id: Some(common.id),
-        position: common.position,
-        provenance: common.provenance,
+        position: Some(common.position),
+        provenance: Some(common.provenance),
     };
     match record {
         Record::Fact { common, claim } => RecordInput::Fact {
@@ -4924,6 +5038,33 @@ fn to_u64(value: i64) -> Result<u64> {
     u64::try_from(value).map_err(|_| {
         UmweltError::public(UmweltErrorCode::InvalidState, "Stored version is negative.")
     })
+}
+
+/// Which constraint an insert broke: the row's primary key, or another unique
+/// key of the table.
+enum Duplicate {
+    PrimaryKey,
+    Unique,
+}
+
+/// Turns an insert that broke a primary or unique key into a `CONFLICT` with
+/// `message`; any other failure stays a `DATABASE_ERROR`.
+fn duplicate_or_database_error(
+    source: rusqlite::Error,
+    message: impl FnOnce(Duplicate) -> String,
+) -> UmweltError {
+    let duplicate = match &source {
+        rusqlite::Error::SqliteFailure(error, _) => match error.extended_code {
+            rusqlite::ffi::SQLITE_CONSTRAINT_PRIMARYKEY => Some(Duplicate::PrimaryKey),
+            rusqlite::ffi::SQLITE_CONSTRAINT_UNIQUE => Some(Duplicate::Unique),
+            _ => None,
+        },
+        _ => None,
+    };
+    match duplicate {
+        Some(duplicate) => UmweltError::public(UmweltErrorCode::Conflict, message(duplicate)),
+        None => database_error(source),
+    }
 }
 
 fn database_error(source: rusqlite::Error) -> UmweltError {

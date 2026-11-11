@@ -247,6 +247,16 @@
       "title": "Array_of_AxisDef",
       "type": "array"
     },
+    "BatchTransitionStatus": {
+      "description": "The statuses `transition.batch` applies. `superseded` is not one of them:\nit needs a replacement record, which `holding.adjustBatch` writes.",
+      "enum": [
+        "retracted",
+        "revoked",
+        "forgotten",
+        "abandoned"
+      ],
+      "type": "string"
+    },
     "BeliefAboutItem": {
       "description": "What a holder thinks another holder knows (`umwelt:holds` Holdings), next\nto what the other holder actually holds at the same position.",
       "properties": {
@@ -695,6 +705,38 @@
         "object",
         "polarity"
       ],
+      "type": "object"
+    },
+    "ClaimKeyPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "$ref": "#/$defs/Claim"
+        }
+      },
+      "required": [
+        "claim"
+      ],
+      "title": "ClaimKeyPayload",
+      "type": "object"
+    },
+    "ClaimKeyResult": {
+      "description": "The keys the engine derives from a claim (`spec/claim-key.md`).",
+      "properties": {
+        "claimKey": {
+          "description": "Identifies the claim whatever its polarity.",
+          "type": "string"
+        },
+        "slotKey": {
+          "description": "Identifies the subject and predicate.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claimKey",
+        "slotKey"
+      ],
+      "title": "ClaimKeyResult",
       "type": "object"
     },
     "ClaimObject": {
@@ -1557,6 +1599,55 @@
       ],
       "type": "object"
     },
+    "DispositionsPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/At",
+          "default": {}
+        },
+        "dimension": {
+          "description": "Only this dimension.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "holder": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "target": {
+          "description": "Only the Dispositions toward this entity.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timelineId": {
+          "description": "Timeline to read; defaults to \"main\".",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "holder"
+      ],
+      "title": "DispositionsPayload",
+      "type": "object"
+    },
+    "DispositionsResult": {
+      "items": {
+        "$ref": "#/$defs/Record"
+      },
+      "title": "Array_of_Record",
+      "type": "array"
+    },
     "DropEmbeddingSpaceResult": {
       "properties": {
         "removed": {
@@ -1767,6 +1858,64 @@
         "entity",
         "created"
       ],
+      "type": "object"
+    },
+    "EnsureWorldInput": {
+      "additionalProperties": false,
+      "description": "A manifest of what must exist: the project and its entity types, entities,\npredicates and axes. Ensuring it creates what is missing, in one\ntransaction, and leaves what is already there untouched; anything that\nexists with another definition refuses the whole manifest.",
+      "properties": {
+        "axes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AxisDef"
+          },
+          "type": "array"
+        },
+        "entities": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/WorldEntity"
+          },
+          "type": "array"
+        },
+        "entityTypes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/WorldEntityType"
+          },
+          "type": "array"
+        },
+        "predicates": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PredicateDef"
+          },
+          "type": "array"
+        },
+        "project": {
+          "$ref": "#/$defs/WorldProject"
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "title": "EnsureWorldInput",
+      "type": "object"
+    },
+    "EnsureWorldResult": {
+      "properties": {
+        "created": {
+          "$ref": "#/$defs/WorldCreated"
+        },
+        "project": {
+          "$ref": "#/$defs/Project"
+        }
+      },
+      "required": [
+        "project",
+        "created"
+      ],
+      "title": "EnsureWorldResult",
       "type": "object"
     },
     "Entity": {
@@ -2846,6 +2995,21 @@
       "title": "HoldingsResult",
       "type": "object"
     },
+    "HoldsAs": {
+      "description": "Whether the Holding behind a `holds` answer has the polarity that was\nasked about. A holder who believes the opposite still holds the claim.",
+      "oneOf": [
+        {
+          "const": "same",
+          "description": "The Holding has the polarity of the claim asked about.",
+          "type": "string"
+        },
+        {
+          "const": "opposite",
+          "description": "The Holding has the opposite polarity: the holder holds the negation.",
+          "type": "string"
+        }
+      ]
+    },
     "HoldsPayload": {
       "additionalProperties": false,
       "properties": {
@@ -2910,7 +3074,19 @@
           ]
         },
         "holds": {
+          "description": "The holder has a Holding about the claim, with either polarity.",
           "type": "boolean"
+        },
+        "holdsAs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HoldsAs"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Whether that Holding affirms what was asked (`same`) or its negation\n(`opposite`). Absent when `holds` is false or the question gave only\na `claimKey`, which has no polarity."
         },
         "polarity": {
           "type": [
@@ -4015,16 +4191,30 @@
               "type": "string"
             },
             "position": {
-              "$ref": "#/$defs/Position"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the position of the commit's event."
             },
             "provenance": {
-              "$ref": "#/$defs/Provenance"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Provenance"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the provenance of the commit's event."
             }
           },
           "required": [
             "kind",
-            "position",
-            "provenance",
             "claim"
           ],
           "type": "object"
@@ -4032,7 +4222,9 @@
         {
           "properties": {
             "accessibility": {
-              "$ref": "#/$defs/Accessibility"
+              "$ref": "#/$defs/Accessibility",
+              "default": "available",
+              "description": "Omitted: `available`."
             },
             "acquisition": {
               "$ref": "#/$defs/Acquisition"
@@ -4044,6 +4236,8 @@
               "$ref": "#/$defs/Claim"
             },
             "confidence": {
+              "default": 1.0,
+              "description": "Omitted: 1.",
               "format": "double",
               "type": "number"
             },
@@ -4061,10 +4255,26 @@
               "type": "string"
             },
             "position": {
-              "$ref": "#/$defs/Position"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the position of the commit's event."
             },
             "provenance": {
-              "$ref": "#/$defs/Provenance"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Provenance"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the provenance of the commit's event."
             },
             "secrecy": {
               "anyOf": [
@@ -4086,14 +4296,10 @@
           },
           "required": [
             "kind",
-            "position",
-            "provenance",
             "holder",
             "attitude",
             "claim",
-            "acquisition",
-            "confidence",
-            "accessibility"
+            "acquisition"
           ],
           "type": "object"
         },
@@ -4113,10 +4319,26 @@
               "type": "string"
             },
             "position": {
-              "$ref": "#/$defs/Position"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the position of the commit's event."
             },
             "provenance": {
-              "$ref": "#/$defs/Provenance"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Provenance"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the provenance of the commit's event."
             },
             "target": {
               "type": "string"
@@ -4124,8 +4346,6 @@
           },
           "required": [
             "kind",
-            "position",
-            "provenance",
             "holder",
             "target"
           ],
@@ -4150,10 +4370,26 @@
               "type": "string"
             },
             "position": {
-              "$ref": "#/$defs/Position"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the position of the commit's event."
             },
             "provenance": {
-              "$ref": "#/$defs/Provenance"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Provenance"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omitted: the provenance of the commit's event."
             },
             "target": {
               "type": "string"
@@ -4162,8 +4398,6 @@
           },
           "required": [
             "kind",
-            "position",
-            "provenance",
             "holder",
             "target",
             "dimension",
@@ -4941,7 +5175,7 @@
           "type": "array"
         },
         "status": {
-          "$ref": "#/$defs/TransitionStatus"
+          "$ref": "#/$defs/BatchTransitionStatus"
         },
         "timelineId": {
           "type": [
@@ -4969,10 +5203,26 @@
           ]
         },
         "position": {
-          "$ref": "#/$defs/Position"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Omitted: the position of the commit's event."
         },
         "provenance": {
-          "$ref": "#/$defs/Provenance"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Omitted: the provenance of the commit's event."
         },
         "status": {
           "$ref": "#/$defs/TransitionStatus"
@@ -4989,9 +5239,7 @@
       },
       "required": [
         "targetRecordId",
-        "status",
-        "position",
-        "provenance"
+        "status"
       ],
       "type": "object"
     },
@@ -5005,12 +5253,137 @@
       ],
       "type": "string"
     },
+    "TransmitBatchItem": {
+      "additionalProperties": false,
+      "description": "One transmit of a batch: a `TransmitInput` whose shareable fields may be\nleft to the batch's `shared`.",
+      "properties": {
+        "attemptId": {
+          "type": "string"
+        },
+        "attitude": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attitude"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Neither here nor in `shared`: `believes`."
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "distortedClaim": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Claim"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Intent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceRecordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timelineId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "attemptId"
+      ],
+      "title": "TransmitBatchItem",
+      "type": "object"
+    },
     "TransmitBatchPayload": {
       "additionalProperties": false,
       "properties": {
+        "shared": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TransmitShared"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the transmits have in common, written once."
+        },
         "transmits": {
           "items": {
-            "$ref": "#/$defs/TransmitInput"
+            "$ref": "#/$defs/TransmitBatchItem"
           },
           "type": "array"
         }
@@ -5109,6 +5482,91 @@
         "intent"
       ],
       "title": "TransmitInput",
+      "type": "object"
+    },
+    "TransmitShared": {
+      "additionalProperties": false,
+      "description": "What every transmit of a batch has in common, written once. A field given\nby an item wins over the shared one.",
+      "properties": {
+        "attitude": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attitude"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Intent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "on": {
+          "additionalProperties": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceRecordId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timelineId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "title": "TransmitShared",
       "type": "object"
     },
     "UpdateEntityInput": {
@@ -5478,6 +5936,152 @@
         "claim"
       ],
       "type": "object"
+    },
+    "WorldCreated": {
+      "description": "What a manifest created; everything else was already there.",
+      "properties": {
+        "axes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "entities": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "entityTypes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "predicates": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "project": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "project",
+        "entityTypes",
+        "entities",
+        "predicates",
+        "axes"
+      ],
+      "type": "object"
+    },
+    "WorldEntity": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/Position",
+          "default": {
+            "tick": 0
+          }
+        },
+        "externalRef": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "additionalProperties": true,
+          "default": {},
+          "type": "object"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "typeId",
+        "name"
+      ],
+      "type": "object"
+    },
+    "WorldEntityType": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FieldDef"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "WorldProject": {
+      "additionalProperties": false,
+      "description": "The project of a world manifest. Unlike `project.create`, the id is\nrequired: it is what makes the manifest repeatable.",
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "timescale": {
+          "type": "string"
+        },
+        "vocabularyMode": {
+          "$ref": "#/$defs/VocabularyMode",
+          "default": "strict"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "timescale"
+      ],
+      "type": "object"
     }
   },
   "$id": "https://umwelt.dev/spec/schema/umwelt-protocol-v1.schema.json",
@@ -5520,6 +6124,11 @@
       "payload": "#/$defs/CheckUtteranceInput",
       "result": "#/$defs/CheckUtteranceResult"
     },
+    "claim.key": {
+      "kind": "query",
+      "payload": "#/$defs/ClaimKeyPayload",
+      "result": "#/$defs/ClaimKeyResult"
+    },
     "commit": {
       "kind": "command",
       "payload": "#/$defs/CommitInput",
@@ -5549,6 +6158,11 @@
       "kind": "command",
       "payload": "#/$defs/SetDispositionsInput",
       "result": "#/$defs/CommitOutcome"
+    },
+    "dispositions": {
+      "kind": "query",
+      "payload": "#/$defs/DispositionsPayload",
+      "result": "#/$defs/DispositionsResult"
     },
     "embedding.defineSpace": {
       "kind": "command",
@@ -5819,6 +6433,11 @@
       "kind": "command",
       "payload": "#/$defs/WitnessInput",
       "result": "#/$defs/CommitOutcome"
+    },
+    "world.ensure": {
+      "kind": "command",
+      "payload": "#/$defs/EnsureWorldInput",
+      "result": "#/$defs/EnsureWorldResult"
     }
   }
 }

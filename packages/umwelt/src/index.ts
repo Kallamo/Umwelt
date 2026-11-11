@@ -5,6 +5,23 @@ export { UmweltClient } from './generated/client.js';
 export { StdioTransport, UmweltError } from './transport.js';
 export type { StdioOptions } from './transport.js';
 export { BUNDLED_PLATFORMS, resolveEngineBinary } from './engine-binary.js';
+export {
+  at,
+  authored,
+  believes,
+  by,
+  claim,
+  evidence,
+  fact,
+  inferred,
+  knows,
+  negate,
+  remembers,
+  suspects,
+  toldBy,
+  witnessed,
+} from './build.js';
+export type { ClaimOptions, FactInput, HoldingInput, HoldingOptions, RecordOptions } from './build.js';
 export { EmbeddingClient } from './embedding.js';
 export type {
   ClientOptions,

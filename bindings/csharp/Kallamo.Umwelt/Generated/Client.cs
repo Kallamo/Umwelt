@@ -28,6 +28,9 @@ public sealed partial class UmweltEngine
     /// <summary>Protocol operation <c>check.utterance</c> (query).</summary>
     public CheckUtteranceResult CheckUtterance(CheckUtteranceInput payload) => Call<CheckUtteranceResult>("check.utterance", payload);
 
+    /// <summary>Protocol operation <c>claim.key</c> (query).</summary>
+    public ClaimKeyResult ClaimKey(ClaimKeyPayload payload) => Call<ClaimKeyResult>("claim.key", payload);
+
     /// <summary>Protocol operation <c>commit</c> (command).</summary>
     public CommitOutcome Commit(CommitInput payload) => Call<CommitOutcome>("commit", payload);
 
@@ -45,6 +48,9 @@ public sealed partial class UmweltEngine
 
     /// <summary>Protocol operation <c>disposition.setBatch</c> (command).</summary>
     public CommitOutcome DispositionSetBatch(SetDispositionsInput payload) => Call<CommitOutcome>("disposition.setBatch", payload);
+
+    /// <summary>Protocol operation <c>dispositions</c> (query).</summary>
+    public List<Record> Dispositions(DispositionsPayload payload) => Call<List<Record>>("dispositions", payload);
 
     /// <summary>Protocol operation <c>embedding.defineSpace</c> (command).</summary>
     public EmbeddingSpace EmbeddingDefineSpace(DefineEmbeddingSpaceInput payload) => Call<EmbeddingSpace>("embedding.defineSpace", payload);
@@ -207,4 +213,7 @@ public sealed partial class UmweltEngine
 
     /// <summary>Protocol operation <c>witness</c> (command).</summary>
     public CommitOutcome Witness(WitnessInput payload) => Call<CommitOutcome>("witness", payload);
+
+    /// <summary>Protocol operation <c>world.ensure</c> (command).</summary>
+    public EnsureWorldResult WorldEnsure(EnsureWorldInput payload) => Call<EnsureWorldResult>("world.ensure", payload);
 }

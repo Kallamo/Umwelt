@@ -97,8 +97,8 @@ fn holding(id: &str, holder: &str, tick: i64, text: Option<&str>) -> RecordInput
     RecordInput::Holding {
         common: RecordInputCommon {
             id: Some(id.to_owned()),
-            position: Position { tick },
-            provenance: provenance(),
+            position: Some(Position { tick }),
+            provenance: Some(provenance()),
         },
         holder: holder.to_owned(),
         attitude: Attitude::Believes,
@@ -115,8 +115,8 @@ fn fact(id: &str, subject: &str, tick: i64) -> RecordInput {
     RecordInput::Fact {
         common: RecordInputCommon {
             id: Some(id.to_owned()),
-            position: Position { tick },
-            provenance: provenance(),
+            position: Some(Position { tick }),
+            provenance: Some(provenance()),
         },
         claim: claim(subject),
     }
@@ -128,8 +128,8 @@ fn forget(id: &str, target: &str, tick: i64) -> TransitionInput {
         target_record_id: target.to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: Position { tick },
-        provenance: provenance(),
+        position: Some(Position { tick }),
+        provenance: Some(provenance()),
     }
 }
 

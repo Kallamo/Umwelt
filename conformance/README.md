@@ -15,3 +15,19 @@ I/O.
 
 Run `cargo test -p umwelt-protocol --test conformance` and `npm test`.
 The latter builds the CLI before starting the stdio runner.
+
+## Write factories
+
+`builders.json` keeps the client libraries' write factories (`claim.entity`,
+`knows`, `witnessed`, ...) identical across languages. Each line is a call
+with named arguments and the JSON it must build:
+
+```json
+{ "call": "claim.entity", "args": { "subject": "bob", "predicate": "stole", "objectId": "necklace" },
+  "expect": { "subject": "bob", "predicate": "stole", "object": { "kind": "entity", "id": "necklace" }, "polarity": true } }
+```
+
+`packages/umwelt/tests/build.test.ts` and the .NET runner
+(`npm run test:csharp`) run every line, and fail when a factory has no line or
+a line names a factory the language does not have. A new factory therefore
+needs a line here and an implementation in both clients.

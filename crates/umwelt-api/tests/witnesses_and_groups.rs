@@ -224,8 +224,8 @@ fn group_coverage_reports_members_with_and_without_the_claim() {
         target_record_id: "m-bob".to_owned(),
         status: TransitionStatus::Retracted,
         superseded_by: None,
-        position: Position { tick: 5 },
-        provenance: provenance(),
+        position: Some(Position { tick: 5 }),
+        provenance: Some(provenance()),
     }];
     engine.commit(leave).expect("bob leaves");
     engine

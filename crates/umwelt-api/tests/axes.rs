@@ -160,7 +160,7 @@ fn a_transition_positioned_only_on_the_main_axis_does_not_reach_the_axis() {
             expected_version: None,
             position: Position { tick: 11 },
             on: AxisPositions::new(),
-            status: TransitionStatus::Forgotten,
+            status: BatchTransitionStatus::Forgotten,
             record_ids: vec!["reader-theft".to_owned()],
             provenance: None,
         })
@@ -177,7 +177,7 @@ fn a_transition_positioned_only_on_the_main_axis_does_not_reach_the_axis() {
             expected_version: None,
             position: Position { tick: 12 },
             on: on(13),
-            status: TransitionStatus::Forgotten,
+            status: BatchTransitionStatus::Forgotten,
             record_ids: vec!["reader-secret".to_owned()],
             provenance: None,
         })

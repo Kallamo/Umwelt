@@ -156,7 +156,34 @@ pub struct CommitBatchPayload {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TransmitBatchPayload {
-    pub transmits: Vec<TransmitInput>,
+    /// What the transmits have in common, written once.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<TransmitShared>,
+    pub transmits: Vec<TransmitBatchItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ClaimKeyPayload {
+    pub claim: Claim,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DispositionsPayload {
+    pub project_id: String,
+    /// Timeline to read; defaults to "main".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeline_id: Option<String>,
+    pub holder: String,
+    /// Only the Dispositions toward this entity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<String>,
+    /// Only this dimension.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dimension: Option<String>,
+    #[serde(default)]
+    pub at: At,
 }
 
 pub type ProjectListResult = Vec<Project>;
@@ -174,6 +201,7 @@ pub type BreachesResult = Vec<Breach>;
 pub type EnsureEntitiesResult = Vec<EnsureEntityResult>;
 pub type ResolveEntitiesResult = Vec<ResolvedEntity>;
 pub type TimelineListResult = Vec<Timeline>;
+pub type DispositionsResult = Vec<Record>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OperationSchema {
@@ -561,6 +589,24 @@ pub const OP_SCHEMAS: &[OperationSchema] = &[
         "Timeline",
     ),
     op(
+        "claim.key",
+        CapabilityKind::Query,
+        "ClaimKeyPayload",
+        "ClaimKeyResult",
+    ),
+    op(
+        "world.ensure",
+        CapabilityKind::Command,
+        "EnsureWorldInput",
+        "EnsureWorldResult",
+    ),
+    op(
+        "dispositions",
+        CapabilityKind::Query,
+        "DispositionsPayload",
+        "DispositionsResult",
+    ),
+    op(
         "shutdown",
         CapabilityKind::Command,
         "EmptyPayload",
@@ -649,6 +695,9 @@ pub const CAPABILITIES: &[Capability] = &[
     query("context.admit"),
     command("proposal.rebase"),
     command("timeline.rebase"),
+    query("claim.key"),
+    command("world.ensure"),
+    query("dispositions"),
     command("shutdown"),
 ];
 const fn command(name: &'static str) -> Capability {
@@ -997,11 +1046,14 @@ impl<S: Store> Dispatcher<S> {
                     .transmit(parse(payload)?)
                     .map_err(map_engine_error)?,
             ),
-            "transmitBatch" => value_json(
-                self.engine
-                    .transmit_batch(parse::<TransmitBatchPayload>(payload)?.transmits)
-                    .map_err(map_engine_error)?,
-            ),
+            "transmitBatch" => {
+                let p: TransmitBatchPayload = parse(payload)?;
+                value_json(
+                    self.engine
+                        .transmit_batch_shared(&p.shared.unwrap_or_default(), p.transmits)
+                        .map_err(map_engine_error)?,
+                )
+            }
             "timeline.openDraft" => value_json(
                 self.engine
                     .open_draft(parse(payload)?)
@@ -1282,6 +1334,30 @@ impl<S: Store> Dispatcher<S> {
                 value_json(
                     self.engine
                         .rebase_draft(&p.project_id, &p.timeline_id)
+                        .map_err(map_engine_error)?,
+                )
+            }
+            "claim.key" => {
+                let p: ClaimKeyPayload = parse(payload)?;
+                value_json(ClaimKeyResult::of(&p.claim))
+            }
+            "world.ensure" => value_json(
+                self.engine
+                    .ensure_world(parse(payload)?)
+                    .map_err(map_engine_error)?,
+            ),
+            "dispositions" => {
+                let p: DispositionsPayload = parse(payload)?;
+                value_json(
+                    self.engine
+                        .in_timeline(timeline(&p.timeline_id))
+                        .dispositions(
+                            &p.project_id,
+                            &p.holder,
+                            p.target.as_deref(),
+                            p.dimension.as_deref(),
+                            p.at,
+                        )
                         .map_err(map_engine_error)?,
                 )
             }

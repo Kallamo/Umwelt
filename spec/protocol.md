@@ -26,9 +26,9 @@ The server selects protocol 1 and returns the contract version, the storage vers
 
 ## Operations
 
-Commands are `project.create`, `entityType.create`, `entity.create`, `entity.update`, `entity.archive`, `predicate.define`, `axis.define`, `embedding.defineSpace`, `embedding.dropSpace`, `embedding.put`, `embedding.delete`, `evidence.register`, `commit`, `commitBatch`, `propose`, `proposal.review`, `proposal.apply`, `proposal.reject`, `transmit`, `transmitBatch`, `witness`, `holding.adjustBatch`, `transition.batch`, `disposition.setBatch`, `entity.ensureBatch`, `proposal.rebase`, `timeline.openDraft`, `timeline.promote`, `timeline.rebase`, `timeline.discard`, `timeline.purge`, and `shutdown`.
+Commands are `project.create`, `entityType.create`, `entity.create`, `entity.update`, `entity.archive`, `predicate.define`, `axis.define`, `embedding.defineSpace`, `embedding.dropSpace`, `embedding.put`, `embedding.delete`, `evidence.register`, `commit`, `commitBatch`, `propose`, `proposal.review`, `proposal.apply`, `proposal.reject`, `transmit`, `transmitBatch`, `witness`, `holding.adjustBatch`, `transition.batch`, `disposition.setBatch`, `entity.ensureBatch`, `proposal.rebase`, `timeline.openDraft`, `timeline.promote`, `timeline.rebase`, `timeline.discard`, `timeline.purge`, `world.ensure`, and `shutdown`.
 
-Queries are `project.get`, `project.list`, `entityType.list`, `entity.get`, `entity.list`, `predicate.list`, `axis.list`, `embedding.listSpaces`, `embedding.pending`, `evidence.get`, `proposal.get`, `proposal.list`, `holds`, `holdings`, `whoHolds`, `canon`, `perspective`, `compare`, `contradictions`, `trace`, `timeline`, `record`, `changes`, `search`, `timeline.get`, `timeline.list`, `entity.resolve`, `entity.resolveBatch`, `entity.at`, `entity.asKnownBy`, `groupCoverage`, `beliefsAbout`, `breaches`, `check.utterance`, and `context.admit`.
+Queries are `project.get`, `project.list`, `entityType.list`, `entity.get`, `entity.list`, `predicate.list`, `axis.list`, `embedding.listSpaces`, `embedding.pending`, `evidence.get`, `proposal.get`, `proposal.list`, `holds`, `holdings`, `whoHolds`, `canon`, `perspective`, `compare`, `contradictions`, `trace`, `timeline`, `record`, `changes`, `search`, `timeline.get`, `timeline.list`, `entity.resolve`, `entity.resolveBatch`, `entity.at`, `entity.asKnownBy`, `groupCoverage`, `beliefsAbout`, `breaches`, `check.utterance`, `context.admit`, `claim.key`, and `dispositions`.
 
 The operations for external entities, witnesses, groups, batch maintenance, names over time, second-order knowledge, secrets, continuity checks, context admission and rebase are specified in [knowledge-operations.md](knowledge-operations.md). A successful commit may carry `warnings`; `UNKNOWN_PREDICATE` (open vocabulary) and `SECRET_BREACH` (a secret told outside its circle) never block a write.
 
@@ -53,6 +53,87 @@ Creation operations never accept fields controlled by the engine:
 - `predicate.define`: `{ projectId, predicate }`. Predicate IDs beginning with `umwelt:` are reserved.
 - `embedding.defineSpace`: `{ projectId, space: { id, dimensions, model } }`. Space IDs beginning with `umwelt:` are reserved; see [search.md](search.md).
 - `axis.define`: `{ projectId, axis: { id, label } }`. The id `tick` and IDs beginning with `umwelt:` are reserved; see [queries.md](queries.md#time-axes).
+
+`project.create`, `entityType.create`, `entity.create` and `predicate.define`
+never overwrite: an id that already exists, or an `externalRef` another entity
+of the project already has, fails with `CONFLICT` and changes nothing. To
+create only what is missing, use `world.ensure` or `entity.ensureBatch`.
+
+### Write defaults
+
+A commit (`commit`, `commitBatch`, `propose`) may leave out fields that repeat
+its event or have one usual value. The defaults are fixed and never depend on
+the data:
+
+| Field | Left out |
+| --- | --- |
+| `position` of a record or a transition | The position of the commit's event. |
+| `provenance` of a record or a transition | The provenance of the commit's event. |
+| `confidence` of a Holding | `1` |
+| `accessibility` of a Holding | `available` |
+
+`holder`, `attitude`, `acquisition` and `claim` (with its `polarity`) have no
+default: who holds something, with which attitude and how they came to hold it
+is always stated by the client. `witness` and `transmit` document their own
+defaults in [knowledge-operations.md](knowledge-operations.md).
+
+Defaults are filled before the request is fingerprinted and validated, and
+the stored record is always complete. A retry that spells out a field the
+first request left to its default is therefore the same attempt and returns
+the original outcome; one that gives it another value is a `CONFLICT`. A
+`propose` stores and returns the filled records, so a reviewer sees what would
+be written. An inherited position goes through the same checks as a written
+one: a transition still cannot precede the record it targets.
+
+### A batch of transmits
+
+`transmitBatch` receives `{ "shared"?: {...}, "transmits": [...] }`. What the
+transmits have in common is written once in `shared` (`projectId`,
+`timelineId`, `position`, `on`, `from`, `to`, `sourceRecordId`, `intent`,
+`attitude`, `confidence`), and each item writes what differs; a field given by
+an item wins. `shared` cannot carry what identifies one transmit (`attemptId`,
+`recordId`, `text`, `distortedClaim`).
+
+After the two are joined every item must be complete: `intent` and
+`confidence` are still required, they can just be stated once. The engine
+supplies neither; only `attitude` has a default (`believes`). Items are
+joined before they are fingerprinted, so a retry that writes a field in the
+item instead of in `shared` is the same attempt. `transmit` takes one complete
+transmit and has no `shared`.
+
+### A world manifest
+
+`world.ensure` declares what must exist:
+
+```json
+{
+  "project": { "id": "ball", "name": "The Ball", "timescale": "scene" },
+  "entityTypes": [{ "id": "person", "name": "Person", "kind": "agent" }],
+  "entities": [{ "id": "ana", "typeId": "person", "name": "Ana" }],
+  "predicates": [{ "id": "stole", "label": "stole", "object": "entity", "cardinality": "many" }],
+  "axes": [{ "id": "reading", "label": "Reading order" }]
+}
+```
+
+Every id is required, and every section but `project` is optional.
+
+- **Atomic.** Everything missing is created in one transaction, or nothing.
+- **Repeatable.** What already exists with the same definition is left as it
+  is. Running the same manifest every time a file is opened is the intended
+  use; the result's `created` lists what was new (`project`, and the ids of
+  `entityTypes`, `entities`, `predicates` and `axes`).
+- **Never overwrites.** Anything that exists with another definition refuses
+  the whole manifest with `CONFLICT`, and `details.divergences` lists each one
+  as `{ kind, id, field }`. To change something, use its own operation.
+- **Entities.** An existing entity only has to have the same `typeId`. Its
+  name, aliases and fields change during play (`entity.update`) and are
+  neither compared nor rewritten.
+
+Duplicate ids inside a manifest, a reserved predicate or axis id, and an
+entity field its type does not define are `VALIDATION_FAILED`; an entity whose
+`typeId` is neither stored nor in the manifest is `NOT_FOUND`. The manifest
+uses the engine's own entity ids; `entity.ensureBatch` remains the way to
+register entities owned by another system, by `externalRef`.
 
 Creation and update operations return the complete stored object. The generated operation contract is [schema/umwelt-protocol-v1.schema.json](schema/umwelt-protocol-v1.schema.json); its `x-ops` map is authoritative for payload/result definitions and capability kind.
 

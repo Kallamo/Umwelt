@@ -57,6 +57,43 @@ carries the protocol `code`, a `message` and optional `details`.
 engine process ends, every pending request rejects with it. `close()` asks the
 engine to shut down and waits for it to exit.
 
+## Building requests
+
+Payloads are plain objects, and the package exports small functions that build
+the repetitive ones:
+
+```ts
+import { at, authored, by, claim, fact, knows, suspects, witnessed } from '@kallamo/umwelt';
+
+const theft = claim.entity('bob', 'stole', 'necklace');
+await client.commit({
+  projectId: 'ball',
+  attemptId: 'scene-1',
+  event: { id: 'scene-1', type: 'scene', title: 'The ball', position: at(1), provenance: by.human() },
+  records: [
+    fact(theft),
+    knows('ana', theft, witnessed('scene-1')),
+    suspects('duchess', claim.entity('ana', 'stole', 'necklace'), authored(), { confidence: 0.6 }),
+  ],
+});
+```
+
+| Builds | Functions |
+| --- | --- |
+| Claims | `claim.entity`, `claim.value`, `claim.unary`, `claim.holds`, `negate` |
+| Positions | `at(tick)` |
+| Provenance | `by.human`, `by.model`, `by.system`, `by.imported` |
+| Acquisitions | `witnessed`, `toldBy`, `evidence`, `inferred`, `authored` |
+| Records | `fact`, and one per attitude: `knows`, `believes`, `suspects`, `remembers` |
+
+Each function is pure and returns the object of the protocol, so its result
+can be mixed with hand-written objects. A record that gives no `position` or
+`provenance` takes those of its event, and a Holding defaults to confidence 1
+and `available`; the last argument of a record function sets them, and `id`,
+`text` and `secrecy`, when needed. Who holds a claim, with which attitude and
+how they acquired it is always written out. When everyone at an event saw the
+same thing, `client.witness` records it in one call.
+
 ## Semantic search with your own model
 
 Umwelt never runs a model. Pass an `embedder` and the client uses yours:

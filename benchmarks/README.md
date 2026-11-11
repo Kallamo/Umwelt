@@ -127,6 +127,23 @@ A read on an additional axis checks transitions and looks up the event
 position of each row and of its transitions: `holds` costs about 1.9 times the
 main axis, a holdings page about 1.3 times.
 
+### Dispositions (`town-dispositions`)
+
+`UMWELT_BENCH_DISPOSITIONS=1` adds a trust and a fear from every agent toward
+every other agent, set on three days (9,360 Dispositions), to a copy of
+`town`, and compares reading them directly with reading the whole perspective
+(group `town-dispositions`). Measured on November 11, 2026, for a holder with
+78 current Dispositions and about 12,600 Holdings:
+
+| Operation | Mean |
+| --- | ---: |
+| dispositions (one target, one dimension) | 0.41 ms |
+| dispositions (all of a holder's) | 1.44 ms |
+| perspective (first page of 100 Holdings) | 3.16 ms |
+
+Reading one Disposition directly is about 8 times faster than reading the
+perspective to find it. There is no target.
+
 ### Semantic search (`town-embeddings`, 1,076.9 MiB)
 
 339,421 vectors of 384 dimensions occupy 665 MiB in the `embeddings` table

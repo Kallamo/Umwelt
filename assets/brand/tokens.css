@@ -1,0 +1,10 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Umwelt brand colors. The spectrum is shared with Kallamo; the ink switches with the ground. */
+:root {
+  --umwelt-ground: #011419;
+  --umwelt-ink-on-dark: #ffffff;
+  --umwelt-ink-on-light: #1a202c;
+  --umwelt-muted-on-dark: #8aa0a8;
+  --umwelt-muted-on-light: #59636e;
+  --umwelt-spectrum: linear-gradient(90deg, #9c27b0 0%, #3b82f6 16%, #19ac9b 32%, #10b981 48%, #fbca2d 66%, #ff8c42 83%, #ff5f56 100%);
+}

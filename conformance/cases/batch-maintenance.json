@@ -365,6 +365,28 @@
     },
     {
       "request": {
+        "op": "transition.batch",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "supersede",
+          "position": {
+            "tick": 3
+          },
+          "status": "superseded",
+          "recordIds": [
+            "h1b"
+          ]
+        }
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "VALIDATION_FAILED"
+        }
+      }
+    },
+    {
+      "request": {
         "op": "disposition.setBatch",
         "payload": {
           "projectId": "p",

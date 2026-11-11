@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 use std::sync::Arc;
 
+use serde_json::json;
 use umwelt_core::domain::*;
 use umwelt_core::{
     Clock, EntityWrite, IdGen, PreparedCommit, RecordPage, RecordQuery, Result, Store, StoreCounts,
@@ -77,6 +78,59 @@ impl<S: Store> Engine<S> {
 
     pub fn entity_types(&self, project_id: &str) -> Result<Vec<EntityType>> {
         self.store.entity_types(project_id)
+    }
+
+    /// Makes a world exist: the project and its entity types, entities,
+    /// predicates and axes. What is missing is created in one transaction;
+    /// what is already there is left untouched, so the same manifest can run
+    /// every time the file is opened. Anything that exists with another
+    /// definition refuses the whole manifest with `CONFLICT`, and
+    /// `details.divergences` names each one: a manifest never overwrites.
+    pub fn ensure_world(&mut self, input: EnsureWorldInput) -> Result<EnsureWorldResult> {
+        let project_id = input.project.id.clone();
+        let stored = match crate::queries::found(self.store.project(&project_id))? {
+            None => StoredWorld::default(),
+            Some(project) => {
+                let mut entities = Vec::new();
+                for wanted in &input.entities {
+                    if let Some(entity) =
+                        crate::queries::found(self.store.entity(&project_id, &wanted.id))?
+                    {
+                        entities.push(entity);
+                    }
+                }
+                StoredWorld {
+                    project: Some(project),
+                    entity_types: self.store.entity_types(&project_id)?,
+                    entities,
+                    predicates: self.store.predicates(&project_id)?,
+                    axes: self.store.axes(&project_id)?,
+                }
+            }
+        };
+        let (write, divergences) = plan_world(&input, &stored, &self.clock.now_utc())?;
+        if !divergences.is_empty() {
+            return Err(UmweltError::public(
+                UmweltErrorCode::Conflict,
+                format!(
+                    "The world already exists with {} different definition(s); nothing was changed.",
+                    divergences.len()
+                ),
+            )
+            .with_details(json!({ "divergences": divergences })));
+        }
+        let created = WorldCreated {
+            project: write.project.is_some(),
+            entity_types: write.entity_types.iter().map(|v| v.id.clone()).collect(),
+            entities: write.entities.iter().map(|v| v.id.clone()).collect(),
+            predicates: write.predicates.iter().map(|v| v.id.clone()).collect(),
+            axes: write.axes.iter().map(|v| v.id.clone()).collect(),
+        };
+        self.store.write_world(&write)?;
+        Ok(EnsureWorldResult {
+            project: self.store.project(&project_id)?,
+            created,
+        })
     }
 
     pub fn put_entity(&mut self, value: Entity) -> Result<()> {
@@ -528,8 +582,9 @@ impl<S: Store> Engine<S> {
         self.store.query_records(query)
     }
 
-    pub fn propose(&mut self, input: ProposeInput) -> Result<Proposal> {
+    pub fn propose(&mut self, mut input: ProposeInput) -> Result<Proposal> {
         self.store.project(&input.project_id)?;
+        input.normalize();
         let proposal = Proposal {
             id: self.ids.new_id(),
             status: ProposalStatus::Pending,
@@ -667,6 +722,21 @@ impl<S: Store> Engine<S> {
         self.store.commit_batch(&prepared)
     }
 
+    /// A batch whose items leave what they have in common to `shared`. Each
+    /// item is completed first, so it is fingerprinted and applied exactly as
+    /// if it had been written out in full.
+    pub fn transmit_batch_shared(
+        &mut self,
+        shared: &TransmitShared,
+        items: Vec<TransmitBatchItem>,
+    ) -> Result<Vec<CommitOutcome>> {
+        let inputs = items
+            .into_iter()
+            .map(|item| item.complete(shared))
+            .collect::<Result<Vec<_>>>()?;
+        self.transmit_batch(inputs)
+    }
+
     /// A transmit is fingerprinted from the request, which is a fraction of
     /// the size of the commit it becomes.
     fn prepare_transmit(&self, input: TransmitInput) -> Result<PreparedCommit> {
@@ -705,8 +775,8 @@ impl<S: Store> Engine<S> {
         let provenance = event.provenance.clone();
         let common = |id: Option<String>| RecordInputCommon {
             id,
-            position,
-            provenance: provenance.clone(),
+            position: Some(position),
+            provenance: Some(provenance.clone()),
         };
         let mut records = input
             .claims
@@ -811,8 +881,8 @@ impl<S: Store> Engine<S> {
             records.push(RecordInput::Holding {
                 common: RecordInputCommon {
                     id: Some(new_id.clone()),
-                    position: input.position,
-                    provenance: provenance.clone(),
+                    position: Some(input.position),
+                    provenance: Some(provenance.clone()),
                 },
                 holder,
                 attitude: adjustment.attitude.unwrap_or(attitude),
@@ -828,8 +898,8 @@ impl<S: Store> Engine<S> {
                 target_record_id: adjustment.record_id,
                 status: TransitionStatus::Superseded,
                 superseded_by: Some(new_id),
-                position: input.position,
-                provenance: provenance.clone(),
+                position: Some(input.position),
+                provenance: Some(provenance.clone()),
             });
         }
         let commit = CommitInput {
@@ -860,11 +930,9 @@ impl<S: Store> Engine<S> {
                 "transition.batch needs at least one record.",
             ));
         }
-        if input.status == TransitionStatus::Superseded {
-            return Err(UmweltError::validation(
-                "transition.batch cannot supersede; use holding.adjustBatch.",
-            ));
-        }
+        // `superseded` cannot be asked for: `BatchTransitionStatus` has no such
+        // value, so the request is refused when it is read.
+        let status = TransitionStatus::from(input.status);
         let provenance = system_provenance(input.provenance, "umwelt:transition");
         let transitions = input
             .record_ids
@@ -872,10 +940,10 @@ impl<S: Store> Engine<S> {
             .map(|record_id| TransitionInput {
                 id: None,
                 target_record_id: record_id,
-                status: input.status.clone(),
+                status: status.clone(),
                 superseded_by: None,
-                position: input.position,
-                provenance: provenance.clone(),
+                position: Some(input.position),
+                provenance: Some(provenance.clone()),
             })
             .collect();
         let commit = CommitInput {
@@ -913,8 +981,8 @@ impl<S: Store> Engine<S> {
             .map(|setting| RecordInput::Disposition {
                 common: RecordInputCommon {
                     id: setting.id,
-                    position: input.position,
-                    provenance: provenance.clone(),
+                    position: Some(input.position),
+                    provenance: Some(provenance.clone()),
                 },
                 holder: setting.holder,
                 target: setting.target,
@@ -1045,7 +1113,10 @@ impl<S: Store> Engine<S> {
         self.store.counts(project_id)
     }
 
-    fn prepare_commit(&self, input: CommitInput) -> Result<PreparedCommit> {
+    /// Write defaults are filled before the fingerprint, so a retry that
+    /// spells out a field the first request omitted is the same attempt.
+    fn prepare_commit(&self, mut input: CommitInput) -> Result<PreparedCommit> {
+        input.normalize();
         let fingerprint = commit_fingerprint(&input)?;
         self.prepare_with_fingerprint(input, fingerprint)
     }
@@ -1121,8 +1192,8 @@ impl<S: Store> Engine<S> {
             records: vec![RecordInput::Holding {
                 common: RecordInputCommon {
                     id: input.record_id,
-                    position: input.position,
-                    provenance,
+                    position: Some(input.position),
+                    provenance: Some(provenance),
                 },
                 holder: input.to,
                 attitude: input.attitude,

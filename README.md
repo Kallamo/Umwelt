@@ -1,10 +1,13 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Umwelt" width="360" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/umwelt-lockup-on-dark.svg" />
+    <img src="assets/brand/umwelt-lockup-on-light.svg" alt="Umwelt" width="360" />
+  </picture>
 </p>
 
 <p align="center">
-  <strong>Who knows what, since when, and how they came to know it.</strong><br />
-  An epistemic state engine for stories, games and AI characters.
+  <strong>What happened, and who knows it.</strong><br />
+  An epistemic state engine that tracks what each character knows, and how they learned it.
 </p>
 
 <p align="center">
@@ -74,8 +77,8 @@ import { createClient } from '@kallamo/umwelt';
 
 const client = createClient({ file: 'story.umw', create: true });
 // ... record a scene in which Ana sees Bob steal the necklace ...
-const { holds } = await client.holds({ projectId: 'ball', holder: 'ana', claim: theft });
-// holds === true; asked for Bob, the thief, the answer is false
+const { holds } = await client.holds({ projectId: 'ball', holder: 'duchess', claim: theft });
+// holds === false: the duchess was at the ball, but nothing says she saw it
 ```
 
 The full scene is in [getting started](docs/getting-started.md).

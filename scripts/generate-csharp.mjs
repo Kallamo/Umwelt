@@ -139,7 +139,8 @@ function objectDefinition(name, schema) {
     const merged = { properties: Object.assign({}, ...schema.anyOf.map(item => item.properties ?? {})), required: [] };
     return `${summary(schema.description ?? 'Exactly one of the properties is set.', '')}public sealed class ${name}\n{\n${members(merged, '    ', name)}}\n`;
   }
-  return `${summary(schema.description, '')}public sealed class ${name}\n{\n${members(schema, '    ', name)}}\n`;
+  // Partial, so that the hand-written factories (Factories.cs) can live on the type.
+  return `${summary(schema.description, '')}public sealed partial class ${name}\n{\n${members(schema, '    ', name)}}\n`;
 }
 
 const banner = '// SPDX-License-Identifier: AGPL-3.0-only\n// Generated from the versioned JSON schemas by scripts/generate-csharp.mjs. Do not edit.\n#nullable enable\n';

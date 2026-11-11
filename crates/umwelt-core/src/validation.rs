@@ -169,7 +169,7 @@ pub fn validate_commit<V: ValidationView>(
     let new_records: BTreeSet<&str> = prepared.record_ids.iter().map(String::as_str).collect();
     let mut warnings = Vec::new();
     for (record_index, record) in input.records.iter().enumerate() {
-        record.common().position.validate()?;
+        record.common().position_in(&input.event).validate()?;
         match record {
             RecordInput::Fact { claim, .. } => {
                 validate_claim(view, &project, claim, &new_records, &mut warnings)?;
@@ -228,7 +228,8 @@ pub fn validate_commit<V: ValidationView>(
     }
 
     for transition in &input.transitions {
-        transition.position.validate()?;
+        let transition_position = transition.position_in(&input.event);
+        transition_position.validate()?;
         require_record(
             view,
             &input.project_id,
@@ -241,7 +242,7 @@ pub fn validate_commit<V: ValidationView>(
             &transition.target_record_id,
             prepared,
         )?;
-        if transition.position.tick < target_tick {
+        if transition_position.tick < target_tick {
             return Err(UmweltError::validation(
                 "Transition position cannot precede its target record.",
             ));
@@ -255,7 +256,7 @@ pub fn validate_commit<V: ValidationView>(
                 })?;
                 require_record(view, &input.project_id, replacement, &new_records)?;
                 let replacement_tick = record_tick(view, &input.project_id, replacement, prepared)?;
-                if replacement_tick > transition.position.tick {
+                if replacement_tick > transition_position.tick {
                     return Err(UmweltError::validation(
                         "A superseding record cannot start after the transition.",
                     ));
@@ -324,11 +325,11 @@ pub fn materialize_commit(
             target_record_id: transition.target_record_id.clone(),
             status: transition.status.clone(),
             superseded_by: transition.superseded_by.clone(),
-            position: transition.position,
+            position: transition.position_in(&input.event),
             recorded_at: version,
             ordinal: ordinal as u32,
             event_id: prepared.event_id.clone(),
-            provenance: transition.provenance.clone(),
+            provenance: transition.provenance_in(&input.event).clone(),
         })
         .collect();
     let outcome = CommitOutcome {
@@ -353,10 +354,10 @@ fn materialize_record(
         id: id.to_owned(),
         project_id: input.project_id.clone(),
         timeline_id: input.timeline().to_owned(),
-        position: source.position,
+        position: source.position_in(&input.event),
         recorded_at: version,
         event_id: event_id.to_owned(),
-        provenance: source.provenance.clone(),
+        provenance: source.provenance_in(&input.event).clone(),
     };
     match record {
         RecordInput::Fact {
@@ -564,7 +565,10 @@ fn record_tick<V: ValidationView>(
         .iter()
         .position(|candidate| candidate == id)
     {
-        return Ok(prepared.input.records[index].common().position.tick);
+        return Ok(prepared.input.records[index]
+            .common()
+            .position_in(&prepared.input.event)
+            .tick);
     }
     view.record_tick(project_id, id)?
         .ok_or_else(|| UmweltError::not_found(format!("Record '{id}' does not exist.")))

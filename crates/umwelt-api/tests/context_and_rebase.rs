@@ -121,8 +121,8 @@ fn world() -> TestEngine {
         target_record_id: "h-gone".to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: Position { tick: 3 },
-        provenance: provenance(),
+        position: Some(Position { tick: 3 }),
+        provenance: Some(provenance()),
     }];
     engine.commit(forget).expect("forget");
     engine
@@ -313,8 +313,8 @@ fn propose(engine: &mut TestEngine) -> Proposal {
                 target_record_id: "p-new".to_owned(),
                 status: TransitionStatus::Forgotten,
                 superseded_by: None,
-                position: Position { tick: 5 },
-                provenance: provenance(),
+                position: Some(Position { tick: 5 }),
+                provenance: Some(provenance()),
             }],
         })
         .expect("propose")
@@ -478,8 +478,8 @@ fn a_draft_that_no_longer_fits_is_left_unchanged() {
         target_record_id: "h-alice".to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: Position { tick: 6 },
-        provenance: provenance(),
+        position: Some(Position { tick: 6 }),
+        provenance: Some(provenance()),
     }];
     engine
         .commit(forget_source)

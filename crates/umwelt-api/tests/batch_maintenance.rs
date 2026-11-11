@@ -158,7 +158,7 @@ fn transition_batch_forgets_many_records_at_once() {
             timeline_id: None,
             expected_version: None,
             position: Position { tick: 3 },
-            status: TransitionStatus::Forgotten,
+            status: BatchTransitionStatus::Forgotten,
             record_ids: vec!["h-alice".to_owned(), "h-bob".to_owned()],
             provenance: None,
         })
@@ -166,20 +166,15 @@ fn transition_batch_forgets_many_records_at_once() {
     assert!(!holds(&engine, "alice", 3).holds);
     assert!(!holds(&engine, "bob", 3).holds);
     assert!(holds(&engine, "bob", 2).holds);
-    expect_code(
-        engine.transition_batch(TransitionBatchInput {
-            on: Default::default(),
-            project_id: "p".to_owned(),
-            attempt_id: "supersede".to_owned(),
-            timeline_id: None,
-            expected_version: None,
-            position: Position { tick: 3 },
-            status: TransitionStatus::Superseded,
-            record_ids: vec!["h-alice".to_owned()],
-            provenance: None,
-        }),
-        UmweltErrorCode::ValidationFailed,
-    );
+    // `superseded` needs a replacement: it is not a status a batch can ask for.
+    let supersede = serde_json::from_value::<TransitionBatchInput>(json!({
+        "projectId": "p",
+        "attemptId": "supersede",
+        "position": { "tick": 3 },
+        "status": "superseded",
+        "recordIds": ["h-alice"]
+    }));
+    assert!(supersede.is_err());
 }
 
 #[test]

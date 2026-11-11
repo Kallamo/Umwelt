@@ -117,8 +117,8 @@ fn event(id: &str, tick: i64, participants: Vec<&str>) -> EventInput {
 fn common(id: &str, tick: i64) -> RecordInputCommon {
     RecordInputCommon {
         id: Some(id.to_owned()),
-        position: Position { tick },
-        provenance: provenance(),
+        position: Some(Position { tick }),
+        provenance: Some(provenance()),
     }
 }
 
@@ -356,8 +356,8 @@ fn transition_preserves_history_at_an_earlier_tick() {
         target_record_id: "belief".to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: Position { tick: 10 },
-        provenance: provenance(),
+        position: Some(Position { tick: 10 }),
+        provenance: Some(provenance()),
     });
     engine.commit(transition).expect("commit transition");
     assert_eq!(
@@ -550,8 +550,8 @@ fn transmit_rejects_an_inactive_source_or_a_different_holder() {
         target_record_id: "source".to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: Position { tick: 2 },
-        provenance: provenance(),
+        position: Some(Position { tick: 2 }),
+        provenance: Some(provenance()),
     });
     engine.commit(transition).expect("deactivate source");
     let inactive = TransmitInput {
@@ -591,16 +591,16 @@ fn transitions_at_the_same_tick_use_version_then_ordinal_as_tiebreakers() {
             target_record_id: "source".to_owned(),
             status: TransitionStatus::Forgotten,
             superseded_by: None,
-            position: Position { tick: 2 },
-            provenance: provenance(),
+            position: Some(Position { tick: 2 }),
+            provenance: Some(provenance()),
         },
         TransitionInput {
             id: Some("t2".to_owned()),
             target_record_id: "source".to_owned(),
             status: TransitionStatus::Revoked,
             superseded_by: None,
-            position: Position { tick: 2 },
-            provenance: provenance(),
+            position: Some(Position { tick: 2 }),
+            provenance: Some(provenance()),
         },
     ];
     engine.commit(input).expect("commit transitions");
@@ -651,8 +651,8 @@ fn transmit_replay_survives_source_forgetting_at_the_same_tick() {
         target_record_id: "source".to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: Position { tick: 2 },
-        provenance: provenance(),
+        position: Some(Position { tick: 2 }),
+        provenance: Some(provenance()),
     });
     engine.commit(forgetting).expect("forget source");
     let replay = engine.transmit(transmit).expect("replay transmit");
@@ -858,8 +858,8 @@ fn transition_cannot_precede_its_target_record() {
         target_record_id: "future-source".to_owned(),
         status: TransitionStatus::Forgotten,
         superseded_by: None,
-        position: Position { tick: 5 },
-        provenance: provenance(),
+        position: Some(Position { tick: 5 }),
+        provenance: Some(provenance()),
     });
     assert!(engine.commit(input).is_err());
 }

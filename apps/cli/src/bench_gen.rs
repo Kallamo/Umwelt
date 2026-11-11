@@ -44,8 +44,8 @@ pub fn holding(id: String, holder: String, tick: i64, claim: Claim) -> RecordInp
     RecordInput::Holding {
         common: RecordInputCommon {
             id: Some(id),
-            position: Position { tick },
-            provenance: provenance(),
+            position: Some(Position { tick }),
+            provenance: Some(provenance()),
         },
         holder,
         attitude: Attitude::Believes,
@@ -244,8 +244,8 @@ pub fn generate_with(path: &Path, profile: &str, seed: u64, extras: Extras) -> R
             initial.push(RecordInput::Fact {
                 common: RecordInputCommon {
                     id: Some(format!("fact-{index}")),
-                    position: Position { tick: 0 },
-                    provenance: provenance(),
+                    position: Some(Position { tick: 0 }),
+                    provenance: Some(provenance()),
                 },
                 claim: benchmark_claim(index, (index + 1) % holders),
             });

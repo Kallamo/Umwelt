@@ -32,6 +32,10 @@ every client library runs.
 9. **A read in one timeline never sees another timeline's rows**, except its
    ancestors' rows, each up to the `baseVersion` of its child on the chain down
    to the draft.
+10. **The intent of a telling is the narrator's knowledge.** A read made on
+    behalf of a holder never reveals the intent with which they were told
+    something: it reads `unknown`. The recorded intent stays available to
+    narrator reads (`record`, `trace`, `breaches`).
 
 Group knowledge follows from 1: a group knows what the group's own records
 say, never the union of its members' knowledge. Vectors used by semantic
