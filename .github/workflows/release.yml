@@ -6,8 +6,8 @@
 # its section in CHANGELOG.md. Publishing uses trusted publishing (OIDC), not
 # stored tokens: the npm packages and the NuGet organization must trust this
 # workflow, and the NUGET_USER secret names the nuget.org account. A package
-# not yet on npm is staged with the NPM_TOKEN secret (a stage-only token) and
-# approved on npmjs.com.
+# not yet on npm is staged with the NPM_TOKEN secret (a stage-only token). Every
+# npm version is approved on npmjs.com before it is public.
 name: Release
 
 on:
@@ -180,11 +180,11 @@ jobs:
           dotnet-version: 6.0.x
       # Staged publishing needs npm 11.15 or newer.
       - run: npm install -g "npm@>=11.15.0 <12"
-      # A version already on npm is skipped, so a release can run again after a
-      # partial failure. A package that exists publishes through trusted
-      # publishing (OIDC, no token). npm trusts a workflow only for packages
-      # that exist, so a new package is staged with NPM_TOKEN, a stage-only
-      # token, and a maintainer approves it on npmjs.com with 2FA.
+      # Every version is staged, and goes public only when a maintainer
+      # approves it on npmjs.com with 2FA. A package that exists stages through
+      # trusted publishing (OIDC, no token); a new one needs NPM_TOKEN, a
+      # stage-only token, because npm trusts a workflow only for packages that
+      # exist. A version already on npm is skipped, so a release can run again.
       - name: Publish to npm, platform packages first
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -195,8 +195,6 @@ jobs:
             version=$(tar -xzOf "$1" package/package.json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
             if npm view "$name@$version" version > /dev/null 2>&1; then
               echo "$name@$version is already on npm."
-            elif npm view "$name" name > /dev/null 2>&1; then
-              npm publish "$1" --access public
             else
               staging=$(mktemp -d)
               tar -xzf "$1" -C "$staging"

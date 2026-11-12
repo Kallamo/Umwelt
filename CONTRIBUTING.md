@@ -290,10 +290,19 @@ Maintainers release from a version tag:
    and `bindings/csharp/Kallamo.Umwelt/Kallamo.Umwelt.csproj`;
    `npm run check:versions` confirms they agree.
 2. Date its section in `CHANGELOG.md`.
-3. Push the tag `vX.Y.Z`. The release workflow checks everything again, builds
-   every platform, and publishes the npm packages, the NuGet package and the
-   GitHub release with the executables, native libraries, C header and
-   third-party notices.
+3. Check that each npm package (`@kallamo/umwelt` and its four platform
+   packages) trusts the release workflow: on npmjs.com, *Settings → Trusted
+   publishing*, GitHub Actions, `Kallamo/Umwelt`, `release.yml`, environment
+   `release`, staging only. A connection not used within two days of its
+   creation expires; recreate it right before tagging.
+4. Push the tag `vX.Y.Z`. The release workflow checks everything again and
+   builds every platform, then waits for approval in the `release`
+   environment.
+5. Once approved, it publishes the NuGet package and the GitHub release with
+   the executables, native libraries, C header and third-party notices, and
+   stages the npm packages.
+6. Approve the staged npm packages on npmjs.com, the platform packages before
+   `@kallamo/umwelt`.
 
 ## Branding and trademark
 
