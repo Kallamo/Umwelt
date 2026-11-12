@@ -70,7 +70,7 @@ using (var engine = UmweltEngine.Create(path))
 
     var suspicion = engine.Holds(new HoldsPayload { ProjectId = projectId, Holder = "duchess", Claim = accusation });
     var confidence = suspicion.Confidence?.ToString(CultureInfo.InvariantCulture);
-    Console.WriteLine($"The duchess {suspicion.Attitude.ToString().ToLowerInvariant()} Ana: {confidence}"); // The duchess suspects Ana: 0.6
+    Console.WriteLine($"The duchess {suspicion.Attitude?.ToString().ToLowerInvariant()} Ana: {confidence}"); // The duchess suspects Ana: 0.6
 
     // Errors are exceptions that carry the protocol code.
     try
