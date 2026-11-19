@@ -160,6 +160,7 @@ fn embedding_benchmarks(criterion: &mut Criterion, root: &std::path::Path) {
                         SearchFilter {
                             holder: Some("agent-00".into()),
                             doc_type: None,
+                            ..Default::default()
                         },
                         At::default(),
                         page(),
@@ -195,6 +196,7 @@ fn embedding_benchmarks(criterion: &mut Criterion, root: &std::path::Path) {
                         SearchFilter {
                             holder: Some("agent-00".into()),
                             doc_type: None,
+                            ..Default::default()
                         },
                         At::default(),
                         page(),
@@ -352,6 +354,72 @@ fn benchmarks(criterion: &mut Criterion) {
         .sample_size(10)
         .warm_up_time(Duration::from_millis(500))
         .measurement_time(Duration::from_secs(2));
+    // Timeline pages of 50 narrowed by range, participant and event type.
+    // `town:day` is 2% of the events; `absent` matches none, so its page
+    // walks every event (the worst case of the type filter alone).
+    let timeline_cases: [(&str, TimelineFilter); 5] = [
+        (
+            "timeline_range_3_ticks",
+            TimelineFilter {
+                range: Some(TickRange {
+                    from: Some(1000),
+                    to: Some(1002),
+                }),
+                ..Default::default()
+            },
+        ),
+        (
+            "timeline_participant_50",
+            TimelineFilter {
+                participant: Some("agent-23".into()),
+                ..Default::default()
+            },
+        ),
+        (
+            "timeline_participant_type_range_50",
+            TimelineFilter {
+                participant: Some("agent-23".into()),
+                event_types: Some(vec!["umwelt:transmit".into()]),
+                range: Some(TickRange {
+                    from: Some(1000),
+                    to: Some(2000),
+                }),
+            },
+        ),
+        (
+            "timeline_rare_type_50",
+            TimelineFilter {
+                event_types: Some(vec!["town:day".into()]),
+                ..Default::default()
+            },
+        ),
+        (
+            "timeline_absent_type",
+            TimelineFilter {
+                event_types: Some(vec!["absent".into()]),
+                ..Default::default()
+            },
+        ),
+    ];
+    for (name, filter) in timeline_cases {
+        group.bench_function(name, |b| {
+            b.iter(|| {
+                black_box(
+                    engine
+                        .timeline_where(
+                            "town",
+                            filter.clone(),
+                            At::default(),
+                            Page {
+                                limit: 50,
+                                cursor: None,
+                            },
+                        )
+                        .required("timeline"),
+                )
+            })
+        });
+    }
     group.bench_function("holds", |b| {
         b.iter(|| {
             black_box(

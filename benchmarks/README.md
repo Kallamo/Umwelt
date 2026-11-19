@@ -167,3 +167,30 @@ own call takes far longer, not for per-frame game logic.
 The hybrid figure comes from its text half: every authored Holding of the
 fixture has the same text, so "gift" matches 336,000 documents, all of which
 the holder filter checks. A text-only search for such a word costs the same.
+
+### Narrowed timelines and file migration (storage 6)
+
+Same laptop, November 18, 2026, `town` fixture (171,361 events: 168,000
+transmissions with two participants each and 3,361 `town:day` events), pages
+of 50, Criterion means:
+
+| Read | Mean |
+| --- | ---: |
+| `timeline`, `range` of 3 ticks | 1.23 ms |
+| `timeline`, `participant` (one agent) | 1.45 ms |
+| `timeline`, `participant` + `eventTypes` + `range` of 1,000 ticks | 1.37 ms |
+| `timeline`, `eventTypes` of 2% of the events | 4.10 ms |
+| `timeline`, `eventTypes` that match nothing | 199 ms |
+
+`range` and `participant` read one ordered range of an index. `eventTypes`
+alone is a filter on the events of the page's range: a type that is 2% of the
+events reads about 2,500 events for a page of 50, and a type that matches
+nothing reads every event of the timeline. Combined with `participant` or a
+`range`, it only reads their events.
+
+Migrating the `town` file from storage 5 to 6 (417.2 MB, 336,000
+participants moved into `event_participants`) takes 4.0 s on open with the
+release CLI (three runs: 4.13, 3.99 and 4.04 s), the byte-for-byte backup
+included. The file grows to 444.6 MB (+6.6%), the size of the new table and
+its index; the backup needs another 417 MB of free disk while the migration
+runs.
