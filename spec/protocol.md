@@ -54,10 +54,18 @@ Creation operations never accept fields controlled by the engine:
 - `embedding.defineSpace`: `{ projectId, space: { id, dimensions, model } }`. Space IDs beginning with `umwelt:` are reserved; see [search.md](search.md).
 - `axis.define`: `{ projectId, axis: { id, label } }`. The id `tick` and IDs beginning with `umwelt:` are reserved; see [queries.md](queries.md#time-axes).
 
-`project.create`, `entityType.create`, `entity.create` and `predicate.define`
-never overwrite: an id that already exists, or an `externalRef` another entity
-of the project already has, fails with `CONFLICT` and changes nothing. To
-create only what is missing, use `world.ensure` or `entity.ensureBatch`.
+Creation never overwrites. `project.create`, `entity.create` and
+`evidence.register` fail with `CONFLICT` and change nothing when the id
+already exists, as do `entity.create` and `entity.update` when another entity
+of the project already has the `externalRef`.
+
+Definitions of the vocabulary (`entityType.create`, `predicate.define`,
+`axis.define`, `embedding.defineSpace`) can be repeated: the same definition
+again is a no-op that returns it, so a setup script can run every time a file
+is opened. A different definition under the same id fails with `CONFLICT`,
+and `details` holds the stored one (`details.entityType`,
+`details.predicate`). To create only what is missing in one call, use
+`world.ensure` or `entity.ensureBatch`.
 
 ### Write defaults
 

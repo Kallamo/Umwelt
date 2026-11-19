@@ -1458,8 +1458,33 @@ impl Store for SqliteStore {
         .collect()
     }
 
+    /// Creating the same entity type again is a no-op; the same id with
+    /// another definition is a `CONFLICT` whose details hold the stored one.
     fn put_entity_type(&mut self, entity_type: &EntityType) -> Result<()> {
-        insert_entity_type(&self.connection, entity_type)
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(database_error)?;
+        let existing: Option<EntityType> = query_json_optional(
+            &transaction,
+            "SELECT payload FROM entity_types WHERE project_id = ?1 AND id = ?2",
+            params![entity_type.project_id, entity_type.id],
+        )?;
+        match existing {
+            Some(existing) if existing == *entity_type => {}
+            Some(existing) => {
+                return Err(UmweltError::public(
+                    UmweltErrorCode::Conflict,
+                    format!(
+                        "Entity type '{}' is already defined differently in project '{}'.",
+                        entity_type.id, entity_type.project_id
+                    ),
+                )
+                .with_details(json!({ "entityType": existing })));
+            }
+            None => insert_entity_type(&transaction, entity_type)?,
+        }
+        transaction.commit().map_err(database_error)
     }
 
     fn entity_types(&self, project_id: &str) -> Result<Vec<EntityType>> {
@@ -1508,8 +1533,33 @@ impl Store for SqliteStore {
         )
     }
 
+    /// Defining the same predicate again is a no-op; the same id with another
+    /// definition is a `CONFLICT` whose details hold the stored one.
     fn put_predicate(&mut self, project_id: &str, predicate: &PredicateDef) -> Result<()> {
-        insert_predicate(&self.connection, project_id, predicate)
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(database_error)?;
+        let existing: Option<PredicateDef> = query_json_optional(
+            &transaction,
+            "SELECT payload FROM predicates WHERE project_id = ?1 AND id = ?2",
+            params![project_id, predicate.id],
+        )?;
+        match existing {
+            Some(existing) if existing == *predicate => {}
+            Some(existing) => {
+                return Err(UmweltError::public(
+                    UmweltErrorCode::Conflict,
+                    format!(
+                        "Predicate '{}' is already defined differently in project '{project_id}'.",
+                        predicate.id
+                    ),
+                )
+                .with_details(json!({ "predicate": existing })));
+            }
+            None => insert_predicate(&transaction, project_id, predicate)?,
+        }
+        transaction.commit().map_err(database_error)
     }
 
     fn write_world(&mut self, write: &WorldWrite) -> Result<()> {
@@ -1797,7 +1847,14 @@ impl Store for SqliteStore {
                 "INSERT INTO evidence_sources (project_id, id, payload) VALUES (?1, ?2, ?3)",
                 params![evidence.project_id, evidence.id, to_json(evidence)?],
             )
-            .map_err(database_error)?;
+            .map_err(|source| {
+                duplicate_or_database_error(source, |_| {
+                    format!(
+                        "Evidence source '{}' already exists in project '{}'.",
+                        evidence.id, evidence.project_id
+                    )
+                })
+            })?;
         Ok(())
     }
 
@@ -3505,7 +3562,19 @@ fn replace_entity(connection: &Connection, entity: &Entity) -> Result<()> {
     let changed = connection.execute(
         "UPDATE entities SET type_id = ?3, name = ?4, external_system = ?5, external_id = ?6, payload = ?7 WHERE project_id = ?1 AND id = ?2",
         params![entity.project_id, entity.id, entity.type_id, entity.name, entity.external_ref.as_ref().map(|value| value.system.as_str()), entity.external_ref.as_ref().map(|value| value.id.as_str()), to_json(entity)?],
-    ).map_err(database_error)?;
+    ).map_err(|source| {
+        // Only the external reference can collide: the id is not changed.
+        duplicate_or_database_error(source, |_| match &entity.external_ref {
+            Some(reference) => format!(
+                "Another entity in project '{}' already has the external reference '{}:{}'.",
+                entity.project_id, reference.system, reference.id
+            ),
+            None => format!(
+                "Entity '{}' conflicts with another entity in project '{}'.",
+                entity.id, entity.project_id
+            ),
+        })
+    })?;
     if changed == 0 {
         return Err(UmweltError::not_found(format!(
             "Entity '{}' does not exist.",
