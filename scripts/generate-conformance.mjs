@@ -50,6 +50,8 @@ add('attempt-payload-conflict', [step('commit', commit([holding()])), error('com
 const pageItems = ids => ids.map(id => ({ record: { id } }));
 add('stable-three-pages', [step('commit', commit(Array.from({ length: 6 }, (_, index) => holding(`h${index}`, 'alice', index + 1)), 'a1', 6)), step('holdings', { projectId: 'p', holder: 'alice', page: { limit: 2 } }, { items: pageItems(['h0', 'h1']), nextCursor: '$capture:c1' }), step('holdings', { projectId: 'p', holder: 'alice', page: { limit: 2, cursor: '$ref:c1' } }, { items: pageItems(['h2', 'h3']), nextCursor: '$capture:c2' }), step('holdings', { projectId: 'p', holder: 'alice', page: { limit: 2, cursor: '$ref:c2' } }, { items: pageItems(['h4', 'h5']) }), step('holdings', { projectId: 'p', holder: 'alice', page: { limit: 100 } }, { items: pageItems(['h0', 'h1', 'h2', 'h3', 'h4', 'h5']) })]);
 add('safe-search-apostrophe', [step('commit', commit([fact()])), step('search', { projectId: 'p', text: "Mira's lantern" }, { items: [{ docType: 'event' }] })]);
+const worded = { ...fact('f-worded'), text: 'The lantern burned at dawn' };
+add('fact-text-search', [step('commit', commit([fact('f-plain'), worded])), step('search', { projectId: 'p', text: 'burned' }, { items: [{ docType: 'record', docId: 'f-worded', record: { kind: 'fact', text: 'The lantern burned at dawn' } }] }), step('search', { projectId: 'p', text: 'item' }, { items: [{ docType: 'record', docId: 'f-plain' }] }), step('embedding.defineSpace', { projectId: 'p', space: { id: 's', dimensions: 3, model: 'hand-made' } }, { id: 's' }), step('embedding.pending', { projectId: 'p', spaceId: 's', docTypes: ['record'] }, { items: [{ docId: 'f-plain', text: 'alice related item' }, { docId: 'f-worded', text: 'The lantern burned at dawn' }] })]);
 add('unknown-query-key', [error('holds', { projectId: 'p', holder: 'alice', claim: claim(), att: {} }, 'VALIDATION_FAILED'), error('holdings', { projectId: 'p', holder: 'alice', att: {} }, 'VALIDATION_FAILED')]);
 // Timelines: drafts branch from main and are promoted or discarded.
 const draft = (payload, timelineId) => ({ ...payload, timelineId });
@@ -148,4 +150,61 @@ add('intent-hidden-from-holder', [step('commit', commit([holding()])), step('tra
 const feels = (target, dimension, value) => ({ holder: 'alice', target, dimension, value });
 const dispositionsOf = (payload, result) => step('dispositions', { projectId: 'p', ...payload }, result);
 add('dispositions-query', [step('disposition.setBatch', { projectId: 'p', attemptId: 'd1', position: { tick: 1 }, dispositions: [feels('bob', 'trust', 0.8), feels('bob', 'fear', 0.1), feels('team', 'trust', 0.5)] }), step('disposition.setBatch', { projectId: 'p', attemptId: 'd2', position: { tick: 3 }, dispositions: [feels('bob', 'trust', 0.2)] }), dispositionsOf({ holder: 'alice' }, [{ kind: 'disposition', target: 'bob', dimension: 'fear', value: 0.1 }, { target: 'bob', dimension: 'trust', value: 0.2 }, { target: 'team', dimension: 'trust', value: 0.5 }]), dispositionsOf({ holder: 'alice', target: 'bob', dimension: 'trust' }, [{ value: 0.2 }]), dispositionsOf({ holder: 'alice', target: 'bob', dimension: 'trust', at: { tick: 2 } }, [{ value: 0.8 }]), dispositionsOf({ holder: 'alice', dimension: 'trust' }, [{ target: 'bob' }, { target: 'team' }]), dispositionsOf({ holder: 'alice', target: 'item' }, []), dispositionsOf({ holder: 'bob' }, []), projection('alice', { dispositions: [{ target: 'bob', dimension: 'fear' }, { target: 'bob', dimension: 'trust', value: 0.2 }, { target: 'team' }] }), error('dispositions', { projectId: 'p', holder: 'nobody' }, 'NOT_FOUND'), openDraft('d'), step('disposition.setBatch', { projectId: 'p', timelineId: 'd', attemptId: 'd3', position: { tick: 4 }, dispositions: [feels('bob', 'trust', 0.9)] }), dispositionsOf({ holder: 'alice', target: 'bob', dimension: 'trust' }, [{ value: 0.2 }]), dispositionsOf({ holder: 'alice', target: 'bob', dimension: 'trust', timelineId: 'd' }, [{ value: 0.9 }])]);
+// Reads narrowed by range, event type, participant and subject.
+const happening = (attemptId, tick, type, participants, records, extra = {}) => ({ projectId: 'p', attemptId, event: { id: `e-${attemptId}`, type, title: `The lantern ${attemptId}`, position: { tick }, provenance, participants, ...extra }, records });
+const about = (subject) => ({ subject, predicate: 'related', object: { kind: 'entity', id: 'item' }, polarity: true });
+const factAbout = (id, tick, subject, text) => ({ kind: 'fact', ...common(id, tick), claim: about(subject), ...(text ? { text } : {}) });
+const heldText = (id, tick, text) => ({ ...holding(id, 'alice', tick), text });
+const ids = names => ({ items: names.map(name => ({ id: `e-${name}` })) });
+const timelineOf = (payload, result) => step('timeline', { projectId: 'p', ...payload }, result);
+const days = [
+  happening('d1', 1, 'scene', ['alice'], [factAbout('f1', 1, 'alice')]),
+  happening('d2', 2, 'note', ['alice'], [factAbout('f2', 2, 'alice')]),
+  happening('d3', 3, 'scene', ['bob', 'alice', 'alice'], [factAbout('f3', 3, 'alice')]),
+  happening('d4', 4, 'scene', ['bob'], [factAbout('f4', 4, 'alice')]),
+  happening('d5', 5, 'note', ['alice'], [factAbout('f5', 5, 'alice')]),
+  happening('d6', 6, 'scene', ['alice'], [factAbout('f6', 6, 'alice')]),
+];
+add('timeline-range-types-participant', [...days.map(day => step('commit', day)),
+  timelineOf({ range: { from: 3, to: 5 } }, ids(['d3', 'd4', 'd5'])),
+  timelineOf({ eventTypes: ['scene'] }, ids(['d1', 'd3', 'd4', 'd6'])),
+  timelineOf({ participant: 'alice' }, ids(['d1', 'd2', 'd3', 'd5', 'd6'])),
+  timelineOf({ participant: 'alice', eventTypes: ['scene'], range: { from: 2, to: 5 } }, { items: [{ id: 'e-d3', participants: ['bob', 'alice', 'alice'] }] }),
+  timelineOf({ range: { to: 4 }, at: { tick: 2 } }, ids(['d1', 'd2'])),
+  timelineOf({ eventTypes: [] }, { items: [] }),
+  timelineOf({ participant: 'alice', page: { limit: 2 } }, { items: [{ id: 'e-d1' }, { id: 'e-d2' }], nextCursor: '$capture:next' }),
+  timelineOf({ participant: 'alice', page: { limit: 2, cursor: '$ref:next' } }, ids(['d3', 'd5'])),
+  error('timeline', { projectId: 'p', range: { from: 5, to: 3 } }, 'VALIDATION_FAILED'),
+  error('timeline', { projectId: 'p', eventTypes: Array.from({ length: 101 }, (_, index) => `type-${index}`) }, 'VALIDATION_FAILED'),
+]);
+const searchOf = (filter, result, extra = {}) => step('search', { projectId: 'p', text: 'lantern', filter, ...extra }, result);
+const one = (docType, docId) => ({ items: [{ docType, docId }] });
+add('search-subject-types-range', [
+  step('commit', happening('s1', 1, 'scene', ['bob'], [factAbout('fa', 1, 'alice', 'a lantern lit'), heldText('h-scene', 1, 'the lantern in the window')])),
+  step('commit', happening('s2', 2, 'note', ['alice'], [factAbout('fb', 2, 'bob', 'a lantern broken'), heldText('h-note', 2, 'a note about a lantern')])),
+  step('commit', happening('s3', 3, 'scene', ['alice'], [factAbout('fc', 3, 'alice', 'no light here')])),
+  searchOf({ subject: 'bob', docType: 'event' }, one('event', 'e-s1')),
+  searchOf({ subject: 'bob', docType: 'record' }, one('record', 'fb')),
+  searchOf({ eventTypes: ['note'], docType: 'event' }, one('event', 'e-s2')),
+  searchOf({ eventTypes: ['note'], docType: 'record' }, one('record', 'fb')),
+  searchOf({ holder: 'alice', eventTypes: ['scene'] }, one('record', 'h-scene')),
+  searchOf({ docType: 'event' }, one('event', 'e-s2'), { range: { from: 2, to: 2 } }),
+  searchOf({ docType: 'event' }, one('event', 'e-s3'), { range: { from: 3 } }),
+]);
+const onReading = (name, tick, reading) => step('commit', happening(name, tick, 'scene', ['alice'], [factAbout(`f-${name}`, tick, 'alice')], { on: { reading } }));
+add('range-on-axis', [defineReading, onReading('ra', 1, 3), onReading('rb', 2, 1), onReading('rc', 3, 2),
+  timelineOf({ at: { axis: 'reading' }, range: { from: 2, to: 3 } }, ids(['rc', 'ra'])),
+  timelineOf({ at: { axis: 'reading' }, participant: 'alice', range: { from: 1, to: 2 } }, ids(['rb', 'rc'])),
+  searchOf({ docType: 'event' }, one('event', 'e-rb'), { at: { axis: 'reading' }, range: { from: 1, to: 1 } }),
+  searchOf({ docType: 'record' }, { items: [] }, { at: { axis: 'reading' }, range: { from: 1, to: 1 } }),
+  searchOf({ docType: 'event' }, one('event', 'e-ra'), { range: { from: 1, to: 1 } }),
+]);
+add('participants-follow-rebase', [openDraft('d'),
+  step('commit', draft(happening('in-d', 2, 'scene', ['alice'], [factAbout('f-in-d', 2, 'alice')]), 'd')),
+  step('commit', happening('in-main', 3, 'scene', ['bob'], [factAbout('f-in-main', 3, 'bob')])),
+  timelineOp('rebase', 'd', { status: 'active' }),
+  timelineOf({ timelineId: 'd', participant: 'alice' }, ids(['in-d'])),
+  timelineOf({ timelineId: 'd', participant: 'bob' }, ids(['in-main'])),
+  timelineOf({ participant: 'alice' }, { items: [] }),
+]);
 for (const value of cases) writeFileSync(new URL(`${value.name}.json`, directory), JSON.stringify(value, null, 2) + '\n');

@@ -107,6 +107,7 @@ fn holder(id: &str) -> SearchFilter {
     SearchFilter {
         holder: Some(id.to_owned()),
         doc_type: None,
+        ..Default::default()
     }
 }
 

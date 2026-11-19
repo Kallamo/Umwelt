@@ -1,11 +1,12 @@
 -- SPDX-License-Identifier: AGPL-3.0-only
--- Storage version 5. Records, claims and acquisitions share one table and
+-- Storage version 6. Records, claims and acquisitions share one table and
 -- every record is rebuilt from columns; repeated provenance is stored once;
 -- drafts branch from main or from other drafts; events may have positions on
 -- additional time axes; searchable documents may have vectors from the
--- client's embedding models. See spec/storage.md.
+-- client's embedding models; event participants are indexed by entity. See
+-- spec/storage.md. Files of earlier versions are migrated (migrations.rs).
 PRAGMA application_id = 0x554D5754;
-PRAGMA user_version = 5;
+PRAGMA user_version = 6;
 
 CREATE TABLE projects (
     id TEXT PRIMARY KEY,
@@ -121,8 +122,8 @@ CREATE TABLE events (
     event_type TEXT NOT NULL,
     title TEXT NOT NULL,
     provenance_id INTEGER NOT NULL,
-    -- JSON with the optional fields (description, participants, location,
-    -- evidence); NULL when all are empty.
+    -- JSON with the optional fields (description, location, evidence); NULL
+    -- when all are empty. Participants live in `event_participants`.
     extra TEXT,
     PRIMARY KEY (project_id, id)
 ) WITHOUT ROWID;
@@ -136,6 +137,19 @@ CREATE TABLE event_positions (
     tick INTEGER NOT NULL,
     recorded_version INTEGER NOT NULL,
     PRIMARY KEY (project_id, event_id, axis_id)
+) WITHOUT ROWID;
+-- The participants of each event, in the order they were written; the only
+-- place they are stored. `tick` and `recorded_version` are the event's, kept
+-- so `event_participants_order` can serve the events of one entity in
+-- timeline order. No timeline column: visibility comes from the event.
+CREATE TABLE event_participants (
+    project_id TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    ordinal INTEGER NOT NULL,
+    entity_id TEXT NOT NULL,
+    tick INTEGER NOT NULL,
+    recorded_version INTEGER NOT NULL,
+    PRIMARY KEY (project_id, event_id, ordinal)
 ) WITHOUT ROWID;
 -- Every record kind in one row. Columns hold everything queries filter on;
 -- `extra` holds the rest (object value, qualifiers, about, told-by intent,
@@ -272,6 +286,7 @@ CREATE INDEX acquisitions_witnessed ON records(project_id, acquisition_ref) WHER
 CREATE INDEX transitions_target_window ON transitions(project_id, target_id, tick, recorded_version);
 CREATE INDEX events_timeline_order ON events(project_id, timeline_id, tick, recorded_version, id);
 CREATE INDEX event_positions_order ON event_positions(project_id, axis_id, tick, recorded_version, event_id);
+CREATE INDEX event_participants_order ON event_participants(project_id, entity_id, tick, recorded_version, event_id);
 -- Draft rows only (main rows are never in these): promote and purge find a
 -- draft's rows without scanning the whole ledger.
 CREATE INDEX records_draft ON records(project_id, timeline_id) WHERE timeline_id <> 'main';

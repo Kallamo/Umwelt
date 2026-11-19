@@ -97,6 +97,7 @@ fn record_without_optional_fields_omits_nulls() {
             polarity: true,
             about: None,
         },
+        text: None,
     };
 
     let serialized = serde_json::to_string(&record).expect("serialize fact");

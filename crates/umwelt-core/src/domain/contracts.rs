@@ -600,6 +600,10 @@ pub enum Record {
         #[serde(flatten)]
         common: RecordCommon,
         claim: Claim,
+        /// What the Fact says, in words. When present, search indexes it
+        /// instead of the claim.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        text: Option<String>,
     },
     Holding {
         #[serde(flatten)]
@@ -807,6 +811,10 @@ pub enum RecordInput {
         #[serde(flatten)]
         common: RecordInputCommon,
         claim: Claim,
+        /// What the Fact says, in words. When present, search indexes it
+        /// instead of the claim.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        text: Option<String>,
     },
     Holding {
         #[serde(flatten)]
@@ -1220,6 +1228,18 @@ pub struct ChangeItem {
     pub payload: Value,
 }
 
+/// A file converted from an earlier storage version when it was opened.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct StorageMigration {
+    /// The storage version the file had.
+    pub from: u32,
+    /// The storage version it has now.
+    pub to: u32,
+    /// The copy of the original file, made before converting it.
+    pub backup: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchFilter {
@@ -1227,6 +1247,41 @@ pub struct SearchFilter {
     pub holder: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub doc_type: Option<String>,
+    /// Only records whose claim is about this entity, and events it
+    /// participates in.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject: Option<String>,
+    /// Only events of these types, and records written by one of them. At
+    /// most 100; an empty list matches nothing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub event_types: Option<Vec<String>>,
+}
+
+/// Ticks, both inclusive, on the axis a read is made on. It selects the
+/// documents a read returns by their own position; what the read can see is
+/// still bounded by `at`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TickRange {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to: Option<i64>,
+}
+
+/// Which events a timeline page holds, besides what the read can see.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TimelineFilter {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub range: Option<TickRange>,
+    /// Only events of these types. At most 100; an empty list matches
+    /// nothing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub event_types: Option<Vec<String>>,
+    /// Only events this entity participates in.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub participant: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]

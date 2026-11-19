@@ -80,6 +80,7 @@ pub enum ErrorCode {
     FileLocked,
     NotUmweltFile,
     UnsupportedFileVersion,
+    MigrationFailed,
     PayloadTooLarge,
     Internal,
 }
@@ -98,6 +99,7 @@ impl ErrorCode {
             Self::FileLocked => "FILE_LOCKED",
             Self::NotUmweltFile => "NOT_UMWELT_FILE",
             Self::UnsupportedFileVersion => "UNSUPPORTED_FILE_VERSION",
+            Self::MigrationFailed => "MIGRATION_FAILED",
             Self::PayloadTooLarge => "PAYLOAD_TOO_LARGE",
             Self::Internal => "INTERNAL",
         }
@@ -141,6 +143,10 @@ pub struct HelloResult {
     pub storage: u32,
     pub engine: String,
     pub capabilities: Vec<Capability>,
+    /// Present when the file was converted from an earlier storage version
+    /// as it was opened.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration: Option<umwelt_core::domain::StorageMigration>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
@@ -821,6 +827,7 @@ impl<S: Store> Dispatcher<S> {
             storage: UMWELT_STORAGE_VERSION,
             engine: env!("CARGO_PKG_VERSION").to_owned(),
             capabilities: CAPABILITIES.to_vec(),
+            migration: self.engine.store().migration(),
         }) {
             Ok(result) => success(id, result),
             Err(error) => ResponseEnvelope::Failure {
@@ -1179,7 +1186,16 @@ impl<S: Store> Dispatcher<S> {
                 value_json(
                     self.engine
                         .in_timeline(timeline(&p.timeline_id))
-                        .timeline(&p.project_id, p.at, p.page)
+                        .timeline_where(
+                            &p.project_id,
+                            TimelineFilter {
+                                range: p.range,
+                                event_types: p.event_types,
+                                participant: p.participant,
+                            },
+                            p.at,
+                            p.page,
+                        )
                         .map_err(map_engine_error)?,
                 )
             }
@@ -1210,11 +1226,12 @@ impl<S: Store> Dispatcher<S> {
                 value_json(
                     self.engine
                         .in_timeline(timeline(&p.timeline_id))
-                        .search_with(
+                        .search_within(
                             &p.project_id,
                             p.text.as_deref(),
                             p.semantic,
                             p.filter,
+                            p.range.unwrap_or_default(),
                             p.at,
                             p.page,
                         )
@@ -1550,6 +1567,16 @@ pub struct TimelinePayload {
     /// Timeline to read; defaults to "main".
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeline_id: Option<String>,
+    /// Only events positioned in this range.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub range: Option<TickRange>,
+    /// Only events of these types. At most 100; an empty list matches
+    /// nothing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub event_types: Option<Vec<String>>,
+    /// Only events this entity participates in.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub participant: Option<String>,
     #[serde(default)]
     pub at: At,
     #[serde(default)]
@@ -1583,6 +1610,9 @@ pub struct SearchPayload {
     pub semantic: Option<SearchSemantic>,
     #[serde(default)]
     pub filter: SearchFilter,
+    /// Only documents positioned in this range.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub range: Option<TickRange>,
     #[serde(default)]
     pub at: At,
     #[serde(default)]
@@ -1745,6 +1775,7 @@ fn map_engine_error(error: umwelt_core::UmweltError) -> PublicError {
         umwelt_core::UmweltErrorCode::UnsupportedFileVersion => {
             ProtocolErrorCode::UnsupportedFileVersion
         }
+        umwelt_core::UmweltErrorCode::MigrationFailed => ProtocolErrorCode::MigrationFailed,
         _ => ProtocolErrorCode::Internal,
     };
     PublicError {

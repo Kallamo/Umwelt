@@ -2214,6 +2214,7 @@
         "FILE_LOCKED",
         "NOT_UMWELT_FILE",
         "UNSUPPORTED_FILE_VERSION",
+        "MIGRATION_FAILED",
         "PAYLOAD_TOO_LARGE",
         "INTERNAL"
       ],
@@ -2769,6 +2770,17 @@
         },
         "engine": {
           "type": "string"
+        },
+        "migration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StorageMigration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Present when the file was converted from an earlier storage version\nas it was opened."
         },
         "protocol": {
           "format": "uint32",
@@ -3940,6 +3952,13 @@
               "minimum": 0,
               "type": "integer"
             },
+            "text": {
+              "description": "What the Fact says, in words. When present, search indexes it\ninstead of the claim.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "timelineId": {
               "type": "string"
             }
@@ -4211,6 +4230,13 @@
                 }
               ],
               "description": "Omitted: the provenance of the commit's event."
+            },
+            "text": {
+              "description": "What the Fact says, in words. When present, search indexes it\ninstead of the claim.",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -4589,7 +4615,24 @@
             "null"
           ]
         },
+        "eventTypes": {
+          "description": "Only events of these types, and records written by one of them. At\nmost 100; an empty list matches nothing.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "holder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "description": "Only records whose claim is about this entity, and events it\nparticipates in.",
           "type": [
             "string",
             "null"
@@ -4701,6 +4744,17 @@
         },
         "projectId": {
           "type": "string"
+        },
+        "range": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TickRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Only documents positioned in this range."
         },
         "semantic": {
           "anyOf": [
@@ -4830,6 +4884,33 @@
       "title": "SetDispositionsInput",
       "type": "object"
     },
+    "StorageMigration": {
+      "description": "A file converted from an earlier storage version when it was opened.",
+      "properties": {
+        "backup": {
+          "description": "The copy of the original file, made before converting it.",
+          "type": "string"
+        },
+        "from": {
+          "description": "The storage version the file had.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "to": {
+          "description": "The storage version it has now.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "backup"
+      ],
+      "type": "object"
+    },
     "SuccessEnvelope": {
       "properties": {
         "id": {
@@ -4854,6 +4935,27 @@
         "result"
       ],
       "title": "SuccessEnvelope",
+      "type": "object"
+    },
+    "TickRange": {
+      "additionalProperties": false,
+      "description": "Ticks, both inclusive, on the axis a read is made on. It selects the\ndocuments a read returns by their own position; what the read can see is\nstill bounded by `at`.",
+      "properties": {
+        "from": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "to": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
       "type": "object"
     },
     "Timeline": {
@@ -4980,14 +5082,42 @@
           "$ref": "#/$defs/At",
           "default": {}
         },
+        "eventTypes": {
+          "description": "Only events of these types. At most 100; an empty list matches\nnothing.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "page": {
           "$ref": "#/$defs/Page",
           "default": {
             "limit": 100
           }
         },
+        "participant": {
+          "description": "Only events this entity participates in.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "projectId": {
           "type": "string"
+        },
+        "range": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TickRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Only events positioned in this range."
         },
         "timelineId": {
           "description": "Timeline to read; defaults to \"main\".",

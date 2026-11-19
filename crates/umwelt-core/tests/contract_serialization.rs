@@ -229,6 +229,7 @@ fn every_record_variant_round_trips_with_kind_tag() {
         Record::Fact {
             common: common(),
             claim: claim(),
+            text: None,
         },
         Record::Holding {
             common: common(),
@@ -522,6 +523,7 @@ fn write_contract_types_round_trip() {
         record: Record::Fact {
             common: common(),
             claim: claim(),
+            text: None,
         },
         transition: None,
     });
@@ -558,6 +560,7 @@ fn read_contract_types_round_trip() {
         items: vec![Record::Fact {
             common: common(),
             claim: claim(),
+            text: None,
         }],
         next_cursor: Some("opaque".to_owned()),
     });
@@ -570,6 +573,16 @@ fn read_contract_types_round_trip() {
     round_trip(&SearchFilter {
         holder: Some("mara".to_owned()),
         doc_type: Some("record".to_owned()),
+        subject: Some("ana".to_owned()),
+        event_types: Some(vec!["scene".to_owned()]),
+    });
+    round_trip(&TimelineFilter {
+        range: Some(TickRange {
+            from: Some(3),
+            to: Some(5),
+        }),
+        event_types: Some(vec!["scene".to_owned()]),
+        participant: Some("ana".to_owned()),
     });
 }
 

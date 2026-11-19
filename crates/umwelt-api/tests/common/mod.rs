@@ -136,6 +136,7 @@ pub fn fact(id: &str, tick: i64, value: Claim) -> RecordInput {
     RecordInput::Fact {
         common: common(id, tick),
         claim: value,
+        text: None,
     }
 }
 

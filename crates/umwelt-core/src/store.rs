@@ -101,6 +101,10 @@ pub struct PreparedCommit {
 }
 
 pub trait Store: Send {
+    /// The conversion applied when the file was opened, if any.
+    fn migration(&self) -> Option<crate::domain::StorageMigration> {
+        None
+    }
     fn create_project(&mut self, project: &Project) -> Result<()>;
     fn project(&self, project_id: &str) -> Result<Project>;
     fn projects(&self) -> Result<Vec<Project>>;
@@ -425,6 +429,13 @@ pub struct EventQuery {
     pub axis: Option<String>,
     pub tick: i64,
     pub as_of_version: Version,
+    /// The lowest position of an event on the page (`i64::MIN`: none). The
+    /// highest is `tick`.
+    pub from: i64,
+    /// Only events of these types; `None`: every type.
+    pub event_types: Option<Vec<String>>,
+    /// Only events this entity participates in.
+    pub participant: Option<String>,
     pub limit: u32,
     pub cursor: Option<EventCursor>,
 }
@@ -455,6 +466,14 @@ pub struct SearchQuery {
     pub semantic: Option<SemanticQuery>,
     pub holder_id: Option<String>,
     pub doc_type: Option<String>,
+    /// Only records about this entity and events it participates in.
+    pub subject: Option<String>,
+    /// Only events of these types and records they wrote; `None`: every type.
+    pub event_types: Option<Vec<String>>,
+    /// Positions of the documents returned, both inclusive. What the search
+    /// can see is bounded by `tick`.
+    pub from: i64,
+    pub to: i64,
     pub tick: i64,
     pub as_of_version: Version,
     pub limit: u32,

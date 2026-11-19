@@ -363,9 +363,11 @@ fn materialize_record(
         RecordInput::Fact {
             common: source,
             claim,
+            text,
         } => Record::Fact {
             common: common(source),
             claim: claim.clone(),
+            text: text.clone(),
         },
         RecordInput::Holding {
             common: source,

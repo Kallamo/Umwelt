@@ -18,6 +18,7 @@ pub enum UmweltErrorCode {
     ImportFailed,
     NotUmweltFile,
     UnsupportedFileVersion,
+    MigrationFailed,
     FileLocked,
 }
 

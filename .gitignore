@@ -5,6 +5,8 @@ coverage/
 .cache/
 .tmp/
 *.umw
+# Reference files of published storage versions (spec/versioning.md).
+!fixtures/storage/*.umw
 *.umw-shm
 *.umw-wal
 *.tsbuildinfo

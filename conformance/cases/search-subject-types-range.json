@@ -1,0 +1,560 @@
+{
+  "name": "search-subject-types-range",
+  "steps": [
+    {
+      "request": {
+        "op": "hello",
+        "payload": {
+          "protocol": {
+            "min": 1,
+            "max": 1
+          },
+          "client": "conformance/1"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "protocol": 1,
+          "engine": "$any"
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "project.create",
+        "payload": {
+          "id": "p",
+          "name": "Test",
+          "timescale": "day",
+          "vocabularyMode": "open"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "version": 0
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "agent",
+          "name": "agent",
+          "kind": "agent"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "group",
+          "name": "group",
+          "kind": "group"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entityType.create",
+        "payload": {
+          "projectId": "p",
+          "id": "other",
+          "name": "other",
+          "kind": "other"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "alice",
+          "typeId": "agent",
+          "name": "alice"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "bob",
+          "typeId": "agent",
+          "name": "bob"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "team",
+          "typeId": "group",
+          "name": "team"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "entity.create",
+        "payload": {
+          "projectId": "p",
+          "id": "item",
+          "typeId": "other",
+          "name": "item"
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "predicate.define",
+        "payload": {
+          "projectId": "p",
+          "predicate": {
+            "id": "related",
+            "label": "Related",
+            "object": "entity",
+            "cardinality": "many"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "commit",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "s1",
+          "event": {
+            "id": "e-s1",
+            "type": "scene",
+            "title": "The lantern s1",
+            "position": {
+              "tick": 1
+            },
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "participants": [
+              "bob"
+            ]
+          },
+          "records": [
+            {
+              "kind": "fact",
+              "id": "fa",
+              "position": {
+                "tick": 1
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "text": "a lantern lit"
+            },
+            {
+              "kind": "holding",
+              "id": "h-scene",
+              "position": {
+                "tick": 1
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "alice",
+              "attitude": "believes",
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available",
+              "text": "the lantern in the window"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "commit",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "s2",
+          "event": {
+            "id": "e-s2",
+            "type": "note",
+            "title": "The lantern s2",
+            "position": {
+              "tick": 2
+            },
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "participants": [
+              "alice"
+            ]
+          },
+          "records": [
+            {
+              "kind": "fact",
+              "id": "fb",
+              "position": {
+                "tick": 2
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "claim": {
+                "subject": "bob",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "text": "a lantern broken"
+            },
+            {
+              "kind": "holding",
+              "id": "h-note",
+              "position": {
+                "tick": 2
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "holder": "alice",
+              "attitude": "believes",
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "acquisition": {
+                "kind": "authored"
+              },
+              "confidence": 1,
+              "accessibility": "available",
+              "text": "a note about a lantern"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "commit",
+        "payload": {
+          "projectId": "p",
+          "attemptId": "s3",
+          "event": {
+            "id": "e-s3",
+            "type": "scene",
+            "title": "The lantern s3",
+            "position": {
+              "tick": 3
+            },
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "participants": [
+              "alice"
+            ]
+          },
+          "records": [
+            {
+              "kind": "fact",
+              "id": "fc",
+              "position": {
+                "tick": 3
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "claim": {
+                "subject": "alice",
+                "predicate": "related",
+                "object": {
+                  "kind": "entity",
+                  "id": "item"
+                },
+                "polarity": true
+              },
+              "text": "no light here"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {}
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "text": "lantern",
+          "filter": {
+            "subject": "bob",
+            "docType": "event"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docType": "event",
+              "docId": "e-s1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "text": "lantern",
+          "filter": {
+            "subject": "bob",
+            "docType": "record"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docType": "record",
+              "docId": "fb"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "text": "lantern",
+          "filter": {
+            "eventTypes": [
+              "note"
+            ],
+            "docType": "event"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docType": "event",
+              "docId": "e-s2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "text": "lantern",
+          "filter": {
+            "eventTypes": [
+              "note"
+            ],
+            "docType": "record"
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docType": "record",
+              "docId": "fb"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "text": "lantern",
+          "filter": {
+            "holder": "alice",
+            "eventTypes": [
+              "scene"
+            ]
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docType": "record",
+              "docId": "h-scene"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "text": "lantern",
+          "filter": {
+            "docType": "event"
+          },
+          "range": {
+            "from": 2,
+            "to": 2
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docType": "event",
+              "docId": "e-s2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "op": "search",
+        "payload": {
+          "projectId": "p",
+          "text": "lantern",
+          "filter": {
+            "docType": "event"
+          },
+          "range": {
+            "from": 3
+          }
+        }
+      },
+      "expect": {
+        "ok": true,
+        "result": {
+          "items": [
+            {
+              "docType": "event",
+              "docId": "e-s3"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

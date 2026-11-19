@@ -132,10 +132,23 @@ public sealed partial class UmweltEngine : IDisposable
     /// <summary>Checkpoints and closes the file.</summary>
     public void Dispose() => handle.Dispose();
 
+    /// <summary>
+    /// The conversion applied when the file was opened, or <c>null</c> when
+    /// it already had this engine's storage version. A migrated file was
+    /// copied first to <see cref="StorageMigration.Backup"/>.
+    /// </summary>
+    public StorageMigration? Migration { get; private set; }
+
     private void Hello(string client)
     {
         var payload = JsonSerializer.SerializeToElement(new { protocol = new { min = 1, max = 1 }, client });
-        Send("hello", payload);
+        var response = Send("hello", payload);
+        if (response.Result.ValueKind == JsonValueKind.Object
+            && response.Result.TryGetProperty("migration", out var migration)
+            && migration.ValueKind == JsonValueKind.Object)
+        {
+            Migration = migration.Deserialize<StorageMigration>(UmweltJson.Options);
+        }
     }
 
     private Envelope Send(string op, JsonElement payload)

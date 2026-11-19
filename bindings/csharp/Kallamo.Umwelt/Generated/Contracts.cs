@@ -2791,6 +2791,14 @@ public abstract class Record
         [JsonPropertyName("recordedAt")]
         public ulong RecordedAt { get; set; }
 
+        /// <summary>
+        /// What the Fact says, in words. When present, search indexes it
+        /// instead of the claim.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonPropertyName("text")]
+        public string? Text { get; set; }
+
         [JsonPropertyName("timelineId")]
         public string TimelineId { get; set; } = default!;
     }
@@ -3014,6 +3022,14 @@ public abstract class RecordInput
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("provenance")]
         public Provenance? Provenance { get; set; }
+
+        /// <summary>
+        /// What the Fact says, in words. When present, search indexes it
+        /// instead of the claim.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonPropertyName("text")]
+        public string? Text { get; set; }
     }
 
     public sealed class Holding : RecordInput
@@ -3291,9 +3307,25 @@ public sealed partial class SearchFilter
     [JsonPropertyName("docType")]
     public string? DocType { get; set; }
 
+    /// <summary>
+    /// Only events of these types, and records written by one of them. At
+    /// most 100; an empty list matches nothing.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("eventTypes")]
+    public List<string>? EventTypes { get; set; }
+
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("holder")]
     public string? Holder { get; set; }
+
+    /// <summary>
+    /// Only records whose claim is about this entity, and events it
+    /// participates in.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("subject")]
+    public string? Subject { get; set; }
 }
 
 public sealed partial class SearchItem
@@ -3382,6 +3414,13 @@ public sealed partial class SearchPayload
     public string ProjectId { get; set; } = default!;
 
     /// <summary>
+    /// Only documents positioned in this range.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("range")]
+    public TickRange? Range { get; set; }
+
+    /// <summary>
     /// A query vector from the client's model.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -3465,6 +3504,46 @@ public sealed partial class SetDispositionsInput
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("timelineId")]
     public string? TimelineId { get; set; }
+}
+
+/// <summary>
+/// A file converted from an earlier storage version when it was opened.
+/// </summary>
+public sealed partial class StorageMigration
+{
+    /// <summary>
+    /// The copy of the original file, made before converting it.
+    /// </summary>
+    [JsonPropertyName("backup")]
+    public string Backup { get; set; } = default!;
+
+    /// <summary>
+    /// The storage version the file had.
+    /// </summary>
+    [JsonPropertyName("from")]
+    public uint From { get; set; }
+
+    /// <summary>
+    /// The storage version it has now.
+    /// </summary>
+    [JsonPropertyName("to")]
+    public uint To { get; set; }
+}
+
+/// <summary>
+/// Ticks, both inclusive, on the axis a read is made on. It selects the
+/// documents a read returns by their own position; what the read can see is
+/// still bounded by `at`.
+/// </summary>
+public sealed partial class TickRange
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("from")]
+    public long? From { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("to")]
+    public long? To { get; set; }
 }
 
 /// <summary>
@@ -3569,12 +3648,34 @@ public sealed partial class TimelinePayload
     [JsonPropertyName("at")]
     public At? At { get; set; }
 
+    /// <summary>
+    /// Only events of these types. At most 100; an empty list matches
+    /// nothing.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("eventTypes")]
+    public List<string>? EventTypes { get; set; }
+
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("page")]
     public Page? Page { get; set; }
 
+    /// <summary>
+    /// Only events this entity participates in.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("participant")]
+    public string? Participant { get; set; }
+
     [JsonPropertyName("projectId")]
     public string ProjectId { get; set; } = default!;
+
+    /// <summary>
+    /// Only events positioned in this range.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("range")]
+    public TickRange? Range { get; set; }
 
     /// <summary>
     /// Timeline to read; defaults to "main".

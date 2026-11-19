@@ -33,6 +33,9 @@ pub fn text_hash(text: &str) -> String {
 /// Other records are not searchable.
 pub fn record_search_text(record: &Record) -> Option<String> {
     let text = match record {
+        Record::Fact {
+            text: Some(text), ..
+        } => text.clone(),
         Record::Fact { claim, .. } => fact_search_text(claim),
         Record::Holding {
             text: Some(text), ..

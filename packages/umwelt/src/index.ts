@@ -21,7 +21,7 @@ export {
   toldBy,
   witnessed,
 } from './build.js';
-export type { ClaimOptions, FactInput, HoldingInput, HoldingOptions, RecordOptions } from './build.js';
+export type { ClaimOptions, FactInput, FactOptions, HoldingInput, HoldingOptions, RecordOptions } from './build.js';
 export { EmbeddingClient } from './embedding.js';
 export type {
   ClientOptions,

@@ -248,6 +248,7 @@ pub fn generate_with(path: &Path, profile: &str, seed: u64, extras: Extras) -> R
                     provenance: Some(provenance()),
                 },
                 claim: benchmark_claim(index, (index + 1) % holders),
+                text: None,
             });
         }
         let mut first = workload_commit("initial".into(), 0, initial);

@@ -41,6 +41,11 @@ export interface RecordOptions {
   provenance?: Provenance;
 }
 
+export interface FactOptions extends RecordOptions {
+  /** What the Fact says, in words. Search indexes it instead of the claim. */
+  text?: string;
+}
+
 export interface HoldingOptions extends RecordOptions {
   /** Omitted: 1. */
   confidence?: number;
@@ -142,8 +147,8 @@ export function authored(): Acquisition {
 }
 
 /** Canon: what is true in the world, whoever knows it. */
-export function fact(value: Claim, options?: RecordOptions): FactInput {
-  return { kind: 'fact', claim: value, ...given(options, ['id', 'position', 'provenance']) };
+export function fact(value: Claim, options?: FactOptions): FactInput {
+  return { kind: 'fact', claim: value, ...given(options, ['id', 'position', 'provenance', 'text']) };
 }
 
 function holding(attitude: Attitude) {

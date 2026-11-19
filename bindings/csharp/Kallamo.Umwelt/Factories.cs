@@ -104,9 +104,12 @@ public static class Acquired
 /// <summary>Records for a commit. A Holding's attitude is the name of its factory.</summary>
 public static class Records
 {
-    /// <summary>Canon: what is true in the world, whoever knows it.</summary>
-    public static RecordInput.Fact Fact(Claim claim, string? id = null, Position? position = null, Provenance? provenance = null) =>
-        new() { Claim = claim, Id = id, Position = position, Provenance = provenance };
+    /// <summary>
+    /// Canon: what is true in the world, whoever knows it. <paramref name="text"/>
+    /// says it in words; search indexes it instead of the claim.
+    /// </summary>
+    public static RecordInput.Fact Fact(Claim claim, string? id = null, Position? position = null, Provenance? provenance = null, string? text = null) =>
+        new() { Claim = claim, Id = id, Position = position, Provenance = provenance, Text = text };
 
     /// <summary>A Holding with attitude <see cref="Attitude.Knows"/>.</summary>
     public static RecordInput.Holding Knows(string holder, Claim claim, Acquisition acquisition, string? id = null, Position? position = null, Provenance? provenance = null, double? confidence = null, Accessibility? accessibility = null, string? text = null, Secrecy? secrecy = null) =>

@@ -3,6 +3,7 @@
 
 #[macro_use]
 mod rows;
+mod migrations;
 
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -37,9 +38,10 @@ use rows::{
 };
 
 const APPLICATION_ID: i64 = 0x554D_5754;
-/// The layout of a `.umw` file (see `spec/storage.md`). Files of another
-/// version are refused.
-pub const STORAGE_VERSION: u32 = 5;
+/// The layout of a `.umw` file (see `spec/storage.md`). Files of an earlier
+/// published version are migrated when opened (`migrations.rs`); files of a
+/// newer one are refused.
+pub const STORAGE_VERSION: u32 = 6;
 const FILE_VERSION: i64 = STORAGE_VERSION as i64;
 
 // Visibility of a row in a timeline (see `TimelineScope`): the timeline's own
@@ -74,6 +76,62 @@ macro_rules! visible {
     };
 }
 
+// An event's type is one of a JSON list bound to `$types`; a NULL list
+// matches every type, an empty one none.
+macro_rules! event_type_in {
+    ($alias:literal, $types:literal) => {
+        concat!(
+            "(",
+            $types,
+            " IS NULL OR ",
+            $alias,
+            ".event_type IN (SELECT value FROM json_each(",
+            $types,
+            ")))"
+        )
+    };
+}
+
+// `$entity` participates in the event `$event_id`, through the primary key
+// of `event_participants`.
+macro_rules! participates {
+    ($event_id:literal, $entity:literal) => {
+        concat!(
+            "EXISTS (SELECT 1 FROM event_participants x WHERE x.project_id = :project_id \
+             AND x.event_id = ",
+            $event_id,
+            " AND x.entity_id = ",
+            $entity,
+            ")"
+        )
+    };
+}
+
+// What `search` narrows its documents to (`range`, `filter.subject`,
+// `filter.eventTypes`), for a record `r` and an event `e`. The range is
+// written for the main axis, like every positioned bound, and `bound_on_axis`
+// moves it to an additional axis. Unused filters are bound to the widest
+// range and to NULL.
+macro_rules! record_filters {
+    () => {
+        "r.tick BETWEEN :from AND :to \
+         AND (:subject IS NULL OR r.subject_id = :subject) \
+         AND (:event_types IS NULL OR EXISTS (SELECT 1 FROM events w \
+         WHERE w.project_id = r.project_id AND w.id = r.event_id \
+         AND w.event_type IN (SELECT value FROM json_each(:event_types))))"
+    };
+}
+macro_rules! event_filters {
+    () => {
+        concat!(
+            "e.tick BETWEEN :from AND :to AND (:subject IS NULL OR ",
+            participates!("e.id", ":subject"),
+            ") AND ",
+            event_type_in!("e", ":event_types")
+        )
+    };
+}
+
 // The tick bound of a read on an additional axis: the row's event has a
 // position on `:axis` up to `:tick`, found through the primary key of
 // `event_positions`. A row whose event has no position there is invisible.
@@ -94,6 +152,22 @@ macro_rules! on_axis {
     };
 }
 
+// The range a search narrows its documents to (`r.tick BETWEEN :from AND :to`
+// as written for the main axis), on an additional axis.
+macro_rules! on_axis_range {
+    ($alias:literal, $event_id:literal) => {
+        concat!(
+            "EXISTS (SELECT 1 FROM event_positions p WHERE p.project_id = ",
+            $alias,
+            ".project_id AND p.event_id = ",
+            $alias,
+            ".",
+            $event_id,
+            " AND p.axis_id = :axis AND p.tick BETWEEN :from AND :to)"
+        )
+    };
+}
+
 /// A positioned query as written (main axis), or bounded on an additional
 /// axis instead (see `on_axis!`). Indexes and order do not change. Without
 /// the tick range the planner would check transitions through the primary key
@@ -106,6 +180,11 @@ fn bound_on_axis(sql: &str, axis: bool) -> Cow<'_, str> {
         sql.replace("r.tick <= :tick", on_axis!("r", "event_id"))
             .replace("t.tick <= :tick", on_axis!("t", "event_id"))
             .replace("e.tick <= :tick", on_axis!("e", "id"))
+            .replace(
+                "r.tick BETWEEN :from AND :to",
+                on_axis_range!("r", "event_id"),
+            )
+            .replace("e.tick BETWEEN :from AND :to", on_axis_range!("e", "id"))
             .replace(
                 "FROM transitions t ",
                 "FROM transitions t INDEXED BY transitions_target_window ",
@@ -166,7 +245,9 @@ const EVENTS_MAIN: &str = concat!(
     event_columns!(),
     " FROM events e \
      WHERE e.project_id = ?1 AND e.timeline_id = ?2 AND e.tick <= ?3 AND e.recorded_version <= ?4 \
-     AND (?5 IS NULL OR e.tick > ?5 OR (e.tick = ?5 AND e.recorded_version > ?6) \
+     AND e.tick >= ?9 AND ",
+    event_type_in!("e", "?10"),
+    " AND (?5 IS NULL OR e.tick > ?5 OR (e.tick = ?5 AND e.recorded_version > ?6) \
      OR (e.tick = ?5 AND e.recorded_version = ?6 AND e.id > ?7)) \
      ORDER BY e.tick, e.recorded_version, e.id LIMIT ?8"
 );
@@ -179,8 +260,10 @@ macro_rules! event_range {
             " FROM events e \
              WHERE e.project_id = :project_id AND e.timeline_id = ",
             $timeline,
-            " AND e.tick <= :tick AND e.recorded_version <= :version",
+            " AND e.tick <= :tick AND e.tick >= :from AND e.recorded_version <= :version",
             $bound,
+            " AND ",
+            event_type_in!("e", ":event_types"),
             " AND (:cursor_tick IS NULL OR e.tick > :cursor_tick \
              OR (e.tick = :cursor_tick AND e.recorded_version > :cursor_version) \
              OR (e.tick = :cursor_tick AND e.recorded_version = :cursor_version \
@@ -211,11 +294,34 @@ const EVENTS_ON_AXIS: &str = concat!(
     " FROM event_positions p INDEXED BY event_positions_order \
      CROSS JOIN events e ON e.project_id = p.project_id AND e.id = p.event_id \
      WHERE p.project_id = :project_id AND p.axis_id = :axis AND p.tick <= :tick \
-     AND p.recorded_version <= :version AND ",
+     AND p.tick >= :from AND p.recorded_version <= :version AND ",
     visible!("e"),
-    " AND (:cursor_tick IS NULL OR (p.tick, p.recorded_version, p.event_id) > \
+    " AND ",
+    event_type_in!("e", ":event_types"),
+    " AND (:participant IS NULL OR ",
+    participates!("e.id", ":participant"),
+    ") AND (:cursor_tick IS NULL OR (p.tick, p.recorded_version, p.event_id) > \
      (:cursor_tick, :cursor_version, :cursor_id)) \
      ORDER BY p.tick, p.recorded_version, p.event_id LIMIT :limit"
+);
+/// The events one entity participates in, on the main axis, in timeline
+/// order: one ordered range of `event_participants_order`, each event checked
+/// against the timeline scope. An entity listed twice in one event counts once.
+const EVENTS_OF_PARTICIPANT: &str = concat!(
+    "SELECT ",
+    event_columns!(),
+    " FROM event_participants x INDEXED BY event_participants_order \
+     CROSS JOIN events e ON e.project_id = x.project_id AND e.id = x.event_id \
+     WHERE x.project_id = :project_id AND x.entity_id = :participant \
+     AND x.tick <= :tick AND x.tick >= :from AND x.recorded_version <= :version AND ",
+    visible!("e"),
+    " AND ",
+    event_type_in!("e", ":event_types"),
+    " AND NOT EXISTS (SELECT 1 FROM event_participants y WHERE y.project_id = x.project_id \
+     AND y.event_id = x.event_id AND y.ordinal < x.ordinal AND y.entity_id = x.entity_id) \
+     AND (:cursor_tick IS NULL OR (x.tick, x.recorded_version, x.event_id) > \
+     (:cursor_tick, :cursor_version, :cursor_id)) \
+     ORDER BY x.tick, x.recorded_version, x.event_id LIMIT :limit"
 );
 /// The highest position on an axis among the events visible in a timeline.
 const AXIS_MAX_TICK: &str = concat!(
@@ -269,8 +375,10 @@ const PURGE_EMBEDDINGS: [&str; 2] = [
      AND doc_type = 'event' AND doc_id IN \
      (SELECT id FROM events WHERE project_id = ?1 AND timeline_id = ?2)",
 ];
-const PURGE_STATEMENTS: [&str; 4] = [
+const PURGE_STATEMENTS: [&str; 5] = [
     "DELETE FROM event_positions WHERE project_id = ?1 AND event_id IN \
+     (SELECT id FROM events WHERE project_id = ?1 AND timeline_id = ?2)",
+    "DELETE FROM event_participants WHERE project_id = ?1 AND event_id IN \
      (SELECT id FROM events WHERE project_id = ?1 AND timeline_id = ?2)",
     "DELETE FROM search_fts WHERE project_id = ?1 AND doc_type = 'record' AND doc_id IN \
      (SELECT id FROM records WHERE project_id = ?1 AND timeline_id = ?2 AND timeline_id <> 'main')",
@@ -412,6 +520,8 @@ pub struct SqliteStore {
     connection: Connection,
     /// Provenance values read so far; see `rows::ProvenanceCache`.
     provenances: ProvenanceCache,
+    /// The conversion applied when the file was opened, if any.
+    migration: Option<StorageMigration>,
     _lock: Option<File>,
 }
 
@@ -425,6 +535,7 @@ impl SqliteStore {
         Ok(Self {
             connection,
             provenances: ProvenanceCache::default(),
+            migration: None,
             _lock: None,
         })
     }
@@ -454,6 +565,7 @@ impl SqliteStore {
         Ok(Self {
             connection,
             provenances: ProvenanceCache::default(),
+            migration: None,
             _lock: Some(lock),
         })
     }
@@ -466,7 +578,7 @@ impl SqliteStore {
                 path.display()
             )));
         }
-        let connection = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_WRITE)
+        let mut connection = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_WRITE)
             .map_err(database_error)?;
         let lock = acquire_lock(&path)?;
         connection
@@ -484,23 +596,40 @@ impl SqliteStore {
         let version: i64 = connection
             .pragma_query_value(None, "user_version", |row| row.get(0))
             .map_err(database_error)?;
-        if version != FILE_VERSION {
+        if !(migrations::OLDEST_PUBLISHED..=FILE_VERSION).contains(&version) {
             let relation = if version > FILE_VERSION {
-                "newer"
+                "newer than supported version"
             } else {
-                "older"
+                "older than the oldest published version"
             };
             return Err(UmweltError::public(
                 UmweltErrorCode::UnsupportedFileVersion,
                 format!(
-                    "Umwelt file version {version} is {relation} than supported version {FILE_VERSION}."
+                    "Umwelt file version {version} is {relation} ({}).",
+                    if version > FILE_VERSION {
+                        FILE_VERSION
+                    } else {
+                        migrations::OLDEST_PUBLISHED
+                    }
                 ),
             ));
         }
         configure_connection(&connection, Some(durability))?;
+        let migration = if version < FILE_VERSION {
+            Some(migrations::migrate(
+                &mut connection,
+                &path,
+                version,
+                FILE_VERSION,
+                migrations::MIGRATIONS,
+            )?)
+        } else {
+            None
+        };
         Ok(Self {
             connection,
             provenances: ProvenanceCache::default(),
+            migration,
             _lock: Some(lock),
         })
     }
@@ -639,12 +768,15 @@ impl SqliteStore {
     pub fn explain_event_page(&self, draft: bool) -> Result<Vec<String>> {
         let no_cursor: Option<i64> = None;
         let no_id: Option<String> = None;
+        let no_types: Option<String> = None;
         let scope = ScopeBinding::of(&deepest_scope())?;
         let parameters: Vec<(&str, &dyn ToSql)> = if draft {
             let mut parameters: Vec<(&str, &dyn ToSql)> = vec![
                 (":project_id", &"project"),
                 (":tick", &i64::MAX),
+                (":from", &i64::MIN),
                 (":version", &i64::MAX),
+                (":event_types", &no_types),
                 (":cursor_tick", &no_cursor),
                 (":cursor_version", &no_cursor),
                 (":cursor_id", &no_id),
@@ -655,7 +787,7 @@ impl SqliteStore {
         } else {
             Vec::new()
         };
-        let main: [&dyn ToSql; 8] = [
+        let main: [&dyn ToSql; 10] = [
             &"project",
             &"main",
             &i64::MAX,
@@ -664,6 +796,8 @@ impl SqliteStore {
             &no_cursor,
             &no_id,
             &50_i64,
+            &i64::MIN,
+            &no_types,
         ];
         let sql = if draft { EVENTS_DRAFT } else { EVENTS_MAIN };
         let mut statement = self
@@ -684,12 +818,16 @@ impl SqliteStore {
     pub fn explain_event_page_on_axis(&self) -> Result<Vec<String>> {
         let no_cursor: Option<i64> = None;
         let no_id: Option<String> = None;
+        let no_filter: Option<String> = None;
         let scope = ScopeBinding::new(&deepest_scope().timeline_id, &deepest_scope().ancestors)?;
         let parameters = scope.with(&[
             (":project_id", &"project"),
             (":axis", &"reading"),
             (":tick", &i64::MAX),
+            (":from", &i64::MIN),
             (":version", &i64::MAX),
+            (":event_types", &no_filter),
+            (":participant", &no_filter),
             (":cursor_tick", &no_cursor),
             (":cursor_version", &no_cursor),
             (":cursor_id", &no_id),
@@ -698,6 +836,35 @@ impl SqliteStore {
         let mut statement = self
             .connection
             .prepare(&format!("EXPLAIN QUERY PLAN {EVENTS_ON_AXIS}"))
+            .map_err(database_error)?;
+        let rows = statement
+            .query_map(&parameters[..], plan_detail)
+            .map_err(database_error)?;
+        rows.map(|row| row.map_err(database_error)).collect()
+    }
+
+    /// Plan of the events of one participant on the main axis, in a draft
+    /// nested `MAX_DRAFT_DEPTH` deep, filtered by event type.
+    pub fn explain_events_of_participant(&self) -> Result<Vec<String>> {
+        let no_cursor: Option<i64> = None;
+        let no_id: Option<String> = None;
+        let types = Some(r#"["scene"]"#.to_owned());
+        let scope = ScopeBinding::new(&deepest_scope().timeline_id, &deepest_scope().ancestors)?;
+        let parameters = scope.with(&[
+            (":project_id", &"project"),
+            (":participant", &"ana"),
+            (":tick", &i64::MAX),
+            (":from", &3_i64),
+            (":version", &i64::MAX),
+            (":event_types", &types),
+            (":cursor_tick", &no_cursor),
+            (":cursor_version", &no_cursor),
+            (":cursor_id", &no_id),
+            (":limit", &50_i64),
+        ]);
+        let mut statement = self
+            .connection
+            .prepare(&format!("EXPLAIN QUERY PLAN {EVENTS_OF_PARTICIPANT}"))
             .map_err(database_error)?;
         let rows = statement
             .query_map(&parameters[..], plan_detail)
@@ -1239,6 +1406,10 @@ fn configure_connection(connection: &Connection, durability: Option<Durability>)
 }
 
 impl Store for SqliteStore {
+    fn migration(&self) -> Option<StorageMigration> {
+        self.migration.clone()
+    }
+
     fn create_project(&mut self, project: &Project) -> Result<()> {
         let transaction = self
             .connection
@@ -2654,13 +2825,17 @@ impl Store for SqliteStore {
             .transpose()?;
         let cursor_id = query.cursor.as_ref().map(|cursor| cursor.event_id.as_str());
         let as_of_version = to_i64(query.as_of_version)?;
+        let event_types = json_list(query.event_types.as_deref())?;
         let rows = if let Some(axis) = &query.axis {
             let scope = ScopeBinding::new(&query.timeline_id, &query.ancestors)?;
             let parameters = scope.with(&[
                 (":project_id", &query.project_id),
                 (":axis", axis),
                 (":tick", &query.tick),
+                (":from", &query.from),
                 (":version", &as_of_version),
+                (":event_types", &event_types),
+                (":participant", &query.participant),
                 (":cursor_tick", &cursor_tick),
                 (":cursor_version", &cursor_version),
                 (":cursor_id", &cursor_id),
@@ -2672,8 +2847,28 @@ impl Store for SqliteStore {
                 .query_map(&parameters[..], |row| EventRow::read(row, 0))
                 .map_err(database_error)?
                 .collect::<rusqlite::Result<Vec<_>>>()
+        } else if let Some(participant) = &query.participant {
+            let scope = ScopeBinding::new(&query.timeline_id, &query.ancestors)?;
+            let parameters = scope.with(&[
+                (":project_id", &query.project_id),
+                (":participant", participant),
+                (":tick", &query.tick),
+                (":from", &query.from),
+                (":version", &as_of_version),
+                (":event_types", &event_types),
+                (":cursor_tick", &cursor_tick),
+                (":cursor_version", &cursor_version),
+                (":cursor_id", &cursor_id),
+                (":limit", &limit),
+            ]);
+            self.connection
+                .prepare_cached(EVENTS_OF_PARTICIPANT)
+                .map_err(database_error)?
+                .query_map(&parameters[..], |row| EventRow::read(row, 0))
+                .map_err(database_error)?
+                .collect::<rusqlite::Result<Vec<_>>>()
         } else if query.ancestors.is_empty() {
-            let parameters: [&dyn ToSql; 8] = [
+            let parameters: [&dyn ToSql; 10] = [
                 &query.project_id,
                 &query.timeline_id,
                 &query.tick,
@@ -2682,6 +2877,8 @@ impl Store for SqliteStore {
                 &cursor_version,
                 &cursor_id,
                 &limit,
+                &query.from,
+                &event_types,
             ];
             self.connection
                 .prepare_cached(EVENTS_MAIN)
@@ -2694,7 +2891,9 @@ impl Store for SqliteStore {
             let parameters = scope.with(&[
                 (":project_id", &query.project_id),
                 (":tick", &query.tick),
+                (":from", &query.from),
                 (":version", &as_of_version),
+                (":event_types", &event_types),
                 (":cursor_tick", &cursor_tick),
                 (":cursor_version", &cursor_version),
                 (":cursor_id", &cursor_id),
@@ -4363,9 +4562,14 @@ fn record_input(record: Record) -> RecordInput {
         provenance: Some(common.provenance),
     };
     match record {
-        Record::Fact { common, claim } => RecordInput::Fact {
+        Record::Fact {
+            common,
+            claim,
+            text,
+        } => RecordInput::Fact {
             common: input_common(common),
             claim,
+            text,
         },
         Record::Holding {
             common,
@@ -4485,12 +4689,17 @@ fn search_records(
     let sql = bound_on_axis(&sql, query.axis.is_some());
     let scope =
         ScopeBinding::new(&query.timeline_id, &query.ancestors)?.on_axis(query.axis.as_deref());
+    let event_types = json_list(query.event_types.as_deref())?;
     let mut parameters = scope.with(&[
         (":project_id", &query.project_id),
         (":text", &safe_text),
         (":doc_type", &query.doc_type),
         (":tick", &query.tick),
         (":version", &version),
+        (":from", &query.from),
+        (":to", &query.to),
+        (":subject", &query.subject),
+        (":event_types", &event_types),
         (":limit", &limit),
         (":offset", &offset),
     ]);
@@ -4552,7 +4761,7 @@ fn text_search_sql(holder: bool, columns: &str) -> String {
              WHERE search_fts MATCH :text AND f.project_id = :project_id AND f.doc_type = 'record' \
              AND r.kind = 'holding' AND r.holder_id = :holder \
              AND r.accessibility = 'available' AND r.tick <= :tick \
-             AND r.recorded_version <= :version AND {visible_r} \
+             AND r.recorded_version <= :version AND {visible_r} AND {filters_r} \
              AND (:doc_type IS NULL OR f.doc_type = :doc_type) \
              AND NOT EXISTS (SELECT 1 FROM transitions t WHERE t.project_id = r.project_id \
              AND t.target_id = r.id AND t.tick <= :tick AND t.recorded_version <= :version \
@@ -4560,6 +4769,7 @@ fn text_search_sql(holder: bool, columns: &str) -> String {
              ORDER BY rank, f.doc_type, f.doc_id LIMIT :limit OFFSET :offset",
             visible_r = visible!("r"),
             visible_t = visible!("t"),
+            filters_r = record_filters!(),
         )
     } else {
         format!(
@@ -4571,9 +4781,9 @@ fn text_search_sql(holder: bool, columns: &str) -> String {
              WHERE search_fts MATCH :text AND f.project_id = :project_id \
              AND (:doc_type IS NULL OR f.doc_type = :doc_type) \
              AND ((f.doc_type = 'event' AND e.tick <= :tick AND e.recorded_version <= :version \
-             AND {visible_e}) \
+             AND {visible_e} AND {filters_e}) \
              OR (f.doc_type = 'record' AND r.kind = 'fact' AND r.tick <= :tick \
-             AND r.recorded_version <= :version AND {visible_r} \
+             AND r.recorded_version <= :version AND {visible_r} AND {filters_r} \
              AND NOT EXISTS (SELECT 1 FROM transitions t \
              WHERE t.project_id = r.project_id AND t.target_id = r.id \
              AND t.tick <= :tick AND t.recorded_version <= :version AND {visible_t}))) \
@@ -4581,6 +4791,8 @@ fn text_search_sql(holder: bool, columns: &str) -> String {
             visible_e = visible!("e"),
             visible_r = visible!("r"),
             visible_t = visible!("t"),
+            filters_e = event_filters!(),
+            filters_r = record_filters!(),
         )
     }
 }
@@ -4597,6 +4809,8 @@ const SEMANTIC_HOLDER: &str = concat!(
      AND r.accessibility = 'available' AND r.tick <= :tick AND r.recorded_version <= :version \
      AND (:doc_type IS NULL OR :doc_type = 'record') AND ",
     visible!("r"),
+    " AND ",
+    record_filters!(),
     " AND NOT EXISTS (SELECT 1 FROM transitions t WHERE t.project_id = r.project_id \
      AND t.target_id = r.id AND t.tick <= :tick AND t.recorded_version <= :version AND ",
     visible!("t"),
@@ -4612,9 +4826,13 @@ const SEMANTIC_NARRATOR: &str = concat!(
      AND (:doc_type IS NULL OR m.doc_type = :doc_type) \
      AND ((m.doc_type = 'event' AND e.tick <= :tick AND e.recorded_version <= :version AND ",
     visible!("e"),
+    " AND ",
+    event_filters!(),
     ") OR (m.doc_type = 'record' AND r.kind = 'fact' AND r.tick <= :tick \
      AND r.recorded_version <= :version AND ",
     visible!("r"),
+    " AND ",
+    record_filters!(),
     " AND NOT EXISTS (SELECT 1 FROM transitions t WHERE t.project_id = r.project_id \
      AND t.target_id = r.id AND t.tick <= :tick AND t.recorded_version <= :version AND ",
     visible!("t"),
@@ -4721,12 +4939,17 @@ fn semantic_ranking(
     let version = to_i64(query.as_of_version)?;
     let scope =
         ScopeBinding::new(&query.timeline_id, &query.ancestors)?.on_axis(query.axis.as_deref());
+    let event_types = json_list(query.event_types.as_deref())?;
     let mut parameters = scope.with(&[
         (":project_id", &query.project_id),
         (":space_id", &semantic.space_id),
         (":doc_type", &query.doc_type),
         (":tick", &query.tick),
         (":version", &version),
+        (":from", &query.from),
+        (":to", &query.to),
+        (":subject", &query.subject),
+        (":event_types", &event_types),
     ]);
     if let Some(holder) = &query.holder_id {
         parameters.push((":holder", holder));
@@ -4791,12 +5014,17 @@ fn text_ranking(
     let offset = 0_i64;
     let scope =
         ScopeBinding::new(&query.timeline_id, &query.ancestors)?.on_axis(query.axis.as_deref());
+    let event_types = json_list(query.event_types.as_deref())?;
     let mut parameters = scope.with(&[
         (":project_id", &query.project_id),
         (":text", &safe_text),
         (":doc_type", &query.doc_type),
         (":tick", &query.tick),
         (":version", &version),
+        (":from", &query.from),
+        (":to", &query.to),
+        (":subject", &query.subject),
+        (":event_types", &event_types),
         (":limit", &limit),
         (":offset", &offset),
     ]);
@@ -5067,10 +5295,43 @@ fn duplicate_or_database_error(
     }
 }
 
+/// A list of strings bound as one JSON array parameter (read with
+/// `json_each`); `None` stays NULL.
+fn json_list(list: Option<&[String]>) -> Result<Option<String>> {
+    list.map(|list| to_json(&list)).transpose()
+}
+
 fn database_error(source: rusqlite::Error) -> UmweltError {
     UmweltError::internal(
         UmweltErrorCode::DatabaseError,
         "SQLite operation failed.",
         source,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every positioned bound of the search SQL, the range included, moves to
+    /// the axis: a bound left on `tick` would select documents by their
+    /// main-axis position in a read on another axis.
+    #[test]
+    fn search_ranges_move_to_the_axis() {
+        let narrator = text_search_sql(false, "f.doc_type, f.doc_id");
+        let holder = text_search_sql(true, "f.doc_type, f.doc_id");
+        for sql in [
+            SEMANTIC_HOLDER,
+            SEMANTIC_NARRATOR,
+            narrator.as_str(),
+            holder.as_str(),
+        ] {
+            assert!(sql.contains(".tick BETWEEN :from AND :to"));
+            let on_axis = bound_on_axis(sql, true);
+            for alias in ["r", "e", "t"] {
+                assert!(!on_axis.contains(&format!("{alias}.tick")), "{on_axis}");
+            }
+            assert!(on_axis.contains("p.tick BETWEEN :from AND :to"));
+        }
+    }
 }

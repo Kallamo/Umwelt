@@ -3102,6 +3102,13 @@
               "minimum": 0,
               "type": "integer"
             },
+            "text": {
+              "description": "What the Fact says, in words. When present, search indexes it\ninstead of the claim.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "timelineId": {
               "type": "string"
             }
@@ -3387,6 +3394,13 @@
                 }
               ],
               "description": "Omitted: the provenance of the commit's event."
+            },
+            "text": {
+              "description": "What the Fact says, in words. When present, search indexes it\ninstead of the claim.",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -3715,7 +3729,24 @@
             "null"
           ]
         },
+        "eventTypes": {
+          "description": "Only events of these types, and records written by one of them. At\nmost 100; an empty list matches nothing.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "holder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "description": "Only records whose claim is about this entity, and events it\nparticipates in.",
           "type": [
             "string",
             "null"

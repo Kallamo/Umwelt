@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 use rusqlite::Connection;
 use tempfile::tempdir;
+use umwelt_core::Store;
 use umwelt_core::{RecordQuery, ScopeAncestor, UmweltErrorCode};
 use umwelt_sqlite::{Durability, SqliteStore};
 
 const KEY: &str = "a0a8d5482c1eb719682e2cf8ef931adb41673a7d6ce1c509a625e93cfa1ed391";
+
+/// Whether a plan walks a whole table or index. Reading the JSON list a
+/// request bound as a parameter (`json_each`, the event types of a filter)
+/// is not a scan of the file.
+fn scans_a_table(plan: &str) -> bool {
+    plan.lines()
+        .any(|line| line.contains("SCAN") && !line.contains("SCAN json_each"))
+}
 
 fn plan(store: &SqliteStore, query: RecordQuery) -> String {
     let details = store
@@ -233,8 +242,9 @@ fn created_files_have_identity_and_other_versions_are_rejected() {
         .pragma_query_value(None, "user_version", |row| row.get(0))
         .expect("read user version");
     assert_eq!(application_id, 0x554D_5754);
-    assert_eq!(user_version, 5);
-    for other in [4, 6] {
+    assert_eq!(user_version, i64::from(umwelt_sqlite::STORAGE_VERSION));
+    // Older than the first published version, or newer than this engine.
+    for other in [4, i64::from(umwelt_sqlite::STORAGE_VERSION) + 1] {
         connection
             .pragma_update(None, "user_version", other)
             .expect("set another version");
@@ -487,7 +497,7 @@ fn event_pages_on_an_axis_read_the_position_index() {
         plan.contains("SEARCH e USING PRIMARY KEY (project_id=? AND id=?)"),
         "{plan}"
     );
-    assert!(!plan.contains("SCAN"), "{plan}");
+    assert!(!scans_a_table(&plan), "{plan}");
 }
 
 /// A semantic search filters in SQL before it scores: with a holder it walks
@@ -513,7 +523,7 @@ fn semantic_search_reaches_vectors_and_documents_by_key() {
         ),
         "{holder}"
     );
-    assert!(!holder.contains("SCAN"), "{holder}");
+    assert!(!scans_a_table(&holder), "{holder}");
     let narrator = store.explain_semantic_search(false).expect("explain").join(
         "
 ",
@@ -530,7 +540,7 @@ fn semantic_search_reaches_vectors_and_documents_by_key() {
         narrator.contains("SEARCH e USING PRIMARY KEY (project_id=? AND id=?)"),
         "{narrator}"
     );
-    assert!(!narrator.contains("SCAN"), "{narrator}");
+    assert!(!scans_a_table(&narrator), "{narrator}");
 }
 
 /// `embedding.pending` walks the full-text index in rowid order from the
@@ -680,4 +690,104 @@ fn dispositions_start_from_the_holder() {
             "{plan}"
         );
     }
+}
+
+/// Every table, index and trigger, without SQL comments (a migrated table
+/// keeps the comments of the version that created it) and with whitespace
+/// collapsed.
+fn schema(path: &std::path::Path) -> Vec<(String, String, String)> {
+    let connection = Connection::open(path).expect("inspect file");
+    let mut statement = connection
+        .prepare(
+            "SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL              AND name NOT LIKE 'search_fts_%' ORDER BY type, name",
+        )
+        .expect("schema query");
+    statement
+        .query_map([], |row| {
+            let sql: String = row.get(2)?;
+            Ok((
+                row.get(0)?,
+                row.get(1)?,
+                sql.lines()
+                    .map(|line| line.split("--").next().unwrap_or_default())
+                    .flat_map(str::split_whitespace)
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            ))
+        })
+        .expect("schema rows")
+        .map(|row| row.expect("schema row"))
+        .collect()
+}
+
+#[test]
+fn a_file_of_the_first_published_version_migrates_once_to_the_current_layout() {
+    let directory = tempdir().expect("create temporary directory");
+    let path = directory.path().join("story.umw");
+    std::fs::copy(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/storage/v5.umw"),
+        &path,
+    )
+    .expect("copy the 0.1.0 reference file");
+    let store = SqliteStore::open(&path).expect("open and migrate");
+    let migration = store.migration().expect("the file was migrated");
+    assert_eq!(
+        (migration.from, migration.to),
+        (5, umwelt_sqlite::STORAGE_VERSION)
+    );
+    assert!(migration.backup.ends_with("story.umw.v5.bak"));
+    drop(store);
+
+    let fresh = directory.path().join("fresh.umw");
+    drop(SqliteStore::create(&fresh).expect("create a new file"));
+    assert_eq!(schema(&path), schema(&fresh));
+
+    let connection = Connection::open(&path).expect("inspect migrated file");
+    let integrity: String = connection
+        .query_row("PRAGMA integrity_check", [], |row| row.get(0))
+        .expect("integrity check");
+    assert_eq!(integrity, "ok");
+    let leftovers: i64 = connection
+        .query_row(
+            "SELECT COUNT(*) FROM events WHERE json_type(extra, '$.participants') IS NOT NULL",
+            [],
+            |row| row.get(0),
+        )
+        .expect("count participants left in extra");
+    assert_eq!(leftovers, 0);
+    let participants: i64 = connection
+        .query_row("SELECT COUNT(*) FROM event_participants", [], |row| {
+            row.get(0)
+        })
+        .expect("count participants");
+    assert!(participants > 0);
+    drop(connection);
+
+    let reopened = SqliteStore::open(&path).expect("reopen");
+    assert!(reopened.migration().is_none(), "a file is migrated once");
+}
+
+/// The events of one participant are one ordered range of their own index,
+/// on the main axis, in main and in drafts, with or without a type filter.
+#[test]
+fn the_events_of_a_participant_read_their_own_index() {
+    let store = SqliteStore::in_memory().expect("create store");
+    let plan = store
+        .explain_events_of_participant()
+        .expect("explain")
+        .join("\n");
+    assert!(
+        plan.contains(
+            "USING INDEX event_participants_order (project_id=? AND entity_id=? AND tick>? AND tick<?)"
+        ) || plan.contains(
+            "USING COVERING INDEX event_participants_order (project_id=? AND entity_id=? AND tick>? AND tick<?)"
+        ),
+        "{plan}"
+    );
+    assert!(
+        plan.contains("SEARCH e USING PRIMARY KEY (project_id=? AND id=?)"),
+        "{plan}"
+    );
+    assert!(!plan.contains("TEMP B-TREE"), "{plan}");
+    assert!(!scans_a_table(&plan), "{plan}");
 }

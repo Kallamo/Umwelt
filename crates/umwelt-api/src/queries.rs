@@ -191,6 +191,19 @@ impl<S: Store> Engine<S> {
         self.main_reader().timeline(project_id, at, page)
     }
 
+    /// The timeline narrowed by range, event types and participant. See
+    /// `TimelineReader::timeline_where`.
+    pub fn timeline_where(
+        &self,
+        project_id: &str,
+        filter: TimelineFilter,
+        at: At,
+        page: Page,
+    ) -> Result<PageResult<Event>> {
+        self.main_reader()
+            .timeline_where(project_id, filter, at, page)
+    }
+
     pub fn search(
         &self,
         project_id: &str,
@@ -216,6 +229,23 @@ impl<S: Store> Engine<S> {
     ) -> Result<PageResult<SearchItem>> {
         self.main_reader()
             .search_with(project_id, text, semantic, filter, at, page)
+    }
+
+    /// `search_with` limited to documents positioned in `range`. See
+    /// `TimelineReader::search_within`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn search_within(
+        &self,
+        project_id: &str,
+        text: Option<&str>,
+        semantic: Option<SearchSemantic>,
+        filter: SearchFilter,
+        range: TickRange,
+        at: At,
+        page: Page,
+    ) -> Result<PageResult<SearchItem>> {
+        self.main_reader()
+            .search_within(project_id, text, semantic, filter, range, at, page)
     }
 
     /// Searchable documents whose vector is missing or stale, with the text
@@ -1284,6 +1314,22 @@ impl<S: Store> TimelineReader<'_, S> {
     }
 
     pub fn timeline(&self, project_id: &str, at: At, page: Page) -> Result<PageResult<Event>> {
+        self.timeline_where(project_id, TimelineFilter::default(), at, page)
+    }
+
+    /// The events the read can see, narrowed to those positioned in
+    /// `filter.range`, of one of `filter.event_types`, and with
+    /// `filter.participant` among their participants. The range is on the
+    /// read's axis; its end never extends the read past `at`.
+    pub fn timeline_where(
+        &self,
+        project_id: &str,
+        filter: TimelineFilter,
+        at: At,
+        page: Page,
+    ) -> Result<PageResult<Event>> {
+        let (from, to) = range_bounds(filter.range.unwrap_or_default())?;
+        let event_types = event_type_filter(filter.event_types)?;
         let (scope, tick, version) = self.resolve_at(project_id, at)?;
         let limit = page_limit(&page)?;
         let cursor = page
@@ -1296,8 +1342,13 @@ impl<S: Store> TimelineReader<'_, S> {
             timeline_id: scope.timeline_id.clone(),
             ancestors: scope.ancestors.clone(),
             axis: scope.axis.clone(),
-            tick,
+            // Events have no transitions: lowering the read's tick to the end
+            // of the range selects exactly the events positioned before it.
+            tick: tick.min(to),
             as_of_version: version,
+            from,
+            event_types,
+            participant: filter.participant,
             limit,
             cursor: cursor.map(|cursor| EventCursor {
                 tick: cursor.tick,
@@ -1350,6 +1401,33 @@ impl<S: Store> TimelineReader<'_, S> {
         at: At,
         page: Page,
     ) -> Result<PageResult<SearchItem>> {
+        self.search_within(
+            project_id,
+            text,
+            semantic,
+            filter,
+            TickRange::default(),
+            at,
+            page,
+        )
+    }
+
+    /// `search_with` limited to documents positioned in `range`, on the
+    /// read's axis: an event by its position, a record by its own. The range
+    /// selects documents; what the search can see is still bounded by `at`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn search_within(
+        &self,
+        project_id: &str,
+        text: Option<&str>,
+        semantic: Option<SearchSemantic>,
+        filter: SearchFilter,
+        range: TickRange,
+        at: At,
+        page: Page,
+    ) -> Result<PageResult<SearchItem>> {
+        let (from, to) = range_bounds(range)?;
+        let event_types = event_type_filter(filter.event_types)?;
         let semantic = match semantic {
             Some(semantic) => {
                 let space = self
@@ -1390,6 +1468,10 @@ impl<S: Store> TimelineReader<'_, S> {
             semantic,
             holder_id: filter.holder,
             doc_type: filter.doc_type,
+            subject: filter.subject,
+            event_types,
+            from,
+            to,
             tick,
             as_of_version: version,
             limit,
@@ -1931,4 +2013,34 @@ pub(crate) fn found<T>(result: Result<T>) -> Result<Option<T>> {
         Err(error) if error.code == UmweltErrorCode::NotFound => Ok(None),
         Err(error) => Err(error),
     }
+}
+
+/// The most event types a read may filter on.
+const MAX_EVENT_TYPES: usize = 100;
+
+/// A read's list of event types, without repeats.
+fn event_type_filter(types: Option<Vec<String>>) -> Result<Option<Vec<String>>> {
+    let Some(mut types) = types else {
+        return Ok(None);
+    };
+    if types.len() > MAX_EVENT_TYPES {
+        return Err(UmweltError::validation(format!(
+            "A read filters on at most {MAX_EVENT_TYPES} event types."
+        )));
+    }
+    types.sort();
+    types.dedup();
+    Ok(Some(types))
+}
+
+/// The ticks a range covers; an open end covers every tick on its side.
+fn range_bounds(range: TickRange) -> Result<(i64, i64)> {
+    let from = range.from.unwrap_or(i64::MIN);
+    let to = range.to.unwrap_or(i64::MAX);
+    if from > to {
+        return Err(UmweltError::validation(
+            "range.from must not be greater than range.to.",
+        ));
+    }
+    Ok((from, to))
 }

@@ -157,6 +157,7 @@ fn fact_never_appears_in_a_holder_projection() {
             vec![RecordInput::Fact {
                 common: common("fact", 1),
                 claim: claim("alice", "item", true),
+                text: None,
             }],
             "a1",
             "e1",
@@ -178,6 +179,7 @@ fn event_participants_do_not_grant_records() {
         vec![RecordInput::Fact {
             common: common("fact", 1),
             claim: claim("alice", "item", true),
+            text: None,
         }],
         "a1",
         "e1",
@@ -223,6 +225,7 @@ fn belief_that_contradicts_canon_remains_active() {
                 RecordInput::Fact {
                     common: common("fact", 1),
                     claim: claim("alice", "item", true),
+                    text: None,
                 },
                 holding("belief", "alice", 1, claim("alice", "item", false)),
             ],
@@ -450,6 +453,7 @@ fn retroactive_commit_does_not_change_an_earlier_version_read() {
             vec![RecordInput::Fact {
                 common: common("fact", 10),
                 claim: claim("bob", "item", true),
+                text: None,
             }],
             "a1",
             "e1",

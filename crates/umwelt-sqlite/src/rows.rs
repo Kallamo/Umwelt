@@ -299,7 +299,10 @@ impl<'a> RecordColumns<'a> {
         };
         let mut extra = RecordExtra::default();
         match record {
-            Record::Fact { claim, .. } => columns.claim(claim, &mut extra)?,
+            Record::Fact { claim, text, .. } => {
+                columns.claim(claim, &mut extra)?;
+                extra.text = text.clone();
+            }
             Record::Holding {
                 holder,
                 attitude,
@@ -532,7 +535,11 @@ impl RecordRow {
                     about: extra.about.take(),
                 };
                 if self.kind == "fact" {
-                    Record::Fact { common, claim }
+                    Record::Fact {
+                        common,
+                        claim,
+                        text: extra.text.take(),
+                    }
                 } else {
                     let acquisition = match self.acquisition_kind.as_deref() {
                         Some("witnessed") => Acquisition::Witnessed {
@@ -604,14 +611,12 @@ fn from_name<T: for<'de> Deserialize<'de>>(name: &str) -> Result<T> {
     from_json(&format!("\"{name}\""))
 }
 
-/// Event fields without a column.
+/// Event fields without a column or a table of their own.
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EventExtra {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     description: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    participants: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     location: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -625,19 +630,15 @@ pub(crate) fn insert_event_row(
 ) -> Result<()> {
     let extra = EventExtra {
         description: event.description.clone(),
-        participants: event.participants.clone(),
         location: event.location.clone(),
         evidence: event.evidence.clone(),
     };
-    let extra = if extra.description.is_none()
-        && extra.participants.is_empty()
-        && extra.location.is_none()
-        && extra.evidence.is_empty()
-    {
-        None
-    } else {
-        Some(to_json(&extra)?)
-    };
+    let extra =
+        if extra.description.is_none() && extra.location.is_none() && extra.evidence.is_empty() {
+            None
+        } else {
+            Some(to_json(&extra)?)
+        };
     connection
         .prepare_cached(
             "INSERT INTO events (project_id, id, timeline_id, tick, recorded_version, event_type, \
@@ -659,7 +660,8 @@ pub(crate) fn insert_event_row(
     for (axis, tick) in &event.on {
         connection
             .prepare_cached(
-                "INSERT INTO event_positions (project_id, event_id, axis_id, tick,                  recorded_version) VALUES (?1, ?2, ?3, ?4, ?5)",
+                "INSERT INTO event_positions (project_id, event_id, axis_id, tick, \
+                 recorded_version) VALUES (?1, ?2, ?3, ?4, ?5)",
             )
             .map_err(database_error)?
             .execute(params![
@@ -671,7 +673,43 @@ pub(crate) fn insert_event_row(
             ])
             .map_err(database_error)?;
     }
+    for (ordinal, entity_id) in event.participants.iter().enumerate() {
+        connection
+            .prepare_cached(
+                "INSERT INTO event_participants (project_id, event_id, ordinal, entity_id, \
+                 tick, recorded_version) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            )
+            .map_err(database_error)?
+            .execute(params![
+                event.project_id,
+                event.id,
+                to_i64(ordinal as u64)?,
+                entity_id,
+                event.position.tick,
+                to_i64(event.recorded_at)?
+            ])
+            .map_err(database_error)?;
+    }
     Ok(())
+}
+
+/// An event's participants in the order they were written, through the
+/// primary key of `event_participants`.
+fn event_participants(
+    connection: &Connection,
+    project_id: &str,
+    event_id: &str,
+) -> Result<Vec<String>> {
+    let mut statement = connection
+        .prepare_cached(
+            "SELECT entity_id FROM event_participants WHERE project_id = ?1 AND event_id = ?2 \
+             ORDER BY ordinal",
+        )
+        .map_err(database_error)?;
+    let rows = statement
+        .query_map(params![project_id, event_id], |row| row.get::<_, String>(0))
+        .map_err(database_error)?;
+    rows.map(|row| row.map_err(database_error)).collect()
 }
 
 /// An event's positions on additional axes, through the primary key of
@@ -734,6 +772,7 @@ impl EventRow {
             .transpose()?
             .unwrap_or_default();
         let on = event_positions(connection, &self.project_id, &self.id)?;
+        let participants = event_participants(connection, &self.project_id, &self.id)?;
         Ok(Event {
             on,
             provenance: provenances.get(connection, &self.project_id, self.provenance_id)?,
@@ -744,7 +783,7 @@ impl EventRow {
             title: self.title,
             description: extra.description,
             position: Position { tick: self.tick },
-            participants: extra.participants,
+            participants,
             location: extra.location,
             evidence: extra.evidence,
             recorded_at: to_u64(self.recorded_version)?,

@@ -248,7 +248,7 @@ internal static class Builders
         ["evidence"] = a => Acquired.Evidence(Text(a, "evidenceId")),
         ["inferred"] = a => Acquired.Inferred(Typed<List<string>>(a, "fromRecordIds")!, Optional(a, "rule")),
         ["authored"] = _ => Acquired.Authored(),
-        ["fact"] = a => Records.Fact(Typed<Claim>(a, "claim")!, Optional(a, "id"), Typed<Position>(a, "position"), Typed<Provenance>(a, "provenance")),
+        ["fact"] = a => Records.Fact(Typed<Claim>(a, "claim")!, Optional(a, "id"), Typed<Position>(a, "position"), Typed<Provenance>(a, "provenance"), Optional(a, "text")),
         ["knows"] = a => Holding(Records.Knows, a),
         ["believes"] = a => Holding(Records.Believes, a),
         ["suspects"] = a => Holding(Records.Suspects, a),

@@ -179,6 +179,7 @@ fn search_escapes_fts_syntax_and_preserves_diacritic_matching() {
             records: vec![RecordInput::Fact {
                 common: common("search-fact", 1),
                 claim: claim("alice", "related", "item", true),
+                text: None,
             }],
             transitions: Vec::new(),
             preconditions: Vec::new(),
@@ -343,6 +344,7 @@ fn holds_holdings_who_holds_and_canon_respect_time_and_withholding() {
             RecordInput::Fact {
                 common: common("fact", 1),
                 claim: value.clone(),
+                text: None,
             },
             holding(
                 "alice-holding",
@@ -484,6 +486,7 @@ fn holds_holdings_who_holds_and_canon_respect_time_and_withholding() {
             SearchFilter {
                 holder: Some("alice".to_owned()),
                 doc_type: Some("record".to_owned()),
+                ..Default::default()
             },
             At::default(),
             Page::default(),
@@ -505,10 +508,12 @@ fn perspective_compare_and_both_contradiction_kinds_are_reported() {
             RecordInput::Fact {
                 common: common("canon", 3),
                 claim: canonical.clone(),
+                text: None,
             },
             RecordInput::Fact {
                 common: common("membership", 3),
                 claim: claim("alice", MEMBER_OF_PREDICATE_ID, "team", true),
+                text: None,
             },
             holding(
                 "alice-opposite",
@@ -702,6 +707,7 @@ fn timeline_pagination_record_entities_predicates_changes_and_search_work() {
             vec![RecordInput::Fact {
                 common: common(&format!("fact-{index}"), index),
                 claim: claim("alice", "related", "item", true),
+                text: None,
             }],
         );
     }

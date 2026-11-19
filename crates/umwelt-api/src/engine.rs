@@ -785,6 +785,7 @@ impl<S: Store> Engine<S> {
             .map(|witnessed| RecordInput::Fact {
                 common: common(witnessed.fact_id.clone()),
                 claim: witnessed.claim.clone(),
+                text: None,
             })
             .collect::<Vec<_>>();
         for witness in &input.witnesses {

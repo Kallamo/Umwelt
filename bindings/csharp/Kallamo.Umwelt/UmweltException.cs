@@ -33,6 +33,7 @@ public class UmweltException : Exception
         "INVALID_STATE" => new InvalidStateException(message, details),
         "FILE_LOCKED" => new FileLockedException(message, details),
         "NOT_UMWELT_FILE" or "UNSUPPORTED_FILE_VERSION" => new UnsupportedFileException(code, message, details),
+        "MIGRATION_FAILED" => new MigrationFailedException(message, details),
         _ => new UmweltException(code, message, details),
     };
 }
@@ -102,6 +103,19 @@ public sealed class UnsupportedFileException : UmweltException
 {
     public UnsupportedFileException(string code, string message, JsonElement? details = null)
         : base(code, message, details)
+    {
+    }
+}
+
+/// <summary>
+/// A file of an earlier storage version could not be converted
+/// (<c>MIGRATION_FAILED</c>). The file is unchanged; <c>details.backup</c>
+/// names the copy made before trying.
+/// </summary>
+public sealed class MigrationFailedException : UmweltException
+{
+    public MigrationFailedException(string message, JsonElement? details = null)
+        : base("MIGRATION_FAILED", message, details)
     {
     }
 }

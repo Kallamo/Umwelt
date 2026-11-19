@@ -12,7 +12,7 @@ fn version_reports_the_product_and_format_versions() {
     assert_eq!(
         line.trim(),
         format!(
-            "umwelt {} (contract {}, protocol 1, storage 5)",
+            "umwelt {} (contract {}, protocol 1, storage 6)",
             env!("CARGO_PKG_VERSION"),
             env!("CARGO_PKG_VERSION")
         )

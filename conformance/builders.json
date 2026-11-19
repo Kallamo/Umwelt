@@ -450,6 +450,34 @@
     }
   },
   {
+    "call": "fact",
+    "args": {
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "text": "Bob stole the necklace"
+    },
+    "expect": {
+      "kind": "fact",
+      "claim": {
+        "subject": "bob",
+        "predicate": "stole",
+        "object": {
+          "kind": "entity",
+          "id": "necklace"
+        },
+        "polarity": true
+      },
+      "text": "Bob stole the necklace"
+    }
+  },
+  {
     "call": "knows",
     "args": {
       "holder": "ana",

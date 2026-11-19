@@ -119,6 +119,7 @@ fn fact(id: &str, subject: &str, tick: i64) -> RecordInput {
             provenance: Some(provenance()),
         },
         claim: claim(subject),
+        text: None,
     }
 }
 
@@ -802,6 +803,7 @@ fn search_in_a_draft_sees_its_text_and_main_up_to_the_base() {
                 SearchFilter {
                     holder: holder.map(str::to_owned),
                     doc_type: None,
+                    ..Default::default()
                 },
                 At::default(),
                 Page::default(),
