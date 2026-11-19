@@ -14,7 +14,7 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <PackageId>Kallamo.Umwelt</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Jonathan Ferreira da Conceição</Authors>
     <Description>Official .NET binding of Umwelt, an epistemic state engine: who knows what, how, and since when. Runs the engine in-process through its native library.</Description>
     <PackageTags>umwelt;narrative;knowledge;rpg;game;modding</PackageTags>

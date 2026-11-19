@@ -73,7 +73,7 @@ checked for the participant through the primary key of `event_participants`.
 | Version | Release | Change |
 | --- | --- | --- |
 | 5 | 0.1.0 | First published layout. |
-| 6 | next | Participants move from the events' `extra` into `event_participants`. |
+| 6 | 0.2.0 | Participants move from the events' `extra` into `event_participants`. |
 
 ## Versions
 

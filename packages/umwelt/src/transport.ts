@@ -52,7 +52,7 @@ export class StdioTransport {
         else pending.reject(new UmweltError('TRANSPORT_CLOSED', 'Malformed engine response.'));
       } catch { this.failAll('Invalid JSON from engine.'); this.process.kill(); }
     });
-    this.ready = options.automaticHello === false ? Promise.resolve(undefined) : this.send<HelloResult>('hello', { protocol: { min: 1, max: 1 }, client: options.client ?? '@kallamo/umwelt/0.1.0' });
+    this.ready = options.automaticHello === false ? Promise.resolve(undefined) : this.send<HelloResult>('hello', { protocol: { min: 1, max: 1 }, client: options.client ?? '@kallamo/umwelt/0.2.0' });
     // A failed startup is also delivered to subsequent request/close callers.
     void this.ready.catch(() => {});
   }

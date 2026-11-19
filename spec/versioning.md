@@ -8,7 +8,7 @@ whether a file, a client or a native library is compatible.
 
 | Version | Where it appears | Current |
 | --- | --- | --- |
-| Product | the CLI, `@kallamo/umwelt`, `Kallamo.Umwelt`, the crates, release tags, `hello.engine` | `0.1.0` |
+| Product | the CLI, `@kallamo/umwelt`, `Kallamo.Umwelt`, the crates, release tags, `hello.engine` | `0.2.0` |
 | Contract | `hello.contract`, the JSON Schemas | the product version |
 | Protocol | `v` in every envelope, `hello.protocol` | `1` |
 | Storage | inside every `.umw` file, `hello.storage` | `6` |

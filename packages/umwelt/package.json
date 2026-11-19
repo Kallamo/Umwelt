@@ -1,6 +1,6 @@
 {
   "name": "@kallamo/umwelt",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript client for Umwelt, an epistemic state engine: who knows what, how they learned it, and since when.",
   "license": "AGPL-3.0-only",
   "author": "Jonathan Ferreira da Conceição <contact@kallamo.com> (https://kallamo.com)",

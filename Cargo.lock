@@ -1130,7 +1130,7 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "umwelt-api"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "criterion",
  "proptest",
@@ -1144,7 +1144,7 @@ dependencies = [
 
 [[package]]
 name = "umwelt-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde_json",
  "sha2",
@@ -1156,7 +1156,7 @@ dependencies = [
 
 [[package]]
 name = "umwelt-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "schemars",
  "serde",
@@ -1167,7 +1167,7 @@ dependencies = [
 
 [[package]]
 name = "umwelt-ffi"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cbindgen",
  "serde_json",
@@ -1178,7 +1178,7 @@ dependencies = [
 
 [[package]]
 name = "umwelt-protocol"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "schemars",
  "serde",
@@ -1190,7 +1190,7 @@ dependencies = [
 
 [[package]]
 name = "umwelt-sqlite"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "fs4",
  "rusqlite",
