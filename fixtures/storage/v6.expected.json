@@ -1,0 +1,3730 @@
+{
+  "engine": "0.2.0",
+  "storage": 6,
+  "note": "Answers of the reads below, recorded by the release that wrote the file. Never edit.",
+  "reads": [
+    {
+      "op": "project.list",
+      "payload": {},
+      "result": [
+        {
+          "createdAt": "2026-11-19T02:08:33.8936226Z",
+          "id": "saga",
+          "name": "Saga",
+          "timescale": "day",
+          "version": 11,
+          "vocabularyMode": "strict"
+        }
+      ]
+    },
+    {
+      "op": "entity.list",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": {
+        "items": [
+          {
+            "aliases": [],
+            "archived": false,
+            "createdAt": {
+              "tick": 0
+            },
+            "fields": {},
+            "id": "ana",
+            "name": "Ana",
+            "projectId": "saga",
+            "typeId": "person"
+          },
+          {
+            "aliases": [],
+            "archived": false,
+            "createdAt": {
+              "tick": 0
+            },
+            "fields": {},
+            "id": "bruno",
+            "name": "Bruno",
+            "projectId": "saga",
+            "typeId": "person"
+          },
+          {
+            "aliases": [],
+            "archived": false,
+            "createdAt": {
+              "tick": 0
+            },
+            "fields": {},
+            "id": "carla",
+            "name": "Carla",
+            "projectId": "saga",
+            "typeId": "person"
+          },
+          {
+            "aliases": [],
+            "archived": false,
+            "createdAt": {
+              "tick": 0
+            },
+            "fields": {},
+            "id": "circle",
+            "name": "The circle",
+            "projectId": "saga",
+            "typeId": "circle"
+          },
+          {
+            "aliases": [
+              "D."
+            ],
+            "archived": false,
+            "createdAt": {
+              "tick": 0
+            },
+            "externalRef": {
+              "id": "D-1",
+              "system": "importer"
+            },
+            "fields": {},
+            "id": "dario",
+            "name": "Dario",
+            "projectId": "saga",
+            "typeId": "person"
+          },
+          {
+            "aliases": [],
+            "archived": false,
+            "createdAt": {
+              "tick": 0
+            },
+            "fields": {},
+            "id": "letter",
+            "name": "The letter",
+            "projectId": "saga",
+            "typeId": "thing"
+          }
+        ]
+      }
+    },
+    {
+      "op": "entity.resolve",
+      "payload": {
+        "projectId": "saga",
+        "externalRef": {
+          "system": "importer",
+          "id": "D-1"
+        }
+      },
+      "result": {
+        "aliases": [
+          "D."
+        ],
+        "archived": false,
+        "createdAt": {
+          "tick": 0
+        },
+        "externalRef": {
+          "id": "D-1",
+          "system": "importer"
+        },
+        "fields": {},
+        "id": "dario",
+        "name": "Dario",
+        "projectId": "saga",
+        "typeId": "person"
+      }
+    },
+    {
+      "op": "predicate.list",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": [
+        {
+          "cardinality": "many",
+          "id": "keeps",
+          "label": "keeps",
+          "object": "entity"
+        },
+        {
+          "cardinality": "many",
+          "id": "met-at",
+          "label": "met at",
+          "object": "value"
+        },
+        {
+          "cardinality": "many",
+          "id": "umwelt:alias",
+          "label": "Alias",
+          "object": "value"
+        },
+        {
+          "cardinality": "many",
+          "id": "umwelt:holds",
+          "label": "Holds",
+          "object": "value"
+        },
+        {
+          "cardinality": "many",
+          "id": "umwelt:member-of",
+          "label": "Member of",
+          "object": "entity"
+        },
+        {
+          "cardinality": "one",
+          "id": "umwelt:name",
+          "label": "Name",
+          "object": "value"
+        },
+        {
+          "cardinality": "many",
+          "id": "umwelt:statement",
+          "label": "Statement",
+          "object": "value"
+        },
+        {
+          "cardinality": "one",
+          "id": "umwelt:title",
+          "label": "Title",
+          "object": "value"
+        }
+      ]
+    },
+    {
+      "op": "axis.list",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": [
+        {
+          "id": "reading",
+          "label": "Reading order"
+        }
+      ]
+    },
+    {
+      "op": "embedding.listSpaces",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": [
+        {
+          "dimensions": 3,
+          "id": "words",
+          "model": "hand-made"
+        }
+      ]
+    },
+    {
+      "op": "timeline.list",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": [
+        {
+          "createdAt": "2026-11-19T02:08:33.8936226Z",
+          "depth": 0,
+          "headVersion": 11,
+          "id": "main",
+          "kind": "main",
+          "maxTick": 9,
+          "projectId": "saga",
+          "status": "active"
+        },
+        {
+          "baseVersion": 8,
+          "createdAt": "2026-11-19T02:08:33.940743Z",
+          "depth": 1,
+          "headVersion": 9,
+          "id": "d-open",
+          "kind": "draft",
+          "maxTick": 7,
+          "parentTimelineId": "main",
+          "projectId": "saga",
+          "status": "active"
+        },
+        {
+          "baseVersion": 9,
+          "createdAt": "2026-11-19T02:08:33.946146Z",
+          "depth": 2,
+          "headVersion": 10,
+          "id": "d-child",
+          "kind": "draft",
+          "maxTick": 8,
+          "parentTimelineId": "d-open",
+          "projectId": "saga",
+          "status": "active"
+        },
+        {
+          "baseVersion": 8,
+          "closedAt": "2026-11-19T02:08:33.9531264Z",
+          "createdAt": "2026-11-19T02:08:33.9502805Z",
+          "depth": 1,
+          "headVersion": 11,
+          "id": "d-promoted",
+          "kind": "draft",
+          "maxTick": 9,
+          "parentTimelineId": "main",
+          "projectId": "saga",
+          "status": "promoted"
+        },
+        {
+          "baseVersion": 11,
+          "closedAt": "2026-11-19T02:08:33.958572Z",
+          "createdAt": "2026-11-19T02:08:33.9548731Z",
+          "depth": 1,
+          "headVersion": 12,
+          "id": "d-discarded",
+          "kind": "draft",
+          "maxTick": 10,
+          "parentTimelineId": "main",
+          "projectId": "saga",
+          "status": "discarded"
+        },
+        {
+          "baseVersion": 11,
+          "closedAt": "2026-11-19T02:08:33.9621081Z",
+          "createdAt": "2026-11-19T02:08:33.9594917Z",
+          "depth": 1,
+          "headVersion": 13,
+          "id": "d-purged",
+          "kind": "draft",
+          "maxTick": 10,
+          "parentTimelineId": "main",
+          "projectId": "saga",
+          "purgedAt": "2026-11-19T02:08:33.9621081Z",
+          "status": "discarded"
+        }
+      ]
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "e-found",
+            "location": "letter",
+            "on": {
+              "reading": 2
+            },
+            "participants": [
+              "bruno",
+              "ana"
+            ],
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main",
+            "title": "The letter is found",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+            "participants": [
+              "ana",
+              "carla"
+            ],
+            "position": {
+              "tick": 2
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "system",
+                "name": "umwelt:transmit"
+              }
+            },
+            "recordedAt": 2,
+            "timelineId": "main",
+            "title": "Transmission",
+            "type": "umwelt:transmit"
+          },
+          {
+            "evidence": [],
+            "id": "e-gathering",
+            "on": {
+              "reading": 1
+            },
+            "participants": [
+              "carla",
+              "bruno"
+            ],
+            "position": {
+              "tick": 3
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 3,
+            "timelineId": "main",
+            "title": "The circle gathers",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "e-note",
+            "participants": [
+              "dario"
+            ],
+            "position": {
+              "tick": 4
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 4,
+            "timelineId": "main",
+            "title": "Sheet updated",
+            "type": "note"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1483-7041-9661-40914beb08ed",
+            "participants": [],
+            "position": {
+              "tick": 4
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 5,
+            "timelineId": "main",
+            "title": "Dispositions",
+            "type": "umwelt:disposition"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1485-7590-bd5c-197b608b0fcc",
+            "participants": [],
+            "position": {
+              "tick": 5
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 6,
+            "timelineId": "main",
+            "title": "Adjustment",
+            "type": "umwelt:adjust"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1489-7cc3-9e20-aad669026a8d",
+            "participants": [],
+            "position": {
+              "tick": 6
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 7,
+            "timelineId": "main",
+            "title": "Transition",
+            "type": "umwelt:transition"
+          },
+          {
+            "evidence": [],
+            "id": "e-burned",
+            "participants": [
+              "carla",
+              "dario"
+            ],
+            "position": {
+              "tick": 6
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 8,
+            "timelineId": "main",
+            "title": "The mill burns",
+            "type": "report"
+          },
+          {
+            "evidence": [],
+            "id": "e-in-promoted",
+            "on": {
+              "reading": 3
+            },
+            "participants": [
+              "bruno"
+            ],
+            "position": {
+              "tick": 9
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 11,
+            "timelineId": "main",
+            "title": "Bruno leaves",
+            "type": "scene"
+          }
+        ]
+      }
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga",
+        "timelineId": "d-child"
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "e-found",
+            "location": "letter",
+            "on": {
+              "reading": 2
+            },
+            "participants": [
+              "bruno",
+              "ana"
+            ],
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main",
+            "title": "The letter is found",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+            "participants": [
+              "ana",
+              "carla"
+            ],
+            "position": {
+              "tick": 2
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "system",
+                "name": "umwelt:transmit"
+              }
+            },
+            "recordedAt": 2,
+            "timelineId": "main",
+            "title": "Transmission",
+            "type": "umwelt:transmit"
+          },
+          {
+            "evidence": [],
+            "id": "e-gathering",
+            "on": {
+              "reading": 1
+            },
+            "participants": [
+              "carla",
+              "bruno"
+            ],
+            "position": {
+              "tick": 3
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 3,
+            "timelineId": "main",
+            "title": "The circle gathers",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "e-note",
+            "participants": [
+              "dario"
+            ],
+            "position": {
+              "tick": 4
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 4,
+            "timelineId": "main",
+            "title": "Sheet updated",
+            "type": "note"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1483-7041-9661-40914beb08ed",
+            "participants": [],
+            "position": {
+              "tick": 4
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 5,
+            "timelineId": "main",
+            "title": "Dispositions",
+            "type": "umwelt:disposition"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1485-7590-bd5c-197b608b0fcc",
+            "participants": [],
+            "position": {
+              "tick": 5
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 6,
+            "timelineId": "main",
+            "title": "Adjustment",
+            "type": "umwelt:adjust"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1489-7cc3-9e20-aad669026a8d",
+            "participants": [],
+            "position": {
+              "tick": 6
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 7,
+            "timelineId": "main",
+            "title": "Transition",
+            "type": "umwelt:transition"
+          },
+          {
+            "evidence": [],
+            "id": "e-burned",
+            "participants": [
+              "carla",
+              "dario"
+            ],
+            "position": {
+              "tick": 6
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 8,
+            "timelineId": "main",
+            "title": "The mill burns",
+            "type": "report"
+          },
+          {
+            "evidence": [],
+            "id": "e-in-open",
+            "participants": [
+              "ana"
+            ],
+            "position": {
+              "tick": 7
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 9,
+            "timelineId": "d-open",
+            "title": "A guess",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "e-in-child",
+            "participants": [
+              "carla",
+              "ana"
+            ],
+            "position": {
+              "tick": 8
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 10,
+            "timelineId": "d-child",
+            "title": "A guess about a guess",
+            "type": "scene"
+          }
+        ]
+      }
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga",
+        "at": {
+          "axis": "reading",
+          "tick": 2
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "e-gathering",
+            "on": {
+              "reading": 1
+            },
+            "participants": [
+              "carla",
+              "bruno"
+            ],
+            "position": {
+              "tick": 3
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 3,
+            "timelineId": "main",
+            "title": "The circle gathers",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "e-found",
+            "location": "letter",
+            "on": {
+              "reading": 2
+            },
+            "participants": [
+              "bruno",
+              "ana"
+            ],
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main",
+            "title": "The letter is found",
+            "type": "scene"
+          }
+        ]
+      }
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga",
+        "at": {
+          "tick": 3,
+          "asOfVersion": 3
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "e-found",
+            "location": "letter",
+            "on": {
+              "reading": 2
+            },
+            "participants": [
+              "bruno",
+              "ana"
+            ],
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main",
+            "title": "The letter is found",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+            "participants": [
+              "ana",
+              "carla"
+            ],
+            "position": {
+              "tick": 2
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "system",
+                "name": "umwelt:transmit"
+              }
+            },
+            "recordedAt": 2,
+            "timelineId": "main",
+            "title": "Transmission",
+            "type": "umwelt:transmit"
+          },
+          {
+            "evidence": [],
+            "id": "e-gathering",
+            "on": {
+              "reading": 1
+            },
+            "participants": [
+              "carla",
+              "bruno"
+            ],
+            "position": {
+              "tick": 3
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 3,
+            "timelineId": "main",
+            "title": "The circle gathers",
+            "type": "scene"
+          }
+        ]
+      }
+    },
+    {
+      "op": "perspective",
+      "payload": {
+        "projectId": "saga",
+        "holder": "ana"
+      },
+      "result": {
+        "awareness": [],
+        "dispositions": [
+          {
+            "dimension": "trust",
+            "eventId": "01a1f190-1483-7041-9661-40914beb08ed",
+            "holder": "ana",
+            "id": "d-trust",
+            "kind": "disposition",
+            "position": {
+              "tick": 4
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 5,
+            "target": "carla",
+            "timelineId": "main",
+            "value": 0.3
+          }
+        ],
+        "holder": {
+          "aliases": [],
+          "archived": false,
+          "createdAt": {
+            "tick": 0
+          },
+          "fields": {},
+          "id": "ana",
+          "name": "Ana",
+          "projectId": "saga",
+          "typeId": "person"
+        },
+        "holdings": [
+          {
+            "acquisition": {
+              "kind": "authored"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "kind": "authored"
+              },
+              "attitude": "knows",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 1,
+              "eventId": "e-found",
+              "holder": "ana",
+              "id": "s-ana",
+              "kind": "holding",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "secrecy": {
+                "sharedWith": [
+                  "bruno"
+                ]
+              },
+              "text": "Ana met someone at the mill",
+              "timelineId": "main"
+            }
+          },
+          {
+            "acquisition": {
+              "kind": "authored"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "kind": "authored"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.5,
+              "eventId": "01a1f190-1485-7590-bd5c-197b608b0fcc",
+              "holder": "ana",
+              "id": "h-ana-2",
+              "kind": "holding",
+              "position": {
+                "tick": 5
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 6,
+              "text": "Ana keeps the letter",
+              "timelineId": "main"
+            }
+          }
+        ],
+        "memberships": [],
+        "withheldCount": 0
+      }
+    },
+    {
+      "op": "perspective",
+      "payload": {
+        "projectId": "saga",
+        "holder": "carla"
+      },
+      "result": {
+        "awareness": [
+          {
+            "eventId": "e-note",
+            "holder": "carla",
+            "id": "aw-carla",
+            "kind": "awareness",
+            "position": {
+              "tick": 4
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 4,
+            "target": "dario",
+            "timelineId": "main"
+          }
+        ],
+        "dispositions": [],
+        "holder": {
+          "aliases": [],
+          "archived": false,
+          "createdAt": {
+            "tick": 0
+          },
+          "fields": {},
+          "id": "carla",
+          "name": "Carla",
+          "projectId": "saga",
+          "typeId": "person"
+        },
+        "holdings": [
+          {
+            "acquisition": {
+              "intent": "unknown",
+              "kind": "told-by",
+              "sourceHolderId": "ana",
+              "sourceRecordId": "s-ana"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "intent": "unknown",
+                "kind": "told-by",
+                "sourceHolderId": "ana",
+                "sourceRecordId": "s-ana"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.8,
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "holder": "carla",
+              "id": "h-carla",
+              "kind": "holding",
+              "position": {
+                "tick": 2
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "system",
+                  "name": "umwelt:transmit"
+                }
+              },
+              "recordedAt": 2,
+              "text": "Carla heard about the mill",
+              "timelineId": "main"
+            }
+          }
+        ],
+        "memberships": [],
+        "withheldCount": 0
+      }
+    },
+    {
+      "op": "perspective",
+      "payload": {
+        "projectId": "saga",
+        "holder": "carla",
+        "timelineId": "d-child"
+      },
+      "result": {
+        "awareness": [
+          {
+            "eventId": "e-note",
+            "holder": "carla",
+            "id": "aw-carla",
+            "kind": "awareness",
+            "position": {
+              "tick": 4
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 4,
+            "target": "dario",
+            "timelineId": "main"
+          }
+        ],
+        "dispositions": [],
+        "holder": {
+          "aliases": [],
+          "archived": false,
+          "createdAt": {
+            "tick": 0
+          },
+          "fields": {},
+          "id": "carla",
+          "name": "Carla",
+          "projectId": "saga",
+          "typeId": "person"
+        },
+        "holdings": [
+          {
+            "acquisition": {
+              "intent": "unknown",
+              "kind": "told-by",
+              "sourceHolderId": "ana",
+              "sourceRecordId": "s-ana"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "intent": "unknown",
+                "kind": "told-by",
+                "sourceHolderId": "ana",
+                "sourceRecordId": "s-ana"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.8,
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "holder": "carla",
+              "id": "h-carla",
+              "kind": "holding",
+              "position": {
+                "tick": 2
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "system",
+                  "name": "umwelt:transmit"
+                }
+              },
+              "recordedAt": 2,
+              "text": "Carla heard about the mill",
+              "timelineId": "main"
+            }
+          },
+          {
+            "acquisition": {
+              "kind": "authored"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "kind": "authored"
+              },
+              "attitude": "knows",
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "carla"
+              },
+              "confidence": 1,
+              "eventId": "e-in-child",
+              "holder": "carla",
+              "id": "h-child",
+              "kind": "holding",
+              "position": {
+                "tick": 8
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 10,
+              "timelineId": "d-child"
+            }
+          }
+        ],
+        "memberships": [],
+        "withheldCount": 0
+      }
+    },
+    {
+      "op": "perspective",
+      "payload": {
+        "projectId": "saga",
+        "holder": "bruno",
+        "at": {
+          "axis": "reading",
+          "tick": 1
+        }
+      },
+      "result": {
+        "awareness": [],
+        "dispositions": [],
+        "holder": {
+          "aliases": [],
+          "archived": false,
+          "createdAt": {
+            "tick": 0
+          },
+          "fields": {},
+          "id": "bruno",
+          "name": "Bruno",
+          "projectId": "saga",
+          "typeId": "person"
+        },
+        "holdings": [
+          {
+            "acquisition": {
+              "eventId": "e-gathering",
+              "kind": "witnessed"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "eventId": "e-gathering",
+                "kind": "witnessed"
+              },
+              "attitude": "knows",
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "circle"
+              },
+              "confidence": 1,
+              "eventId": "e-gathering",
+              "holder": "bruno",
+              "id": "w-bruno",
+              "kind": "holding",
+              "position": {
+                "tick": 3
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 3,
+              "timelineId": "main"
+            }
+          }
+        ],
+        "memberships": [],
+        "withheldCount": 0
+      }
+    },
+    {
+      "op": "holdings",
+      "payload": {
+        "projectId": "saga",
+        "holder": "carla"
+      },
+      "result": {
+        "items": [
+          {
+            "acquisition": {
+              "intent": "unknown",
+              "kind": "told-by",
+              "sourceHolderId": "ana",
+              "sourceRecordId": "s-ana"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "intent": "unknown",
+                "kind": "told-by",
+                "sourceHolderId": "ana",
+                "sourceRecordId": "s-ana"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.8,
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "holder": "carla",
+              "id": "h-carla",
+              "kind": "holding",
+              "position": {
+                "tick": 2
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "system",
+                  "name": "umwelt:transmit"
+                }
+              },
+              "recordedAt": 2,
+              "text": "Carla heard about the mill",
+              "timelineId": "main"
+            }
+          }
+        ],
+        "withheldCount": 0
+      }
+    },
+    {
+      "op": "holds",
+      "payload": {
+        "projectId": "saga",
+        "holder": "ana",
+        "claim": {
+          "subject": "ana",
+          "predicate": "keeps",
+          "object": {
+            "kind": "entity",
+            "id": "letter"
+          },
+          "polarity": true
+        }
+      },
+      "result": {
+        "attitude": "believes",
+        "confidence": 0.5,
+        "holds": true,
+        "holdsAs": "same",
+        "polarity": true,
+        "recordId": "h-ana-2"
+      }
+    },
+    {
+      "op": "whoHolds",
+      "payload": {
+        "projectId": "saga",
+        "claim": {
+          "subject": "ana",
+          "predicate": "met-at",
+          "object": {
+            "kind": "value",
+            "value": {
+              "day": 1,
+              "place": "mill"
+            }
+          },
+          "polarity": true
+        }
+      },
+      "result": [
+        {
+          "attitude": "knows",
+          "confidence": 1,
+          "holder": "ana",
+          "polarity": true,
+          "recordId": "s-ana"
+        },
+        {
+          "attitude": "believes",
+          "confidence": 0.8,
+          "holder": "carla",
+          "polarity": true,
+          "recordId": "h-carla"
+        }
+      ]
+    },
+    {
+      "op": "canon",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": {
+        "items": [
+          {
+            "claim": {
+              "object": {
+                "id": "letter",
+                "kind": "entity"
+              },
+              "polarity": true,
+              "predicate": "keeps",
+              "qualifiers": {},
+              "subject": "ana"
+            },
+            "eventId": "e-found",
+            "id": "f-letter",
+            "kind": "fact",
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main"
+          },
+          {
+            "claim": {
+              "object": {
+                "kind": "value",
+                "value": {
+                  "day": 1,
+                  "place": "mill"
+                }
+              },
+              "polarity": true,
+              "predicate": "met-at",
+              "qualifiers": {},
+              "subject": "ana"
+            },
+            "eventId": "e-found",
+            "id": "f-meeting",
+            "kind": "fact",
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main"
+          },
+          {
+            "claim": {
+              "object": {
+                "id": "letter",
+                "kind": "entity"
+              },
+              "polarity": true,
+              "predicate": "keeps",
+              "qualifiers": {},
+              "subject": "circle"
+            },
+            "eventId": "e-gathering",
+            "id": "f-circle",
+            "kind": "fact",
+            "position": {
+              "tick": 3
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 3,
+            "timelineId": "main"
+          },
+          {
+            "claim": {
+              "object": {
+                "kind": "value",
+                "value": {
+                  "day": 6,
+                  "place": "mill"
+                }
+              },
+              "polarity": true,
+              "predicate": "met-at",
+              "qualifiers": {},
+              "subject": "letter"
+            },
+            "eventId": "e-burned",
+            "id": "f-burned",
+            "kind": "fact",
+            "position": {
+              "tick": 6
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 8,
+            "text": "The letter burned with the mill",
+            "timelineId": "main"
+          },
+          {
+            "claim": {
+              "object": {
+                "kind": "value",
+                "value": "harbour"
+              },
+              "polarity": true,
+              "predicate": "met-at",
+              "qualifiers": {},
+              "subject": "bruno"
+            },
+            "eventId": "e-in-promoted",
+            "id": "f-left",
+            "kind": "fact",
+            "position": {
+              "tick": 9
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 11,
+            "timelineId": "main"
+          }
+        ]
+      }
+    },
+    {
+      "op": "compare",
+      "payload": {
+        "projectId": "saga",
+        "a": "ana",
+        "b": "carla"
+      },
+      "result": {
+        "conflicting": [],
+        "counts": {
+          "conflicting": 0,
+          "onlyA": 1,
+          "onlyB": 0,
+          "shared": 1
+        },
+        "onlyA": [
+          {
+            "a": {
+              "accessibility": "available",
+              "acquisition": {
+                "kind": "authored"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.5,
+              "eventId": "01a1f190-1485-7590-bd5c-197b608b0fcc",
+              "holder": "ana",
+              "id": "h-ana-2",
+              "kind": "holding",
+              "position": {
+                "tick": 5
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 6,
+              "text": "Ana keeps the letter",
+              "timelineId": "main"
+            },
+            "claimKey": "a90d1dc7fda9c9ee439f81cf6c5f6b08147fb48b431c7ab7cd02104c099f66e2"
+          }
+        ],
+        "onlyB": [],
+        "shared": [
+          {
+            "a": {
+              "accessibility": "available",
+              "acquisition": {
+                "kind": "authored"
+              },
+              "attitude": "knows",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 1,
+              "eventId": "e-found",
+              "holder": "ana",
+              "id": "s-ana",
+              "kind": "holding",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "secrecy": {
+                "sharedWith": [
+                  "bruno"
+                ]
+              },
+              "text": "Ana met someone at the mill",
+              "timelineId": "main"
+            },
+            "b": {
+              "accessibility": "available",
+              "acquisition": {
+                "intent": "unknown",
+                "kind": "told-by",
+                "sourceHolderId": "ana",
+                "sourceRecordId": "s-ana"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.8,
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "holder": "carla",
+              "id": "h-carla",
+              "kind": "holding",
+              "position": {
+                "tick": 2
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "system",
+                  "name": "umwelt:transmit"
+                }
+              },
+              "recordedAt": 2,
+              "text": "Carla heard about the mill",
+              "timelineId": "main"
+            },
+            "claimKey": "bb5fe201f418acec245a394cb00189cd806f99349b1f7f95cbd19c3fb5da6333"
+          }
+        ]
+      }
+    },
+    {
+      "op": "contradictions",
+      "payload": {
+        "projectId": "saga",
+        "holder": "carla"
+      },
+      "result": []
+    },
+    {
+      "op": "trace",
+      "payload": {
+        "projectId": "saga",
+        "recordId": "h-carla"
+      },
+      "result": {
+        "chain": [
+          {
+            "acquisition": {
+              "intent": "deceptive",
+              "kind": "told-by",
+              "sourceHolderId": "ana",
+              "sourceRecordId": "s-ana"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "intent": "deceptive",
+                "kind": "told-by",
+                "sourceHolderId": "ana",
+                "sourceRecordId": "s-ana"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.8,
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "holder": "carla",
+              "id": "h-carla",
+              "kind": "holding",
+              "position": {
+                "tick": 2
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "system",
+                  "name": "umwelt:transmit"
+                }
+              },
+              "recordedAt": 2,
+              "text": "Carla heard about the mill",
+              "timelineId": "main"
+            }
+          },
+          {
+            "acquisition": {
+              "kind": "authored"
+            },
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "kind": "authored"
+              },
+              "attitude": "knows",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 1,
+              "eventId": "e-found",
+              "holder": "ana",
+              "id": "s-ana",
+              "kind": "holding",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "secrecy": {
+                "sharedWith": [
+                  "bruno"
+                ]
+              },
+              "text": "Ana met someone at the mill",
+              "timelineId": "main"
+            }
+          }
+        ],
+        "event": {
+          "evidence": [],
+          "id": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+          "participants": [
+            "ana",
+            "carla"
+          ],
+          "position": {
+            "tick": 2
+          },
+          "projectId": "saga",
+          "provenance": {
+            "origin": {
+              "kind": "system",
+              "name": "umwelt:transmit"
+            }
+          },
+          "recordedAt": 2,
+          "timelineId": "main",
+          "title": "Transmission",
+          "type": "umwelt:transmit"
+        },
+        "record": {
+          "accessibility": "available",
+          "acquisition": {
+            "intent": "deceptive",
+            "kind": "told-by",
+            "sourceHolderId": "ana",
+            "sourceRecordId": "s-ana"
+          },
+          "attitude": "believes",
+          "claim": {
+            "object": {
+              "kind": "value",
+              "value": {
+                "day": 1,
+                "place": "mill"
+              }
+            },
+            "polarity": true,
+            "predicate": "met-at",
+            "qualifiers": {},
+            "subject": "ana"
+          },
+          "confidence": 0.8,
+          "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+          "holder": "carla",
+          "id": "h-carla",
+          "kind": "holding",
+          "position": {
+            "tick": 2
+          },
+          "projectId": "saga",
+          "provenance": {
+            "origin": {
+              "kind": "system",
+              "name": "umwelt:transmit"
+            }
+          },
+          "recordedAt": 2,
+          "text": "Carla heard about the mill",
+          "timelineId": "main"
+        },
+        "transitions": [],
+        "truncated": false
+      }
+    },
+    {
+      "op": "record",
+      "payload": {
+        "projectId": "saga",
+        "recordId": "h-ana"
+      },
+      "result": {
+        "accessibility": "available",
+        "acquisition": {
+          "kind": "authored"
+        },
+        "attitude": "knows",
+        "claim": {
+          "object": {
+            "id": "letter",
+            "kind": "entity"
+          },
+          "polarity": true,
+          "predicate": "keeps",
+          "qualifiers": {},
+          "subject": "ana"
+        },
+        "confidence": 1,
+        "eventId": "e-found",
+        "holder": "ana",
+        "id": "h-ana",
+        "kind": "holding",
+        "position": {
+          "tick": 1
+        },
+        "projectId": "saga",
+        "provenance": {
+          "origin": {
+            "kind": "human"
+          }
+        },
+        "recordedAt": 1,
+        "text": "Ana keeps the letter",
+        "timelineId": "main"
+      }
+    },
+    {
+      "op": "dispositions",
+      "payload": {
+        "projectId": "saga",
+        "holder": "ana"
+      },
+      "result": [
+        {
+          "dimension": "trust",
+          "eventId": "01a1f190-1483-7041-9661-40914beb08ed",
+          "holder": "ana",
+          "id": "d-trust",
+          "kind": "disposition",
+          "position": {
+            "tick": 4
+          },
+          "projectId": "saga",
+          "provenance": {
+            "origin": {
+              "kind": "human"
+            }
+          },
+          "recordedAt": 5,
+          "target": "carla",
+          "timelineId": "main",
+          "value": 0.3
+        }
+      ]
+    },
+    {
+      "op": "breaches",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": [
+        {
+          "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+          "owner": "ana",
+          "position": {
+            "tick": 2
+          },
+          "recipient": "carla",
+          "recordId": "h-carla",
+          "secretRecordId": "s-ana",
+          "toldBy": "ana"
+        }
+      ]
+    },
+    {
+      "op": "beliefsAbout",
+      "payload": {
+        "projectId": "saga",
+        "holder": "carla",
+        "about": "ana"
+      },
+      "result": []
+    },
+    {
+      "op": "entity.at",
+      "payload": {
+        "projectId": "saga",
+        "entityId": "dario"
+      },
+      "result": {
+        "aliases": [
+          "D."
+        ],
+        "entity": {
+          "aliases": [
+            "D."
+          ],
+          "archived": false,
+          "createdAt": {
+            "tick": 0
+          },
+          "externalRef": {
+            "id": "D-1",
+            "system": "importer"
+          },
+          "fields": {},
+          "id": "dario",
+          "name": "Dario",
+          "projectId": "saga",
+          "typeId": "person"
+        },
+        "name": "Dario",
+        "recordIds": []
+      }
+    },
+    {
+      "op": "changes",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": {
+        "items": [
+          {
+            "payload": {
+              "eventId": "e-found",
+              "recordCount": 4,
+              "transitionCount": 0,
+              "version": 1
+            },
+            "seq": 1,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 1
+          },
+          {
+            "payload": {
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 2
+            },
+            "seq": 2,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 2
+          },
+          {
+            "payload": {
+              "eventId": "e-gathering",
+              "recordCount": 3,
+              "transitionCount": 0,
+              "version": 3
+            },
+            "seq": 3,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 3
+          },
+          {
+            "payload": {
+              "eventId": "e-note",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 4
+            },
+            "seq": 4,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 4
+          },
+          {
+            "payload": {
+              "eventId": "01a1f190-1483-7041-9661-40914beb08ed",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 5
+            },
+            "seq": 5,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 5
+          },
+          {
+            "payload": {
+              "eventId": "01a1f190-1485-7590-bd5c-197b608b0fcc",
+              "recordCount": 1,
+              "transitionCount": 1,
+              "version": 6
+            },
+            "seq": 6,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 6
+          },
+          {
+            "payload": {
+              "eventId": "01a1f190-1489-7cc3-9e20-aad669026a8d",
+              "recordCount": 0,
+              "transitionCount": 1,
+              "version": 7
+            },
+            "seq": 7,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 7
+          },
+          {
+            "payload": {
+              "eventId": "e-burned",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 8
+            },
+            "seq": 8,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 8
+          },
+          {
+            "payload": {
+              "eventId": "e-in-open",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 9
+            },
+            "seq": 9,
+            "timelineId": "d-open",
+            "type": "commit",
+            "version": 9
+          },
+          {
+            "payload": {
+              "eventId": "e-in-child",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 10
+            },
+            "seq": 10,
+            "timelineId": "d-child",
+            "type": "commit",
+            "version": 10
+          },
+          {
+            "payload": {
+              "eventId": "e-in-promoted",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 11
+            },
+            "seq": 11,
+            "timelineId": "main",
+            "type": "commit",
+            "version": 11
+          },
+          {
+            "payload": {
+              "baseVersion": 8,
+              "headVersion": 11,
+              "into": "main",
+              "reparented": [],
+              "timelineId": "d-promoted"
+            },
+            "seq": 12,
+            "timelineId": "main",
+            "type": "timeline.promoted",
+            "version": 11
+          },
+          {
+            "payload": {
+              "eventId": "e-in-discarded",
+              "recordCount": 1,
+              "transitionCount": 0,
+              "version": 12
+            },
+            "seq": 13,
+            "timelineId": "d-discarded",
+            "type": "commit",
+            "version": 12
+          }
+        ]
+      }
+    },
+    {
+      "op": "search",
+      "payload": {
+        "projectId": "saga",
+        "text": "letter"
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "f-circle",
+            "docType": "record",
+            "match": "text",
+            "record": {
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "circle"
+              },
+              "eventId": "e-gathering",
+              "id": "f-circle",
+              "kind": "fact",
+              "position": {
+                "tick": 3
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 3,
+              "timelineId": "main"
+            }
+          },
+          {
+            "docId": "f-letter",
+            "docType": "record",
+            "match": "text",
+            "record": {
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "eventId": "e-found",
+              "id": "f-letter",
+              "kind": "fact",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main"
+            }
+          },
+          {
+            "docId": "e-found",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-found",
+              "location": "letter",
+              "on": {
+                "reading": 2
+              },
+              "participants": [
+                "bruno",
+                "ana"
+              ],
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main",
+              "title": "The letter is found",
+              "type": "scene"
+            },
+            "match": "text"
+          },
+          {
+            "docId": "f-burned",
+            "docType": "record",
+            "match": "text",
+            "record": {
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 6,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "letter"
+              },
+              "eventId": "e-burned",
+              "id": "f-burned",
+              "kind": "fact",
+              "position": {
+                "tick": 6
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 8,
+              "text": "The letter burned with the mill",
+              "timelineId": "main"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "search",
+      "payload": {
+        "projectId": "saga",
+        "text": "mill",
+        "filter": {
+          "holder": "carla"
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "h-carla",
+            "docType": "record",
+            "match": "text",
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "intent": "unknown",
+                "kind": "told-by",
+                "sourceHolderId": "ana",
+                "sourceRecordId": "s-ana"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.8,
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "holder": "carla",
+              "id": "h-carla",
+              "kind": "holding",
+              "position": {
+                "tick": 2
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "system",
+                  "name": "umwelt:transmit"
+                }
+              },
+              "recordedAt": 2,
+              "text": "Carla heard about the mill",
+              "timelineId": "main"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "search",
+      "payload": {
+        "projectId": "saga",
+        "semantic": {
+          "spaceId": "words",
+          "vector": [
+            1,
+            0,
+            0
+          ]
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "e-found",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-found",
+              "location": "letter",
+              "on": {
+                "reading": 2
+              },
+              "participants": [
+                "bruno",
+                "ana"
+              ],
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main",
+              "title": "The letter is found",
+              "type": "scene"
+            },
+            "match": "semantic",
+            "score": 0.8912760019302368
+          },
+          {
+            "docId": "f-burned",
+            "docType": "record",
+            "match": "semantic",
+            "record": {
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 6,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "letter"
+              },
+              "eventId": "e-burned",
+              "id": "f-burned",
+              "kind": "fact",
+              "position": {
+                "tick": 6
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 8,
+              "text": "The letter burned with the mill",
+              "timelineId": "main"
+            },
+            "score": 0.5593413710594177
+          },
+          {
+            "docId": "e-burned",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-burned",
+              "participants": [
+                "carla",
+                "dario"
+              ],
+              "position": {
+                "tick": 6
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 8,
+              "timelineId": "main",
+              "title": "The mill burns",
+              "type": "report"
+            },
+            "match": "semantic",
+            "score": 0.43638721108436584
+          },
+          {
+            "docId": "e-gathering",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-gathering",
+              "on": {
+                "reading": 1
+              },
+              "participants": [
+                "carla",
+                "bruno"
+              ],
+              "position": {
+                "tick": 3
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 3,
+              "timelineId": "main",
+              "title": "The circle gathers",
+              "type": "scene"
+            },
+            "match": "semantic",
+            "score": 0.4204603135585785
+          },
+          {
+            "docId": "e-note",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-note",
+              "participants": [
+                "dario"
+              ],
+              "position": {
+                "tick": 4
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 4,
+              "timelineId": "main",
+              "title": "Sheet updated",
+              "type": "note"
+            },
+            "match": "semantic",
+            "score": 0.18271410465240479
+          },
+          {
+            "docId": "f-circle",
+            "docType": "record",
+            "match": "semantic",
+            "record": {
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "circle"
+              },
+              "eventId": "e-gathering",
+              "id": "f-circle",
+              "kind": "fact",
+              "position": {
+                "tick": 3
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 3,
+              "timelineId": "main"
+            },
+            "score": 0.13010360300540924
+          },
+          {
+            "docId": "f-letter",
+            "docType": "record",
+            "match": "semantic",
+            "record": {
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "eventId": "e-found",
+              "id": "f-letter",
+              "kind": "fact",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main"
+            },
+            "score": 0.10483646392822266
+          },
+          {
+            "docId": "f-meeting",
+            "docType": "record",
+            "match": "semantic",
+            "record": {
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "eventId": "e-found",
+              "id": "f-meeting",
+              "kind": "fact",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main"
+            },
+            "score": 0.037646178156137466
+          }
+        ]
+      }
+    },
+    {
+      "op": "search",
+      "payload": {
+        "projectId": "saga",
+        "text": "circle",
+        "semantic": {
+          "spaceId": "words",
+          "vector": [
+            0,
+            1,
+            0
+          ]
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "f-circle",
+            "docType": "record",
+            "match": "both",
+            "record": {
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "circle"
+              },
+              "eventId": "e-gathering",
+              "id": "f-circle",
+              "kind": "fact",
+              "position": {
+                "tick": 3
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 3,
+              "timelineId": "main"
+            },
+            "score": 0.03225806451612903
+          },
+          {
+            "docId": "e-gathering",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-gathering",
+              "on": {
+                "reading": 1
+              },
+              "participants": [
+                "carla",
+                "bruno"
+              ],
+              "position": {
+                "tick": 3
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 3,
+              "timelineId": "main",
+              "title": "The circle gathers",
+              "type": "scene"
+            },
+            "match": "both",
+            "score": 0.032018442622950824
+          },
+          {
+            "docId": "f-letter",
+            "docType": "record",
+            "match": "semantic",
+            "record": {
+              "claim": {
+                "object": {
+                  "id": "letter",
+                  "kind": "entity"
+                },
+                "polarity": true,
+                "predicate": "keeps",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "eventId": "e-found",
+              "id": "f-letter",
+              "kind": "fact",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main"
+            },
+            "score": 0.01639344262295082
+          },
+          {
+            "docId": "e-note",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-note",
+              "participants": [
+                "dario"
+              ],
+              "position": {
+                "tick": 4
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 4,
+              "timelineId": "main",
+              "title": "Sheet updated",
+              "type": "note"
+            },
+            "match": "semantic",
+            "score": 0.015873015873015872
+          },
+          {
+            "docId": "e-burned",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-burned",
+              "participants": [
+                "carla",
+                "dario"
+              ],
+              "position": {
+                "tick": 6
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 8,
+              "timelineId": "main",
+              "title": "The mill burns",
+              "type": "report"
+            },
+            "match": "semantic",
+            "score": 0.015384615384615385
+          },
+          {
+            "docId": "f-meeting",
+            "docType": "record",
+            "match": "semantic",
+            "record": {
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "eventId": "e-found",
+              "id": "f-meeting",
+              "kind": "fact",
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main"
+            },
+            "score": 0.015151515151515152
+          },
+          {
+            "docId": "f-burned",
+            "docType": "record",
+            "match": "semantic",
+            "record": {
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 6,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "letter"
+              },
+              "eventId": "e-burned",
+              "id": "f-burned",
+              "kind": "fact",
+              "position": {
+                "tick": 6
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 8,
+              "text": "The letter burned with the mill",
+              "timelineId": "main"
+            },
+            "score": 0.014925373134328358
+          },
+          {
+            "docId": "e-found",
+            "docType": "event",
+            "event": {
+              "evidence": [],
+              "id": "e-found",
+              "location": "letter",
+              "on": {
+                "reading": 2
+              },
+              "participants": [
+                "bruno",
+                "ana"
+              ],
+              "position": {
+                "tick": 1
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 1,
+              "timelineId": "main",
+              "title": "The letter is found",
+              "type": "scene"
+            },
+            "match": "semantic",
+            "score": 0.014705882352941176
+          }
+        ]
+      }
+    },
+    {
+      "op": "embedding.pending",
+      "payload": {
+        "projectId": "saga",
+        "spaceId": "words"
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "e-in-promoted",
+            "docType": "event",
+            "stale": false,
+            "text": "Bruno leaves",
+            "textHash": "3e059e23c54499406d8197351c93416f709b42626603a74bf28db517f06968b9"
+          },
+          {
+            "docId": "f-left",
+            "docType": "record",
+            "stale": false,
+            "text": "bruno met at harbour",
+            "textHash": "8c8bcca40a45e61d38046a0ee9e62fee6219670d94b3f7c422bf3533bc773dbf"
+          }
+        ],
+        "resumeCursor": "3234"
+      }
+    },
+    {
+      "op": "proposal.list",
+      "payload": {
+        "projectId": "saga"
+      },
+      "result": [
+        {
+          "id": "01a1f190-14ac-7db2-bb9a-8074b62be2d0",
+          "input": {
+            "event": {
+              "evidence": [],
+              "id": "e-proposed",
+              "participants": [
+                "carla"
+              ],
+              "position": {
+                "tick": 11
+              },
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "title": "A proposal",
+              "type": "scene"
+            },
+            "projectId": "saga",
+            "records": [
+              {
+                "claim": {
+                  "object": {
+                    "id": "letter",
+                    "kind": "entity"
+                  },
+                  "polarity": true,
+                  "predicate": "keeps",
+                  "qualifiers": {},
+                  "subject": "carla"
+                },
+                "id": "f-proposed",
+                "kind": "fact",
+                "position": {
+                  "tick": 11
+                },
+                "provenance": {
+                  "origin": {
+                    "kind": "human"
+                  }
+                }
+              }
+            ],
+            "transitions": []
+          },
+          "reviews": [],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga",
+        "participant": "carla"
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+            "participants": [
+              "ana",
+              "carla"
+            ],
+            "position": {
+              "tick": 2
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "system",
+                "name": "umwelt:transmit"
+              }
+            },
+            "recordedAt": 2,
+            "timelineId": "main",
+            "title": "Transmission",
+            "type": "umwelt:transmit"
+          },
+          {
+            "evidence": [],
+            "id": "e-gathering",
+            "on": {
+              "reading": 1
+            },
+            "participants": [
+              "carla",
+              "bruno"
+            ],
+            "position": {
+              "tick": 3
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 3,
+            "timelineId": "main",
+            "title": "The circle gathers",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "e-burned",
+            "participants": [
+              "carla",
+              "dario"
+            ],
+            "position": {
+              "tick": 6
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 8,
+            "timelineId": "main",
+            "title": "The mill burns",
+            "type": "report"
+          }
+        ]
+      }
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga",
+        "participant": "ana",
+        "eventTypes": [
+          "scene"
+        ],
+        "range": {
+          "from": 1,
+          "to": 9
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "e-found",
+            "location": "letter",
+            "on": {
+              "reading": 2
+            },
+            "participants": [
+              "bruno",
+              "ana"
+            ],
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main",
+            "title": "The letter is found",
+            "type": "scene"
+          }
+        ]
+      }
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga",
+        "timelineId": "d-child",
+        "participant": "ana"
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "e-found",
+            "location": "letter",
+            "on": {
+              "reading": 2
+            },
+            "participants": [
+              "bruno",
+              "ana"
+            ],
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main",
+            "title": "The letter is found",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+            "participants": [
+              "ana",
+              "carla"
+            ],
+            "position": {
+              "tick": 2
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "system",
+                "name": "umwelt:transmit"
+              }
+            },
+            "recordedAt": 2,
+            "timelineId": "main",
+            "title": "Transmission",
+            "type": "umwelt:transmit"
+          },
+          {
+            "evidence": [],
+            "id": "e-in-open",
+            "participants": [
+              "ana"
+            ],
+            "position": {
+              "tick": 7
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 9,
+            "timelineId": "d-open",
+            "title": "A guess",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "e-in-child",
+            "participants": [
+              "carla",
+              "ana"
+            ],
+            "position": {
+              "tick": 8
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 10,
+            "timelineId": "d-child",
+            "title": "A guess about a guess",
+            "type": "scene"
+          }
+        ]
+      }
+    },
+    {
+      "op": "timeline",
+      "payload": {
+        "projectId": "saga",
+        "at": {
+          "axis": "reading"
+        },
+        "participant": "bruno",
+        "range": {
+          "from": 1,
+          "to": 2
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "evidence": [],
+            "id": "e-gathering",
+            "on": {
+              "reading": 1
+            },
+            "participants": [
+              "carla",
+              "bruno"
+            ],
+            "position": {
+              "tick": 3
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 3,
+            "timelineId": "main",
+            "title": "The circle gathers",
+            "type": "scene"
+          },
+          {
+            "evidence": [],
+            "id": "e-found",
+            "location": "letter",
+            "on": {
+              "reading": 2
+            },
+            "participants": [
+              "bruno",
+              "ana"
+            ],
+            "position": {
+              "tick": 1
+            },
+            "projectId": "saga",
+            "provenance": {
+              "origin": {
+                "kind": "human"
+              }
+            },
+            "recordedAt": 1,
+            "timelineId": "main",
+            "title": "The letter is found",
+            "type": "scene"
+          }
+        ]
+      }
+    },
+    {
+      "op": "search",
+      "payload": {
+        "projectId": "saga",
+        "text": "burned"
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "f-burned",
+            "docType": "record",
+            "match": "text",
+            "record": {
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 6,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "letter"
+              },
+              "eventId": "e-burned",
+              "id": "f-burned",
+              "kind": "fact",
+              "position": {
+                "tick": 6
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 8,
+              "text": "The letter burned with the mill",
+              "timelineId": "main"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "search",
+      "payload": {
+        "projectId": "saga",
+        "text": "letter",
+        "filter": {
+          "subject": "letter"
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "f-burned",
+            "docType": "record",
+            "match": "text",
+            "record": {
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 6,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "letter"
+              },
+              "eventId": "e-burned",
+              "id": "f-burned",
+              "kind": "fact",
+              "position": {
+                "tick": 6
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "human"
+                }
+              },
+              "recordedAt": 8,
+              "text": "The letter burned with the mill",
+              "timelineId": "main"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "search",
+      "payload": {
+        "projectId": "saga",
+        "text": "mill",
+        "filter": {
+          "holder": "carla",
+          "eventTypes": [
+            "umwelt:transmit"
+          ]
+        },
+        "range": {
+          "from": 2,
+          "to": 2
+        }
+      },
+      "result": {
+        "items": [
+          {
+            "docId": "h-carla",
+            "docType": "record",
+            "match": "text",
+            "record": {
+              "accessibility": "available",
+              "acquisition": {
+                "intent": "unknown",
+                "kind": "told-by",
+                "sourceHolderId": "ana",
+                "sourceRecordId": "s-ana"
+              },
+              "attitude": "believes",
+              "claim": {
+                "object": {
+                  "kind": "value",
+                  "value": {
+                    "day": 1,
+                    "place": "mill"
+                  }
+                },
+                "polarity": true,
+                "predicate": "met-at",
+                "qualifiers": {},
+                "subject": "ana"
+              },
+              "confidence": 0.8,
+              "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+              "holder": "carla",
+              "id": "h-carla",
+              "kind": "holding",
+              "position": {
+                "tick": 2
+              },
+              "projectId": "saga",
+              "provenance": {
+                "origin": {
+                  "kind": "system",
+                  "name": "umwelt:transmit"
+                }
+              },
+              "recordedAt": 2,
+              "text": "Carla heard about the mill",
+              "timelineId": "main"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "retries": [
+    {
+      "op": "commit",
+      "payload": {
+        "projectId": "saga",
+        "attemptId": "found",
+        "event": {
+          "id": "e-found",
+          "type": "scene",
+          "title": "The letter is found",
+          "position": {
+            "tick": 1
+          },
+          "provenance": {
+            "origin": {
+              "kind": "human"
+            }
+          },
+          "participants": [
+            "bruno",
+            "ana"
+          ],
+          "location": "letter",
+          "on": {
+            "reading": 2
+          }
+        },
+        "records": [
+          {
+            "kind": "fact",
+            "id": "f-letter",
+            "claim": {
+              "subject": "ana",
+              "predicate": "keeps",
+              "object": {
+                "kind": "entity",
+                "id": "letter"
+              },
+              "polarity": true
+            }
+          },
+          {
+            "kind": "fact",
+            "id": "f-meeting",
+            "claim": {
+              "subject": "ana",
+              "predicate": "met-at",
+              "object": {
+                "kind": "value",
+                "value": {
+                  "day": 1,
+                  "place": "mill"
+                }
+              },
+              "polarity": true
+            }
+          },
+          {
+            "kind": "holding",
+            "id": "h-ana",
+            "holder": "ana",
+            "attitude": "knows",
+            "claim": {
+              "subject": "ana",
+              "predicate": "keeps",
+              "object": {
+                "kind": "entity",
+                "id": "letter"
+              },
+              "polarity": true
+            },
+            "acquisition": {
+              "kind": "authored"
+            },
+            "confidence": 1,
+            "accessibility": "available",
+            "text": "Ana keeps the letter"
+          },
+          {
+            "kind": "holding",
+            "id": "s-ana",
+            "holder": "ana",
+            "attitude": "knows",
+            "claim": {
+              "subject": "ana",
+              "predicate": "met-at",
+              "object": {
+                "kind": "value",
+                "value": {
+                  "day": 1,
+                  "place": "mill"
+                }
+              },
+              "polarity": true
+            },
+            "acquisition": {
+              "kind": "authored"
+            },
+            "confidence": 1,
+            "accessibility": "available",
+            "text": "Ana met someone at the mill",
+            "secrecy": {
+              "sharedWith": [
+                "bruno"
+              ]
+            }
+          }
+        ]
+      },
+      "result": {
+        "eventId": "e-found",
+        "recordIds": [
+          "f-letter",
+          "f-meeting",
+          "h-ana",
+          "s-ana"
+        ],
+        "transitionIds": [],
+        "version": 1,
+        "warnings": []
+      }
+    },
+    {
+      "op": "transmit",
+      "payload": {
+        "projectId": "saga",
+        "attemptId": "told-carla",
+        "position": {
+          "tick": 2
+        },
+        "from": "ana",
+        "to": "carla",
+        "sourceRecordId": "s-ana",
+        "recordId": "h-carla",
+        "confidence": 0.8,
+        "intent": "deceptive",
+        "text": "Carla heard about the mill"
+      },
+      "result": {
+        "eventId": "01a1f190-1478-7c61-b8b3-1bc9f36482b1",
+        "recordIds": [
+          "h-carla"
+        ],
+        "transitionIds": [],
+        "version": 2,
+        "warnings": [
+          {
+            "code": "SECRET_BREACH",
+            "message": "'ana' told 'carla' the secret 's-ana'."
+          }
+        ]
+      }
+    },
+    {
+      "op": "witness",
+      "payload": {
+        "projectId": "saga",
+        "attemptId": "gathering",
+        "event": {
+          "id": "e-gathering",
+          "type": "scene",
+          "title": "The circle gathers",
+          "position": {
+            "tick": 3
+          },
+          "provenance": {
+            "origin": {
+              "kind": "human"
+            }
+          },
+          "participants": [
+            "carla",
+            "bruno"
+          ],
+          "on": {
+            "reading": 1
+          }
+        },
+        "claims": [
+          {
+            "claim": {
+              "subject": "circle",
+              "predicate": "keeps",
+              "object": {
+                "kind": "entity",
+                "id": "letter"
+              },
+              "polarity": true
+            },
+            "canon": true,
+            "factId": "f-circle"
+          }
+        ],
+        "witnesses": [
+          {
+            "holder": "bruno",
+            "recordIds": [
+              "w-bruno"
+            ]
+          },
+          {
+            "holder": "carla",
+            "attitude": "suspects",
+            "confidence": 0.5,
+            "accessibility": "available",
+            "recordIds": [
+              "w-carla"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "eventId": "e-gathering",
+        "recordIds": [
+          "f-circle",
+          "w-bruno",
+          "w-carla"
+        ],
+        "transitionIds": [],
+        "version": 3,
+        "warnings": []
+      }
+    },
+    {
+      "op": "commit",
+      "payload": {
+        "projectId": "saga",
+        "attemptId": "burned",
+        "event": {
+          "id": "e-burned",
+          "type": "report",
+          "title": "The mill burns",
+          "position": {
+            "tick": 6
+          },
+          "provenance": {
+            "origin": {
+              "kind": "human"
+            }
+          },
+          "participants": [
+            "carla",
+            "dario"
+          ]
+        },
+        "records": [
+          {
+            "kind": "fact",
+            "id": "f-burned",
+            "claim": {
+              "subject": "letter",
+              "predicate": "met-at",
+              "object": {
+                "kind": "value",
+                "value": {
+                  "day": 6,
+                  "place": "mill"
+                }
+              },
+              "polarity": true
+            },
+            "text": "The letter burned with the mill"
+          }
+        ]
+      },
+      "result": {
+        "eventId": "e-burned",
+        "recordIds": [
+          "f-burned"
+        ],
+        "transitionIds": [],
+        "version": 8,
+        "warnings": []
+      }
+    }
+  ]
+}

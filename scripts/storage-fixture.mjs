@@ -11,7 +11,9 @@
 //
 // Run it once per published storage version, with the binary of that release.
 // A published reference file is never regenerated: migrations are tested
-// against it (see spec/versioning.md).
+// against it (see spec/versioning.md). The scenario grows with the engine, so
+// it only runs with the release it was last extended for; each reference
+// file records what its own release could write and read.
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { existsSync, mkdirSync, mkdtempSync, copyFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -101,6 +103,11 @@ const writes = [
   ['holding.adjustBatch', { projectId: project, attemptId: 'doubt', position: { tick: 5 }, provenance,
     adjustments: [{ recordId: 'h-ana', newRecordId: 'h-ana-2', confidence: 0.5, attitude: 'believes', accessibility: 'available' }] }],
   ['transition.batch', { projectId: project, attemptId: 'forget', position: { tick: 6 }, status: 'forgotten', recordIds: ['w-carla'], provenance }],
+  // Storage 6 (0.2.0): a Fact with text, and an event of another type whose
+  // participants a narrowed read selects.
+  ['commit', commit('burned', event('e-burned', 'report', 'The mill burns', 6, { participants: ['carla', 'dario'] }), [
+    { ...fact('f-burned', claim('letter', 'met-at', value({ day: 6, place: 'mill' }))), text: 'The letter burned with the mill' },
+  ]), 'retry'],
   ['embedding.defineSpace', { projectId: project, space: { id: 'words', dimensions: 3, model: 'hand-made' } }],
   ['embed', 'words'],
   // Drafts: one left open with a child, one promoted, one discarded, one purged.
@@ -161,6 +168,14 @@ const reads = [
   ['search', { projectId: project, text: 'circle', semantic: { spaceId: 'words', vector: [0, 1, 0] } }],
   ['embedding.pending', { projectId: project, spaceId: 'words' }],
   ['proposal.list', { projectId: project }],
+  // Reads added with storage 6 (0.2.0).
+  ['timeline', { projectId: project, participant: 'carla' }],
+  ['timeline', { projectId: project, participant: 'ana', eventTypes: ['scene'], range: { from: 1, to: 9 } }],
+  ['timeline', { projectId: project, timelineId: 'd-child', participant: 'ana' }],
+  ['timeline', { projectId: project, at: { axis: 'reading' }, participant: 'bruno', range: { from: 1, to: 2 } }],
+  ['search', { projectId: project, text: 'burned' }],
+  ['search', { projectId: project, text: 'letter', filter: { subject: 'letter' } }],
+  ['search', { projectId: project, text: 'mill', filter: { holder: 'carla', eventTypes: ['umwelt:transmit'] }, range: { from: 2, to: 2 } }],
 ];
 
 class Server {
