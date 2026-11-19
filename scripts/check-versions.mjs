@@ -15,6 +15,8 @@ const versions = {
   'Cargo.toml (workspace)': read('Cargo.toml').match(/^\[workspace\.package\][^[]*?^version = "([^"]+)"/ms)?.[1],
   'packages/umwelt/package.json': JSON.parse(read('packages/umwelt/package.json')).version,
   'bindings/csharp/Kallamo.Umwelt/Kallamo.Umwelt.csproj': read('bindings/csharp/Kallamo.Umwelt/Kallamo.Umwelt.csproj').match(/<Version>([^<]+)<\/Version>/)?.[1],
+  // The name the TypeScript client gives itself in `hello`.
+  'packages/umwelt/src/transport.ts (hello client)': read('packages/umwelt/src/transport.ts').match(/'@kallamo\/umwelt\/([^']+)'/)?.[1],
 };
 
 const tagIndex = process.argv.indexOf('--tag');
