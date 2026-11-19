@@ -196,7 +196,8 @@ contribution, not the tool that helped write it.
   and be ready to explain and defend your changes in review. "The tool wrote
   it" is not an answer to a review question.
 - **Test it.** The validation above must pass, and the behavior must be
-  checked, not assumed.
+  checked, not assumed. New functionality must come with tests in the
+  automated suite, and a bug fix with a test that fails without it.
 - **Say so when a tool did a substantial part of the work.** One line in the
   pull request description is enough. It helps the review; it is not held
   against you.
