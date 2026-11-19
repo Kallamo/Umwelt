@@ -5,6 +5,40 @@ All notable changes to Umwelt are recorded here. The format follows
 follows [semantic versioning](spec/versioning.md): every package of a release
 shares its version.
 
+## [0.2.0] - 2026-11-18
+
+### Engine
+
+- Files of an earlier storage version are migrated when they are opened,
+  after a byte-for-byte backup next to them (`story.umw.v5.bak`). `hello`
+  reports the migration, and a failed one returns `MIGRATION_FAILED` and
+  leaves the file unchanged. Storage version 6.
+- Facts take an optional `text`, which search and `embedding.pending` use
+  instead of the words of the claim.
+- `timeline` takes `range`, `eventTypes` and `participant`; `search` takes
+  `range`, `filter.subject` and `filter.eventTypes`. A chronology such as
+  "the scenes Ana took part in between day 3 and day 5" is one read.
+
+### Interfaces
+
+- `fact()` and `Records.Fact()` take `text`. The .NET binding reports a
+  migration in `UmweltEngine.Migration` and throws `MigrationFailedException`;
+  the TypeScript client returns it in `transport.ready`.
+
+### Changed
+
+- Creating an entity type or defining a predicate again with the same
+  definition is a no-op that returns it, like `axis.define` and
+  `embedding.defineSpace`; in 0.1.0 it failed with `CONFLICT`. A different
+  definition still fails with `CONFLICT`, and `details.entityType` or
+  `details.predicate` holds the stored one.
+
+### Fixed
+
+- `evidence.register` with an id that already exists, and `entity.update`
+  with an `externalRef` another entity of the project has, fail with
+  `CONFLICT` instead of `INTERNAL`, and change nothing.
+
 ## [0.1.0] - 2026-11-11
 
 The first public release.
