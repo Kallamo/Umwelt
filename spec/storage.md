@@ -3,9 +3,10 @@
 # Storage format
 
 A `.umw` file is a SQLite database with `application_id` `0x554D5754` and
-`user_version` equal to the storage version, currently **5**, which the
-`hello` result reports. A file of a newer storage version is refused with
-`UNSUPPORTED_FILE_VERSION`; see [versioning.md](versioning.md#storage).
+`user_version` equal to the storage version, currently **6**, which the
+`hello` result reports. A file of an earlier published storage version is
+migrated when opened, after a backup; a file of a newer one is refused with
+`UNSUPPORTED_FILE_VERSION`. See [versioning.md](versioning.md#storage).
 
 The layout is an implementation detail of `umwelt-sqlite`: clients use the
 protocol, never SQL. This page explains what the file holds and why it is
@@ -21,13 +22,14 @@ reads, so no record, event or transition is kept a second time as JSON.
 | Table | One row per | Notes |
 | --- | --- | --- |
 | `records` | Fact, Holding, Awareness or Disposition | Claims and acquisitions are columns of the record. `WITHOUT ROWID`. |
-| `events` | event | Type, title and provenance as columns; description, participants, location and evidence in `extra`. |
+| `events` | event | Type, title and provenance as columns; description, location and evidence in `extra`. |
 | `transitions` | transition | Fully columnar. |
 | `provenances` | distinct provenance | Shared by every row with the same provenance. |
 | `attempts` | applied attempt | 32-byte fingerprint, event, version; the outcome's ids, warnings and preconditions in `extra`. |
 | `change_feed` | change item | Commit items as columns; the payload is rebuilt when read. |
 | `current_status` | transitioned record | The latest status, for fast reads of main at its head. |
 | `event_positions` | event position on an additional axis | Key `(project_id, event_id, axis_id)`. The only place a position is stored; its `recorded_version` is the event's, kept so event pages by axis read one ordered index. |
+| `event_participants` | participant of an event | Key `(project_id, event_id, ordinal)`: the participants in the order they were written. The only place participants are stored; `tick` and `recorded_version` are the event's, kept so the events of one entity are read from one ordered index. |
 | `axes` | additional axis | Id and label. |
 | `embedding_spaces` | embedding space | Id, dimensions and model label. |
 | `embeddings` | vector of a searchable document in a space | Unique index `(project_id, space_id, doc_type, doc_id)`. Little-endian `f32`, normalized; the first 16 bytes of the SHA-256 of the text it was made from. A rowid table: a vector is too large for a `WITHOUT ROWID` row. Derived data, no timeline column. |
@@ -60,6 +62,18 @@ A read on an additional axis keeps the same indexes and order: it replaces the
 tick bound of each row and of its transitions with a primary-key lookup in
 `event_positions`. Event pages on an axis read
 `event_positions_order (project_id, axis_id, tick, recorded_version, event_id)`.
+
+The events of one participant on the main axis are read from
+`event_participants_order (project_id, entity_id, tick, recorded_version, event_id)`.
+On an additional axis they are read from `event_positions_order`, each event
+checked for the participant through the primary key of `event_participants`.
+
+## Changes by version
+
+| Version | Release | Change |
+| --- | --- | --- |
+| 5 | 0.1.0 | First published layout. |
+| 6 | next | Participants move from the events' `extra` into `event_participants`. |
 
 ## Versions
 

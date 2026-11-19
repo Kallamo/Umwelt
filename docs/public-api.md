@@ -32,8 +32,10 @@ every other language.
   `compare` and
   `compare_across`, `contradictions`, `beliefs_about`, `breaches`,
   `entity_at`, `entity_known_by`, `check_utterance`, `context_admit`,
-  `trace`, `timeline`, `record`, `search` and `search_with` (semantic and
-  hybrid), and `pending_embeddings`.
+  `trace`, `timeline` and `timeline_where` (narrowed by a `TimelineFilter`:
+  range, event types, participant), `record`, `search`, `search_with`
+  (semantic and hybrid) and `search_within` (with a `TickRange`), and
+  `pending_embeddings`.
 - Every query takes an `At`: a position (`tick`), optionally on an additional
   axis (`axis`), and a version (`as_of_version`).
 - In a `CommitInput` or a `ProposeInput`, the `position` and `provenance` of
@@ -47,6 +49,10 @@ Holding affirms what was asked. Reads made for a holder (`holdings`,
 `perspective`, `compare`, `search` with a holder) return `Intent::Unknown` for
 told-by acquisitions; `record` and `trace` return the recorded intent.
 `ClaimKeyResult::of(&claim)` gives a claim's keys.
+
+`SqliteStore::open` migrates a file of an earlier storage version after
+copying it (see `spec/versioning.md`); `Store::migration()` reports what was
+done, and the protocol returns it in the `hello` result.
 
 The TypeScript and .NET clients also export small pure factories for the
 write contract (`claim.entity`, `knows`, `witnessed`, ... and `Claim.Entity`,

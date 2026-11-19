@@ -12,12 +12,20 @@ however well it matches.
 
 | `docType` | Document | Text |
 | --- | --- | --- |
-| `record` | an active Fact | its subject, predicate, object and string qualifiers |
+| `record` | an active Fact with `text` | the `text` |
+| `record` | an active Fact without `text` | its subject, predicate, object and string qualifiers |
 | `record` | a Holding with `text` | the `text` |
 | `event` | an event whose type does not begin with `umwelt:` | its title and description |
 
 Without `filter.holder`, a search returns Facts and events (the narrator's
 view). With it, only that holder's active, available Holdings.
+
+A Fact's claim is made of ids, and its object may be a structured value, so
+the words built from it are a poor match for a question in natural language
+and a poor input for an embedding model. Give the Fact a `text` that says it
+in words (`"The mill burned on the third day"`): search and
+`embedding.pending` then use the `text` alone. The claim stays what reads,
+contradictions and continuity checks compare; the text is never parsed.
 
 ## Modes
 
@@ -47,6 +55,25 @@ vector is compared, so its cost grows with the number of candidates. With
 `filter.holder` the candidates are that holder's documents; without it, every
 Fact and event with a vector in the space. See
 [../benchmarks/README.md](../benchmarks/README.md) for measured costs.
+
+## Narrowing a search
+
+These filters narrow the documents a search returns, in every mode. They never
+widen what the read can see.
+
+| Field | Keeps |
+| --- | --- |
+| `filter.subject` | records whose claim's subject is the entity, and events it participates in |
+| `filter.eventTypes` | events of one of the types, and records written by an event of one of them (at most 100; an empty list matches nothing) |
+| `range: { from, to }` | documents positioned between `from` and `to`, both inclusive, on the read's axis |
+
+A record's position is its own: for a Holding, **when it was acquired**, not
+when the thing it describes happened. "What Ana learned between day 3 and day
+5" is a range; "what Ana knows about day 3" is a claim. As in `timeline`, `at`
+says when the search reads and `range` cannot extend it.
+
+With `filter.holder`, `filter.eventTypes` answers questions such as "what did
+Ana learn in scenes", leaving out records written by events of other kinds.
 
 ## Pages
 

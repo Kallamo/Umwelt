@@ -22,7 +22,7 @@ The first valid request must be:
 {"v":1,"id":"r1","op":"hello","payload":{"protocol":{"min":1,"max":1},"client":"client-name/version"}}
 ```
 
-The server selects protocol 1 and returns the contract version, the storage version (see [storage.md](storage.md) and [versioning.md](versioning.md)), the engine version, and every supported operation as a `command` or `query` capability. A different first operation returns `HANDSHAKE_REQUIRED`. A range that excludes 1 returns `UNSUPPORTED_PROTOCOL` with `{"supported":{"min":1,"max":1}}` in `details`.
+The server selects protocol 1 and returns the contract version, the storage version (see [storage.md](storage.md) and [versioning.md](versioning.md)), the engine version, and every supported operation as a `command` or `query` capability. When the file was converted from an earlier storage version as it was opened, the result also carries `migration: { from, to, backup }` (see [versioning.md](versioning.md#storage)). A different first operation returns `HANDSHAKE_REQUIRED`. A range that excludes 1 returns `UNSUPPORTED_PROTOCOL` with `{"supported":{"min":1,"max":1}}` in `details`.
 
 ## Operations
 

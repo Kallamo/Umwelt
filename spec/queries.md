@@ -22,6 +22,30 @@ Every query that takes `at` accepts the axis. "Later" in the `future` verdicts o
 
 Pages keep the main-axis order `(tick, recordedVersion, recordId)` on every axis; on an additional axis that order carries no meaning, and the axis decides only what enters the page. Likewise the "latest" record a query reports (the Holding behind `holds`, the name `entity.at` shows) is the latest in main-axis order. The exception is the event page, `timeline`: on an additional axis it is ordered by the position on that axis, the reading order. Reads on an additional axis always check transitions directly, like draft reads.
 
+## Narrowing a timeline
+
+`timeline` returns the events a read can see, in order. Three optional fields
+narrow the page, and combine:
+
+```json
+{ "projectId": "saga", "participant": "ana", "eventTypes": ["scene"], "range": { "from": 3, "to": 5 } }
+```
+
+- `range: { from, to }`: only events positioned between `from` and `to`, both
+  inclusive, on the read's axis. Either end may be left out. `at` still says
+  when the read is made; `to` never extends it: an event after `at.tick` is
+  never returned. `from` greater than `to` fails with `VALIDATION_FAILED`.
+- `eventTypes`: only events of one of these types (at most 100; an empty list
+  returns an empty page). The engine gives no meaning to any type. Clients
+  that write events of different natures (a scene, an edit to a character
+  sheet, an import) should give each its own type, so that a chronology can
+  keep only the events it means.
+- `participant`: only events the entity participates in (`Event.participants`;
+  an entity listed twice counts once). Participating grants no knowledge: this
+  is a narrator read, like the rest of `timeline`.
+
+The cursor of a narrowed page continues within the same filters.
+
 ## Pagination cursors
 
 Record and event list cursors are opaque and stable. They preserve the ordering `(tick, recordedVersion, recordId)` (for an event page on an additional axis, the tick is the position on that axis) and therefore remain valid when later writes are added to the ledger.

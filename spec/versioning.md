@@ -11,7 +11,7 @@ whether a file, a client or a native library is compatible.
 | Product | the CLI, `@kallamo/umwelt`, `Kallamo.Umwelt`, the crates, release tags, `hello.engine` | `0.1.0` |
 | Contract | `hello.contract`, the JSON Schemas | the product version |
 | Protocol | `v` in every envelope, `hello.protocol` | `1` |
-| Storage | inside every `.umw` file, `hello.storage` | `5` |
+| Storage | inside every `.umw` file, `hello.storage` | `6` |
 | C ABI | `umwelt_abi_version()` | `1` |
 
 ## Product and contract
@@ -62,10 +62,32 @@ Every `.umw` file records the storage version that wrote it. The engine reads
 and writes files of its own storage version.
 
 When a release changes the file layout, the storage version goes up and the
-release migrates files of the previous versions automatically: on open, the
-engine copies the file to a backup next to it (`story.umw.v5.bak`), converts
-it, and continues. A file of a newer storage version than the engine knows is
-refused with `UNSUPPORTED_FILE_VERSION`: upgrade the engine to open it.
+release migrates files of every earlier published version automatically. On
+open, the engine:
+
+1. copies the file, byte for byte, to a backup next to it
+   (`story.umw.v5.bak`; when that name is taken, `story.umw.v5.2.bak`,
+   `story.umw.v5.3.bak` and so on: a backup is never overwritten);
+2. converts it, in one transaction, through every version in between;
+3. continues, and reports the conversion in the `hello` result:
+   `migration: { from, to, backup }`. The field is absent when the file
+   already had the engine's storage version.
+
+If a conversion step fails, nothing is changed: the file keeps its version and
+contents, the open fails with `MIGRATION_FAILED`, and `details` carries
+`{ from, to, backup }`. The backup stays on disk.
+
+A migration needs free disk space for the backup, about the size of the file.
+It runs once; later opens find the new version.
+
+A file of a newer storage version than the engine knows is refused with
+`UNSUPPORTED_FILE_VERSION`: upgrade the engine to open it. So is a file older
+than storage version 5, the first published one (0.1.0).
+
+Every published storage version has a reference file in the repository
+(`fixtures/storage/v<N>.umw`), with the answers its release gave to a fixed
+set of reads. Every later engine must open each reference file and give the
+same answers.
 
 ## C ABI
 

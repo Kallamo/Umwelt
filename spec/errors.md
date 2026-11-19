@@ -16,7 +16,8 @@ The following protocol v1 codes are frozen. Existing code text must never be cha
 | `UNKNOWN_OP` | The requested operation name is not part of protocol v1. |
 | `FILE_LOCKED` | Another process owns the exclusive lock for the `.umw` file. |
 | `NOT_UMWELT_FILE` | The SQLite file does not have the Umwelt application identifier. |
-| `UNSUPPORTED_FILE_VERSION` | The file storage version is newer than this engine supports. |
+| `UNSUPPORTED_FILE_VERSION` | The file storage version is newer than this engine supports, or older than the first published one. |
+| `MIGRATION_FAILED` | A file of an earlier storage version could not be converted. The file is unchanged; `details` is `{ from, to, backup }`. |
 | `PAYLOAD_TOO_LARGE` | A request line exceeds 16 MiB. |
 | `INTERNAL` | An unexpected engine, storage, serialization, or I/O failure occurred. |
 
