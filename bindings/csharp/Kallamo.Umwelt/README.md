@@ -103,7 +103,8 @@ loaders, need no configuration when the native library ships next to
 AGPL-3.0-only. Free, non-monetized games, mods, interactive fiction and
 tabletop play tools may use Umwelt without releasing their own code under the
 [Umwelt Free Play Exception](https://github.com/Kallamo/Umwelt/blob/main/LICENSE-EXCEPTION.md);
-other uses that cannot comply with the AGPL can obtain a commercial license at
-contact@kallamo.com. Built by [Kallamo](https://kallamo.com);
+other uses that cannot comply with the AGPL can obtain a
+[commercial license](https://github.com/Kallamo/Umwelt/blob/main/COMMERCIAL.md)
+(development and prototyping are free) at contact@kallamo.com. Built by [Kallamo](https://kallamo.com);
 see the [repository](https://github.com/Kallamo/Umwelt) for the documentation
 and how to contribute.

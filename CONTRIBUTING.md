@@ -287,15 +287,18 @@ a migration from the previous version, so that existing files keep opening.
 
 Maintainers release from a version tag:
 
-1. Set the new version in `Cargo.toml` (workspace), `packages/umwelt/package.json`
-   and `bindings/csharp/Kallamo.Umwelt/Kallamo.Umwelt.csproj`;
+1. Set the new version in `Cargo.toml` (workspace), `packages/umwelt/package.json`,
+   `bindings/csharp/Kallamo.Umwelt/Kallamo.Umwelt.csproj` and the TypeScript
+   client's `hello`, and the release tag in the install instructions
+   (`README.md`, `docs/getting-started.md`, `docs/public-api.md`);
    `npm run check:versions` confirms they agree.
 2. Date its section in `CHANGELOG.md`.
-3. Check that each npm package (`@kallamo/umwelt` and its four platform
-   packages) trusts the release workflow: on npmjs.com, *Settings → Trusted
-   publishing*, GitHub Actions, `Kallamo/Umwelt`, `release.yml`, environment
-   `release`, staging only. A connection not used within two days of its
-   creation expires; recreate it right before tagging.
+3. Each npm package (`@kallamo/umwelt` and its four platform packages) trusts
+   the release workflow: on npmjs.com, *Settings → Trusted publishing*,
+   GitHub Actions, `Kallamo/Umwelt`, workflow `release.yml`, environment
+   `release`, staging only. A new package needs this connection before its
+   first release; a new connection expires unless a release uses it within
+   two days.
 4. Push the tag `vX.Y.Z`. The release workflow checks everything again and
    builds every platform, then waits for approval in the `release`
    environment.

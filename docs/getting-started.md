@@ -17,11 +17,11 @@ defined in [concepts.md](concepts.md).
 ## Command line
 
 Install the `umwelt` command from the
-[latest release](https://github.com/Kallamo/Umwelt/releases), or build it with
-Rust:
+[latest release](https://github.com/Kallamo/Umwelt/releases/latest), or build
+that release with Rust:
 
 ```bash
-cargo install --git https://github.com/Kallamo/Umwelt umwelt-cli
+cargo install --git https://github.com/Kallamo/Umwelt --tag v0.2.0 umwelt-cli
 ```
 
 Create a file, then declare the world in one call: a project, the kinds of

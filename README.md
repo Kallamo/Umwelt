@@ -30,7 +30,7 @@ It works entirely without AI, and it is built to keep AI characters honest:
 a model voicing Ana is given what Ana knows, never the twist she has not
 learned yet.
 
-> **Status:** `0.1`, the first public release. The engine is complete and
+> **Status:** `0.x`, published and versioned. The engine is complete and
 > tested. The API may still change before `1.0`; every change to the file
 > format comes with an automatic migration, so your files keep opening (see
 > [versioning](spec/versioning.md)).
@@ -67,10 +67,11 @@ learned yet.
 
 | | Install | Guide |
 | --- | --- | --- |
-| Command line | `cargo install --git https://github.com/Kallamo/Umwelt umwelt-cli`, or a [release](https://github.com/Kallamo/Umwelt/releases) | [getting-started](docs/getting-started.md#command-line) |
+| Command line | a [release](https://github.com/Kallamo/Umwelt/releases/latest), or `cargo install --git https://github.com/Kallamo/Umwelt --tag v0.2.0 umwelt-cli` | [getting-started](docs/getting-started.md#command-line) |
 | TypeScript / Node.js | `npm install @kallamo/umwelt` | [getting-started](docs/getting-started.md#typescript), [client guide](packages/umwelt/README.md) |
 | .NET 6+ | `dotnet add package Kallamo.Umwelt` | [getting-started](docs/getting-started.md#net), [binding guide](bindings/csharp/Kallamo.Umwelt/README.md) |
 | Any language | `umwelt serve world.umw`, JSON over stdio, or the C ABI | [protocol](spec/protocol.md) |
+| Rust | the crates from Git, at a release tag (not on crates.io) | [Rust API](docs/public-api.md) |
 
 ```ts
 import { createClient } from '@kallamo/umwelt';
@@ -137,8 +138,11 @@ notice in [`NOTICE`](NOTICE).
 - **Private or internal use**, and **projects released under the AGPL**, need
   nothing more.
 - **Everything else** that cannot comply with the AGPL, such as commercial
-  products and hosted services, can obtain a commercial license:
-  contact@kallamo.com.
+  products and hosted services, can obtain a commercial license. Development
+  and prototyping are free; a license is needed only once a product is
+  publicly released or can earn revenue, and released builds of a game stay
+  distributable after a subscription ends. Prices and terms are in
+  [`COMMERCIAL.md`](COMMERCIAL.md); contact@kallamo.com.
 
 "Umwelt" and "Kallamo" are trademarks of their creator: a fork or
 redistribution must use its own name.

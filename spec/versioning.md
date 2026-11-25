@@ -32,6 +32,10 @@ talking to.
 Before 1.0 a minor version may contain incompatible changes; the changelog
 names every one of them.
 
+The version covers the contract, the protocol, the clients and the C ABI. The
+Rust crates are not published and their API is not covered yet: any release
+may change it ([public-api.md](../docs/public-api.md)).
+
 ### What is an incompatible change
 
 - removing or renaming a field, an operation, an enum value or an error code;

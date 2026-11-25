@@ -1,8 +1,19 @@
 # Public Engine API
 
 The Rust API is `umwelt_api::Engine<S: Store>`, built from a store, a `Clock`
-and an `IdGen`. The crates are not published on crates.io yet; depend on them
-from the Git repository (`https://github.com/Kallamo/Umwelt`).
+and an `IdGen`. The crates are not published on crates.io; depend on them from
+the Git repository, at a release tag:
+
+```toml
+[dependencies]
+umwelt-api = { git = "https://github.com/Kallamo/Umwelt", tag = "v0.2.0" }
+umwelt-sqlite = { git = "https://github.com/Kallamo/Umwelt", tag = "v0.2.0" }
+```
+
+Without a tag, Cargo follows `main`, which may hold unreleased changes. The
+Rust API is not covered by the version promise yet: any release may change
+it, while the protocol, the clients and the C ABI follow
+[versioning.md](../spec/versioning.md).
 
 ```rust
 let engine = Engine::new(

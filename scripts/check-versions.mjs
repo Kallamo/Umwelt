@@ -4,7 +4,8 @@
 //   node scripts/check-versions.mjs [--tag v1.2.3]
 //
 // Fails when the Cargo workspace, the npm package and the NuGet package
-// disagree, or when they do not match the given release tag.
+// disagree, when they do not match the given release tag, or when a release
+// tag written in the install instructions names another version.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -30,5 +31,15 @@ for (const [source, version] of Object.entries(versions)) {
     failed = true;
   }
 }
+// Install instructions pin a release tag (`--tag v1.2.3`, `tag = "v1.2.3"`).
+for (const path of ['README.md', 'docs/getting-started.md', 'docs/public-api.md']) {
+  for (const [, version] of read(path).matchAll(/tag[ =]+"?v(\d+\.\d+\.\d+[^\s"`]*)/g)) {
+    if (version !== expected) {
+      console.error(`${path}: release tag v${version}, expected v${expected}`);
+      failed = true;
+    }
+  }
+}
+
 if (failed) process.exit(1);
 console.log(`All packages are at ${expected}.`);
